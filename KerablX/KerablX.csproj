@@ -34,11 +34,13 @@
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\..\KSP\dev_KSP_linux\KSP_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="KerbalX.cs" />
+    <Compile Include="KerbalXWindow.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
