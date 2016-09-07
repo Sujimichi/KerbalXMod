@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Net;
+using System.Threading;
+using SimpleJSON;
 using UnityEngine;
+using UnityEngine.Experimental.Networking;
 using KerablXWindow;
 //using UnityEngine.UI;
 //using UnityEngine.EventSystems;
@@ -16,7 +21,11 @@ namespace KerbalX
 		public static string notification = "";
 		public static bool logged_in = false;
 
-		public static void log (string e){ log_data.Add (e); }
+		public static void log (string s){ 
+			s = "[KerbalX] " + s;
+			log_data.Add (s); 
+			Debug.Log (s);
+		}
 		public static string last_log()
 		{
 			if(log_data.Count != 0){
@@ -26,7 +35,7 @@ namespace KerbalX
 			}
 		}
 		public static void show_log(){
-			foreach (string l in log_data) { Debug.Log ("[KerbalX] " + l); }
+			foreach (string l in log_data) { Debug.Log (l); }
 		}
 		public static void notify(string s){
 			notification = s;
@@ -44,6 +53,7 @@ namespace KerbalX
 	public class KerbalXAPI
 	{
 		public static string token = null; 
+		public static string json = "";
 
 		public static void set_token(string new_token){
 			token = new_token;
@@ -76,7 +86,34 @@ namespace KerbalX
 			KerbalX.notify("login succsessful, yay!");
 		}
 
+		public delegate void RequestCallback(string data, int status_code);
+
+		//does the....like...getting of shit yo.
+		public static void get(string url, RequestCallback callback)
+		{
+			string response_data = null;
+			int status_code = 500;
+			var thread = new Thread (() => {
+				try{
+					using (var client = new System.Net.WebClient()) {
+						KerbalX.log("sending request to: " + url);
+						response_data = client.DownloadString (url);
+						status_code = 200;
+					}
+				}
+				catch(WebException e){
+					HttpWebResponse resp = (System.Net.HttpWebResponse)e.Response;
+					KerbalX.log ("request failed with " + resp.StatusCode + "-" + (int)resp.StatusCode);
+					status_code = (int)resp.StatusCode;
+				}
+				callback(response_data, status_code);
+			});
+			thread.Start ();
+		}
 	}
+
+
+
 
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class KerbalXLoginWindow : KerbalXWindow
@@ -140,6 +177,29 @@ namespace KerbalX
 
 			if (GUILayout.Button ("print log to console")) {
 				KerbalX.show_log ();
+			}
+
+			if (GUILayout.Button ("test fetch - good")) {
+				KerbalXAPI.get ("http://localhost:3000/katateochi.json", (resp, code) => {
+					KerbalX.notify ("callback start, got data");
+					Debug.Log ("code: " + code);
+					var data = JSON.Parse (resp);
+					KerbalX.notify (data["username"]);
+				});
+			}
+
+			if (GUILayout.Button ("test fetch - bad")) {
+				KerbalXAPI.get ("http://localhost:3000/katateochimoo.json", (resp, code) => {
+					if(code == 200){
+						KerbalX.notify ("callback start, got data");
+						var data = JSON.Parse (resp);
+						KerbalX.notify (data["username"]);
+					}else if(code == 404){
+						Debug.Log("not found yo");
+					}else{
+						Debug.Log ("some error happened");
+					}
+				});
 			}
 		}
 	}
