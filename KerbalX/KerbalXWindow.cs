@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace KerbalXWindow
+namespace KerbalX
 {
 	/* KerbalXWindow is a base class to be inherited by classes which draw GUI windows
 	It provides common setup required to draw a GUI window, enabling DRY and minimal window classes.
