@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Net;
@@ -41,13 +42,13 @@ namespace KerbalX
 			notification = s;
 			log (s);
 		}
+
 		public static void load_token(){
 			//attempt to read the token file from the root of KSP
 			//read token file if present
 			KerbalX.notify("Reading token from file");
 			KerbalXAPI.authenticate_token ("bob's pyjamas");
 		}
-
 	}
 
 	public class KerbalXAPI
@@ -88,16 +89,69 @@ namespace KerbalX
 
 		public delegate void RequestCallback(string data, int status_code);
 
-		//does the....like...getting of shit yo.
-		public static void get(string url, RequestCallback callback)
+
+		/*Perform simple GET request 
+		* Usage:
+		*	KerbalXAPI.get ("http://some_website.com/path/to/stuff", (resp, code) => {
+		*		//actions to perform after request completes. code provides the status code int and resp provides the returned string
+		*	});
+		*/
+		public static void get(string url, RequestCallback callback){
+			request ("GET", url, new NameValueCollection(), callback);
+		}
+
+		/*Perform GET request with query 
+		* Usage:
+		* NameValueCollection query = new NameValueCollection ();
+		* query.Add ("username", "foobar");
+		*	KerbalXAPI.get ("http://some_website.com/path/to/stuff", query, (resp, code) => {
+		*		//actions to perform after request completes. code provides the status code int and resp provides the returned string
+		*	});	
+		*/
+		public static void get(string url, NameValueCollection queries, RequestCallback callback){
+			request ("GET", url, queries, callback);
+		}
+
+		/*Perform POST request
+		* Usage:
+		* NameValueCollection query = new NameValueCollection ();
+		* query.Add ("username", "foobar");
+		*	KerbalXAPI.post ("http://some_website.com/path/to/stuff", query, (resp, code) => {
+		*		//actions to perform after request completes. code provides the status code int and resp provides the returned string
+		*	});	
+		*/
+		public static void post(string url, NameValueCollection queries, RequestCallback callback){
+			request ("POST", url, queries, callback);
+		}
+
+		/* Performs HTTP GET and POST requests - takes a method ('GET' or 'POST'), a url, query args and a callback delegate
+		* The request is performed in a thread to facilitate asynchronous handling
+		* Usage:
+		* NameValueCollection query = new NameValueCollection ();
+		* query.Add ("username", "foobar");
+		*	KerbalXAPI.request ("GET", "http://some_website.com/path/to/stuff", query, (resp, code) => {
+		*		//actions to perform after request completes. code provides the status code int and resp provides the returned string
+		*	});	
+		* OR
+		*	KerbalXAPI.request ("POST", "http://some_website.com/path/to/stuff", query, (resp, code) => {
+		*		//actions to perform after request completes. code provides the status code int and resp provides the returned string
+		*	});	
+		*/
+		public static void request(string method, string url, NameValueCollection queries, RequestCallback callback)
 		{
 			string response_data = null;
 			int status_code = 500;
+
 			var thread = new Thread (() => {
 				try{
 					using (var client = new System.Net.WebClient()) {
 						KerbalX.log("sending request to: " + url);
-						response_data = client.DownloadString (url);
+						if(method == "GET"){
+							client.QueryString = queries;	
+							response_data = client.DownloadString (url);
+						}else if(method == "POST"){
+							response_data = Encoding.Default.GetString(client.UploadValues (url, queries));
+						}
 						status_code = 200;
 					}
 				}
@@ -179,7 +233,7 @@ namespace KerbalX
 				KerbalX.show_log ();
 			}
 
-			if (GUILayout.Button ("test fetch - good")) {
+			if (GUILayout.Button ("test fetch")) {
 				KerbalXAPI.get ("http://localhost:3000/katateochi.json", (resp, code) => {
 					KerbalX.notify ("callback start, got data");
 					Debug.Log ("code: " + code);
@@ -188,19 +242,30 @@ namespace KerbalX
 				});
 			}
 
-			if (GUILayout.Button ("test fetch - bad")) {
-				KerbalXAPI.get ("http://localhost:3000/katateochimoo.json", (resp, code) => {
-					if(code == 200){
-						KerbalX.notify ("callback start, got data");
+			if (GUILayout.Button ("test api/craft")) {
+				KerbalXAPI.get ("http://localhost:3000/api/craft.json", (resp, code) => {
+					if(code==200){
+						KerbalX.notify (resp);
 						var data = JSON.Parse (resp);
-						KerbalX.notify (data["username"]);
-					}else if(code == 404){
-						Debug.Log("not found yo");
-					}else{
-						Debug.Log ("some error happened");
+						Debug.Log (data["controller"]);
 					}
+					//KerbalX.notify (data["username"]);
 				});
 			}
+			if (GUILayout.Button ("test api/login")) {
+				NameValueCollection queries = new NameValueCollection ();
+				queries.Add ("username", "barbar");
+				queries.Add ("password", "someshit");
+				KerbalXAPI.post ("http://localhost:3000/api/login", queries, (resp, code) => {
+					if(code==200){
+						KerbalX.notify (resp);
+						var data = JSON.Parse (resp);
+						Debug.Log (data["controller"]);
+					}
+					//KerbalX.notify (data["username"]);
+				});
+			}
+
 		}
 	}
 		
