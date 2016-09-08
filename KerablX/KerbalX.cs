@@ -87,8 +87,8 @@ namespace KerbalX
 			KerbalX.notify("login succsessful, yay!");
 		}
 
+		//define delegate to be used to pass lambda statement as a callback to get, post and request methods.
 		public delegate void RequestCallback(string data, int status_code);
-
 
 		/*Perform simple GET request 
 		* Usage:
@@ -108,8 +108,8 @@ namespace KerbalX
 		*		//actions to perform after request completes. code provides the status code int and resp provides the returned string
 		*	});	
 		*/
-		public static void get(string url, NameValueCollection queries, RequestCallback callback){
-			request ("GET", url, queries, callback);
+		public static void get(string url, NameValueCollection query, RequestCallback callback){
+			request ("GET", url, query, callback);
 		}
 
 		/*Perform POST request
@@ -120,8 +120,8 @@ namespace KerbalX
 		*		//actions to perform after request completes. code provides the status code int and resp provides the returned string
 		*	});	
 		*/
-		public static void post(string url, NameValueCollection queries, RequestCallback callback){
-			request ("POST", url, queries, callback);
+		public static void post(string url, NameValueCollection query, RequestCallback callback){
+			request ("POST", url, query, callback);
 		}
 
 		/* Performs HTTP GET and POST requests - takes a method ('GET' or 'POST'), a url, query args and a callback delegate
@@ -137,7 +137,7 @@ namespace KerbalX
 		*		//actions to perform after request completes. code provides the status code int and resp provides the returned string
 		*	});	
 		*/
-		public static void request(string method, string url, NameValueCollection queries, RequestCallback callback)
+		public static void request(string method, string url, NameValueCollection query, RequestCallback callback)
 		{
 			string response_data = null;
 			int status_code = 500;
@@ -147,10 +147,10 @@ namespace KerbalX
 					using (var client = new System.Net.WebClient()) {
 						KerbalX.log("sending request to: " + url);
 						if(method == "GET"){
-							client.QueryString = queries;	
+							client.QueryString = query;	
 							response_data = client.DownloadString (url);
 						}else if(method == "POST"){
-							response_data = Encoding.Default.GetString(client.UploadValues (url, queries));
+							response_data = Encoding.Default.GetString(client.UploadValues (url, query));
 						}
 						status_code = 200;
 					}
@@ -160,7 +160,7 @@ namespace KerbalX
 					KerbalX.log ("request failed with " + resp.StatusCode + "-" + (int)resp.StatusCode);
 					status_code = (int)resp.StatusCode;
 				}
-				callback(response_data, status_code);
+				callback(response_data, status_code); //call the callback method and pass in the response and status code.
 			});
 			thread.Start ();
 		}
