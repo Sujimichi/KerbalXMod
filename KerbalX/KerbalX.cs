@@ -17,10 +17,12 @@ namespace KerbalX
 {
 	public class KerbalX
 	{
-		public static List<string> log_data = new List<string>();
-		public static string notification = "";
-		public static bool logged_in = false;
 		public static string token_path = Path.Combine (KSPUtil.ApplicationRootPath, "KerbalX.key");
+		public static List<string> log_data = new List<string>();
+		public static string notice = "";
+		public static string alert = "";
+		public static bool show_login = false;
+
 
 		public static void log (string s){ 
 			s = "[KerbalX] " + s;
@@ -39,47 +41,51 @@ namespace KerbalX
 			foreach (string l in log_data) { Debug.Log (l); }
 		}
 		public static void notify(string s){
-			notification = s;
+			notice = s;
 			log (s);
 		}
 
 		public static void load_token(){
-			//attempt to read the token file from the root of KSP
-			//read token file if present
 			KerbalX.notify("Reading token from " + token_path);
 			try{
 				string token = System.IO.File.ReadAllText(token_path);
-				Debug.Log (token);
 				KerbalXAPI.authenticate_token (token);
 			}
 			catch{
-				KerbalX.notify ("no token file found");
+				KerbalX.notify("Enter your KerbalX username and password");
+				KerbalX.show_login = true;
 			}
 		}
+
+		public static void save_token(string token){
+			System.IO.File.WriteAllText(token_path, token);
+		}
 	}
-
-
-
-
 
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class KerbalXLoginWindow : KerbalXWindow
 	{
-
 		private string username = "";
 		private string password = "";
+		public static bool enable_login = true;  //used to toggle enabled/disabled state on login fields and button
+		GUIStyle alert_style = new GUIStyle();
 
 
 		private void Start(){
 			window_title = "KerbalX::Login";
 			window_pos = new Rect((Screen.width/2 - 310/2),100, 310, 5);
-			KerbalX.log ("starting");
-			KerbalX.load_token ();
+			alert_style.normal.textColor = Color.red;
+
+			KerbalX.show_login = false;
+			if (KerbalXAPI.token == null) {
+				KerbalX.load_token ();
+			}
 		}
 
 		protected override void WindowContent(int win_id)
 		{
-			if(KerbalX.logged_in == false){					
+			if(KerbalX.show_login == true){					
+				GUI.enabled = enable_login;
 				grid (310f, window => {
 					GUILayout.Label ("username", GUILayout.Width (60f));
 					username = GUILayout.TextField (username, 255, GUILayout.Width (250f));
@@ -87,22 +93,34 @@ namespace KerbalX
 
 				grid (310f, window => {
 					GUILayout.Label ("password", GUILayout.Width(60f));
-					password = GUILayout.TextField (password, 255, GUILayout.Width(250f));
+					password = GUILayout.PasswordField (password, '*', 255, GUILayout.Width(250f));
 				});
+				GUI.enabled = true;
 			}
 
-			GUILayout.Label (KerbalX.notification, GUILayout.Width(310f));
+			if (KerbalX.notice != "") {
+				GUILayout.Label (KerbalX.notice, GUILayout.Width (310f));
+			};
 
-			if (KerbalX.logged_in == false) {
+			if (KerbalX.alert != "") {	
+				GUILayout.Label (KerbalX.alert, alert_style, GUILayout.Width (310f) );
+			};
+
+			GUI.enabled = enable_login;
+			if (KerbalX.show_login == true) {
 				if (GUILayout.Button ("Login")) {				
+					KerbalX.alert = "";
+					enable_login = false;
 					KerbalXAPI.login (username, password);
 				}
 			}else{
 				if (GUILayout.Button ("Log out")) {
-					KerbalX.logged_in = false;
+					KerbalX.show_login = true;
+					KerbalXAPI.token = null;
 					KerbalX.notify ("logged out");
 				}				
 			}
+			GUI.enabled = true;
 		}
 	}
 
@@ -124,8 +142,6 @@ namespace KerbalX
 				GUILayout.Label (KerbalXAPI.token);
 			});
 
-			GUILayout.Label (KSPUtil.ApplicationRootPath);
-			GUILayout.Label ("foo" + Path.DirectorySeparatorChar);
 
 			if (GUILayout.Button ("print log to console")) {
 				KerbalX.show_log ();
@@ -152,27 +168,10 @@ namespace KerbalX
 			if (GUILayout.Button ("test api/craft")) {
 				KerbalXAPI.get ("http://localhost:3000/api/craft.json", (resp, code) => {
 					if(code==200){
-						KerbalX.notify (resp);
-						var data = JSON.Parse (resp);
-						Debug.Log (data["controller"]);
+						KerbalX.log (resp);
 					}
-					//KerbalX.notify (data["username"]);
 				});
 			}
-			if (GUILayout.Button ("test api/login")) {
-				NameValueCollection queries = new NameValueCollection ();
-				queries.Add ("username", "barbar");
-				queries.Add ("password", "someshit");
-				KerbalXAPI.post ("http://localhost:3000/api/login", queries, (resp, code) => {
-					if(code==200){
-						KerbalX.notify (resp);
-						var data = JSON.Parse (resp);
-						Debug.Log (data["controller"]);
-					}
-					//KerbalX.notify (data["username"]);
-				});
-			}
-
 		}
 	}
 		

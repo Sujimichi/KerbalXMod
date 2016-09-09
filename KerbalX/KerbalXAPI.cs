@@ -22,44 +22,42 @@ namespace KerbalX
 		public static string token = null; 
 		public static string json = "";
 
-		public static void set_token(string new_token){
-			token = new_token;
-			//and write token to KerablX.key in KSP root dir
-		}
-
-		public static bool authenticate_token(string new_token){
-			//make request to site to authenticate token and return true or false
-			KerbalX.notify("Authenticating token with KerbalX.com...");
-			if(new_token == "bob's pyjamas"){
-				token = new_token;
-				KerbalX.logged_in = true;
-				KerbalX.notify("logged in");
-				return true;
-			}else{				
-				token = null;
-				KerbalX.logged_in = false;
-				KerbalX.notify("token was invalid");
-				return false;
-			}
+		//make request to site to authenticate token 
+		public static void authenticate_token(string new_token){
+			KerbalX.notify("Authenticating with KerbalX.com...");
+			NameValueCollection queries = new NameValueCollection ();
+			queries.Add ("token", new_token);
+			KerbalXAPI.post ("http://localhost:3000/api/authenticate", queries, (resp, code) => {
+				if(code==200){
+					token = new_token;
+					KerbalX.show_login = false;
+					KerbalX.notify("You are logged in.");
+				}else{
+					KerbalX.show_login = true;
+					KerbalX.notify("Enter your KerbalX username and password");
+				}
+			});
 		}
 
 		public static void login(string username, string password){
 			//make request to site to authenticate username and password and get token back
 			KerbalX.notify("loging into KerbalX.com...");
-
 			NameValueCollection queries = new NameValueCollection ();
 			queries.Add ("username", username);
 			queries.Add ("password", password);
 			KerbalXAPI.post ("http://localhost:3000/api/login", queries, (resp, code) => {
 				if(code==200){
 					var data = JSON.Parse (resp);
-					set_token(data["token"]);
-					KerbalX.logged_in = true;
-					KerbalX.notify("login succsessful, yay!");
+					token = data["token"];
+					KerbalX.save_token (data["token"]);
+					KerbalX.show_login = false;
+					KerbalX.notify("login succsessful! KerbalX.key saved in KSP root");
 				}else{
-					KerbalX.logged_in = false;
-					KerbalX.notify("login failed, check yo shit.");										
+					KerbalX.show_login = true;
+					KerbalX.alert = "login failed, check yo shit.";
+					KerbalX.notice = "";
 				}
+				KerbalXLoginWindow.enable_login = true;
 			});
 		}
 
@@ -119,6 +117,7 @@ namespace KerbalX
 					KerbalX.log("sending request to: " + url);
 					//ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 					var client = new WebClient();
+					client.Headers.Add("token", token);
 					//client.Headers.Add(HttpRequestHeader.UserAgent, "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:8.0) Gecko/20100101 Firefox/8.0");
 					if(method == "GET"){
 						client.QueryString = query;	
