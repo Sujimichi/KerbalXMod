@@ -27,7 +27,7 @@ namespace KerbalX
 			KerbalX.notify("Authenticating with KerbalX.com...");
 			NameValueCollection queries = new NameValueCollection ();
 			queries.Add ("token", new_token);
-			KerbalXAPI.post ("http://localhost:3000/api/authenticate", queries, (resp, code) => {
+			KerbalXAPI.post (KerbalX.url_to ("api/authenticate"), queries, (resp, code) => {
 				if(code==200){
 					token = new_token;
 					KerbalX.show_login = false;
@@ -45,7 +45,7 @@ namespace KerbalX
 			NameValueCollection queries = new NameValueCollection ();
 			queries.Add ("username", username);
 			queries.Add ("password", password);
-			KerbalXAPI.post ("http://localhost:3000/api/login", queries, (resp, code) => {
+			KerbalXAPI.post (KerbalX.url_to ("api/login"), queries, (resp, code) => {
 				if(code==200){
 					var data = JSON.Parse (resp);
 					token = data["token"];

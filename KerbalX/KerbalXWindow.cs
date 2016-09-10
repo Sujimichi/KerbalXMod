@@ -46,6 +46,8 @@ namespace KerbalX
 		protected bool draggable = true;
 		static int last_window_id = 0;
 
+
+
 		//Definition of delegate to be passed into the grid method 
 		protected delegate void Content(Rect win);
 
@@ -79,9 +81,17 @@ namespace KerbalX
 		//Callback methods which is passed to GUILayout.Window in OnGUI.  Calls WindowContent and performs common window actions
 		private void DrawWindow(int window_id)
 		{
-			WindowContent (window_id);	//Draw the main content of the window as defined by WindowContent
+			
+			var link_label_style = new GUIStyle (GUI.skin.label);
+			link_label_style.normal.textColor = new Color (0.4f,0.5f,0.9f,1);
+							
+
+			GUI.BringWindowToFront(window_id);
+			WindowContent (window_id);			//Draw the main content of the window as defined by WindowContent
 			if(footer){
-				GUILayout.Label ("kerablx.com");
+				if(GUILayout.Button ("KerbalX.com", link_label_style)){
+					Application.OpenURL (KerbalX.site_url);
+				}
 			}
 			if(draggable){
 				GUI.DragWindow();

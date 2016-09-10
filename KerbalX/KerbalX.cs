@@ -13,6 +13,7 @@ using SimpleJSON;
 using UnityEngine;
 
 
+
 namespace KerbalX
 {
 	public class KerbalX
@@ -22,6 +23,12 @@ namespace KerbalX
 		public static string notice = "";
 		public static string alert = "";
 		public static bool show_login = false;
+		public static string site_url = "http://localhost:3000";
+
+		public static string url_to (string path){
+			if(!path.StartsWith ("/")){ path = "/" + path;}
+			return site_url + path;
+		}
 
 
 		public static void log (string s){ 
@@ -135,17 +142,10 @@ namespace KerbalX
 
 		protected override void WindowContent(int win_id)
 		{
-			grid (300f, window => {
-				GUILayout.Label (KerbalX.last_log ());
-			});
-			grid (300f, window => {
-				GUILayout.Label (KerbalXAPI.token);
-			});
+			grid (300f, window => { GUILayout.Label (KerbalX.last_log ());	});
+			grid (300f, window => { GUILayout.Label (KerbalXAPI.token); 	});
 
-
-			if (GUILayout.Button ("print log to console")) {
-				KerbalX.show_log ();
-			}
+			if (GUILayout.Button ("print log to console")) { KerbalX.show_log (); }
 
 			if (GUILayout.Button ("test fetch http")) {
 				KerbalXAPI.get ("http://kerbalx-stage.herokuapp.com/katateochi.json", (resp, code) => {
@@ -166,7 +166,7 @@ namespace KerbalX
 			}
 
 			if (GUILayout.Button ("test api/craft")) {
-				KerbalXAPI.get ("http://localhost:3000/api/craft.json", (resp, code) => {
+				KerbalXAPI.get (KerbalX.url_to ("api/craft.json"), (resp, code) => {
 					if(code==200){
 						KerbalX.log (resp);
 					}
@@ -174,5 +174,30 @@ namespace KerbalX
 			}
 		}
 	}
+
 		
+	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
+	public class JumpStart : MonoBehaviour
+	{
+		public static bool autostart = true;
+		public static string save_name = "default";
+		public static string craft_name = "testy";
+
+		public void Start()
+		{
+			if(autostart){
+				HighLogic.SaveFolder = save_name;
+				GamePersistence.LoadGame("persistent", HighLogic.SaveFolder, true, false);
+				if(craft_name != null || craft_name != ""){
+					string path = Path.Combine (KSPUtil.ApplicationRootPath, "saves/" + save_name + "/Ships/VAB/" + craft_name + ".craft");
+					EditorDriver.StartAndLoadVessel (path, EditorFacility.VAB);
+				}else{
+					EditorDriver.StartEditor (EditorFacility.VAB);
+				}
+
+			}
+		}
+	}
+
+
 }
