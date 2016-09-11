@@ -86,7 +86,7 @@ namespace KerbalX
 			link_label_style.normal.textColor = new Color (0.4f,0.5f,0.9f,1);
 							
 
-			GUI.BringWindowToFront(window_id);
+			//GUI.BringWindowToFront(window_id);
 			WindowContent (window_id);			//Draw the main content of the window as defined by WindowContent
 			if(footer){
 				if(GUILayout.Button ("KerbalX.com", link_label_style)){

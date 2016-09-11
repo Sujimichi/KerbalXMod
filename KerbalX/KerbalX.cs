@@ -142,7 +142,6 @@ namespace KerbalX
 	{
 		public string current_editor = null;
 		private string craft_name = null;
-		private string[] part_names;
 		private string[] upload_errors = new string[0];
 
 		GUIStyle alert_style = new GUIStyle();
@@ -162,15 +161,6 @@ namespace KerbalX
 			GUILayout.Label ("Yo fat ass is in the " + current_editor);
 
 
-			var part_list = EditorLogic.fetch.ship.parts;
-			List<string> part_names_list = new List<string> ();
-			foreach(Part part in part_list){
-				part_names_list.Add (part.name);
-			}
-			part_names = part_names_list.Distinct ().ToArray ();
-			foreach(string part_name in part_names){
-				GUILayout.Label (part_name);
-			}
 
 			if (upload_errors.Length > 0) {
 				GUILayout.Label ("errors and shit");
@@ -179,12 +169,26 @@ namespace KerbalX
 				}
 			}
 
+			var part_list = EditorLogic.fetch.ship.parts;
+			foreach(Part part in part_list){
+				//GUILayout.Label (part.name);
+				//GUILayout.Label (part.partName);
+
+				//GUILayout.Label (part.partInfo.partUrl.Split('/')[0]);
+				//GUILayout.Label (part.partInfo.partConfig.ToString ());
+			}
 
 			if (GUILayout.Button ("test")) {
-				string path = craft_path ();
-				KerbalX.log (path);
+				//string path = craft_path ();
+				//KerbalX.log (path);
 				//EditorLogic.fetch.ship.SaveShip ().Save (path);
-				Debug.Log (EditorLogic.fetch.ship.SaveShip ());
+				//Debug.Log (EditorLogic.fetch.ship.SaveShip ());
+				//Debug.Log (part_info ().ToString ());
+				//var t = part_info ();
+				string s = JSONX.toJSON (part_info ());
+				Debug.Log ("json output:");
+				Debug.Log (s);
+
 
 
 			}
@@ -195,11 +199,54 @@ namespace KerbalX
 
 		}
 
+		//returns the craft file
+		private string craft_file(){
+			//return EditorLogic.fetch.ship.SaveShip ().ToString ();
+			return System.IO.File.ReadAllText(craft_path ());
+		}
+
+		//returns the path of the craft file
+		private string craft_path(){
+			string path = Paths.joined (KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, "Ships", current_editor, craft_name);
+			return path + ".craft";
+		}
+
+		private Dictionary<string, object> part_info(){
+			Dictionary<string, object> part_data = new Dictionary<string, object>();
+
+			var part_list = EditorLogic.fetch.ship.parts;
+
+			foreach(Part part in part_list){
+				if (!part_data.ContainsKey (part.partName)) {
+					Dictionary<string, object> part_detail = new Dictionary<string, object>();
+					part_detail.Add ("mod", part.partInfo.partUrl.Split ('/') [0]);
+					part_detail.Add ("something", 42);
+					part_data.Add (part.name, part_detail);
+				}
+				//GUILayout.Label (part.partInfo.partConfig.ToString ());
+			}
+			return part_data;
+
+		}
+
+		//returns a list of unique part names in the craft
+		private string[] craft_part_names(){
+			List<string> part_names_list = new List<string> ();
+			var part_list = EditorLogic.fetch.ship.parts;
+			foreach(Part part in part_list){
+				part_names_list.Add (part.name);
+			}
+			return part_names_list.Distinct ().ToArray ();
+		}
+
 		private void upload_craft(){
-			Array.Clear (upload_errors, 0, upload_errors.Length);
-			NameValueCollection data = new NameValueCollection ();
-			data.Add ("craft_file", craft_file());
+			Array.Clear (upload_errors, 0, upload_errors.Length);	//remove any previous upload errors
+
+			NameValueCollection data = new NameValueCollection ();	//contruct upload data
+			//data.Add ("craft_file", craft_file());
 			data.Add ("craft_name", craft_name);
+			data.Add ("part_data", JSONX.toJSON (part_info ()));
+
 			KerbalXAPI.post (KerbalX.url_to ("api/craft.json"), data, (resp, code) => {
 				if(code == 200){
 					var resp_data = JSON.Parse (resp);
@@ -220,28 +267,8 @@ namespace KerbalX
 				}
 			});
 		}
-
-		private string craft_file(){
-			//return EditorLogic.fetch.ship.SaveShip ().ToString ();
-			return System.IO.File.ReadAllText(craft_path ());
-		}
-
-		private string craft_path(){
-			string path = Paths.joined (KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, "Ships", current_editor, craft_name);
-			return path + ".craft";
-		}
-
 	}
 
-	public class Paths{
-		static public string joined(params string[] paths){
-			string path = paths [0];
-			for(int i=1; i<paths.Length; i++){
-				path = Path.Combine (path, paths[i]);
-			}
-			return path;
-		}
-	}
 
 	
 	[KSPAddon(KSPAddon.Startup.EditorVAB, false)]
