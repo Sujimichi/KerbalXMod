@@ -25,9 +25,9 @@ namespace KerbalX
 		//make request to site to authenticate token 
 		public static void authenticate_token(string new_token){
 			KerbalX.notify("Authenticating with KerbalX.com...");
-			NameValueCollection queries = new NameValueCollection ();
-			queries.Add ("token", new_token);
-			KerbalXAPI.post (KerbalX.url_to ("api/authenticate"), queries, (resp, code) => {
+			NameValueCollection data = new NameValueCollection ();
+			data.Add ("token", new_token);
+			KerbalXAPI.post (KerbalX.url_to ("api/authenticate"), data, (resp, code) => {
 				if(code==200){
 					token = new_token;
 					KerbalX.show_login = false;
@@ -42,14 +42,14 @@ namespace KerbalX
 		public static void login(string username, string password){
 			//make request to site to authenticate username and password and get token back
 			KerbalX.notify("loging into KerbalX.com...");
-			NameValueCollection queries = new NameValueCollection ();
-			queries.Add ("username", username);
-			queries.Add ("password", password);
-			KerbalXAPI.post (KerbalX.url_to ("api/login"), queries, (resp, code) => {
+			NameValueCollection data = new NameValueCollection ();
+			data.Add ("username", username);
+			data.Add ("password", password);
+			KerbalXAPI.post (KerbalX.url_to ("api/login"), data, (resp, code) => {
 				if(code==200){
-					var data = JSON.Parse (resp);
-					token = data["token"];
-					KerbalX.save_token (data["token"]);
+					var resp_data = JSON.Parse (resp);
+					token = resp_data["token"];
+					KerbalX.save_token (resp_data["token"]);
 					KerbalX.show_login = false;
 					KerbalX.notify("login succsessful! KerbalX.key saved in KSP root");
 				}else{
@@ -91,8 +91,8 @@ namespace KerbalX
 		//	KerbalXAPI.post ("http://some_website.com/path/to/stuff", query, (resp, code) => {
 		//		//actions to perform after request completes. code provides the status code int and resp provides the returned string
 		//	});	
-		public static void post(string url, NameValueCollection query, RequestCallback callback){
-			request ("POST", url, query, callback);
+		public static void post(string url, NameValueCollection data, RequestCallback callback){
+			request ("POST", url, data, callback);
 		}
 
 		// Performs HTTP GET and POST requests - takes a method ('GET' or 'POST'), a url, query args and a callback delegate

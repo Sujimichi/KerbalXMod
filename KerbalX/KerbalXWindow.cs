@@ -39,7 +39,7 @@ namespace KerbalX
  	*/
 	public class KerbalXWindow : MonoBehaviour
 	{
-		protected Rect window_pos = new Rect();
+		public Rect window_pos = new Rect();
 		protected string window_title = "untitled window";
 		protected int window_id = 0;
 		protected bool footer = true;
