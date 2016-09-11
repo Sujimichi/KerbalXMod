@@ -219,7 +219,6 @@ namespace KerbalX
 				if (!part_data.ContainsKey (part.partName)) {
 					Dictionary<string, object> part_detail = new Dictionary<string, object>();
 					part_detail.Add ("mod", part.partInfo.partUrl.Split ('/') [0]);
-					part_detail.Add ("moose", "maybe");
 					//part.partInfo.partConfig
 					part_data.Add (part.name, part_detail);
 				}
