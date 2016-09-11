@@ -183,11 +183,12 @@ namespace KerbalX
 				//KerbalX.log (path);
 				//EditorLogic.fetch.ship.SaveShip ().Save (path);
 				//Debug.Log (EditorLogic.fetch.ship.SaveShip ());
-				//Debug.Log (part_info ().ToString ());
-				//var t = part_info ();
+
 				string s = JSONX.toJSON (part_info ());
+				string s2 = JSONX.toJSON (part_info (), true);
 				Debug.Log ("json output:");
 				Debug.Log (s);
+				Debug.Log (s2);
 
 
 
@@ -213,20 +214,17 @@ namespace KerbalX
 
 		private Dictionary<string, object> part_info(){
 			Dictionary<string, object> part_data = new Dictionary<string, object>();
-
 			var part_list = EditorLogic.fetch.ship.parts;
-
 			foreach(Part part in part_list){
 				if (!part_data.ContainsKey (part.partName)) {
 					Dictionary<string, object> part_detail = new Dictionary<string, object>();
 					part_detail.Add ("mod", part.partInfo.partUrl.Split ('/') [0]);
-					part_detail.Add ("something", 42);
+					part_detail.Add ("moose", "maybe");
+					//part.partInfo.partConfig
 					part_data.Add (part.name, part_detail);
 				}
-				//GUILayout.Label (part.partInfo.partConfig.ToString ());
 			}
 			return part_data;
-
 		}
 
 		//returns a list of unique part names in the craft
