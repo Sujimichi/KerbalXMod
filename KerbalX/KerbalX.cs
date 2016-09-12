@@ -25,7 +25,9 @@ namespace KerbalX
 		public static bool show_login = false;
 		public static string site_url = "http://localhost:3000";
 
-		public static List<Dictionary<string, object>> existing_craft; //container for listing of users craft already on KX
+
+		public static Dictionary<int, Dictionary<string, object>> existing_craft; //container for listing of users craft already on KX
+		public static NameValueCollection existing_craft_by_name = new NameValueCollection();
 
 		//window handles
 		public static KerbalXConsole console = null;
@@ -146,7 +148,7 @@ namespace KerbalX
 		private string craft_name = null;
 		private string editor_craft_name = "";
 		private string[] upload_errors = new string[0];
-
+		private bool matching_name_found = false;
 
 		private string image = "";
 
@@ -179,13 +181,21 @@ namespace KerbalX
 				craft_name = GUILayout.TextField (craft_name, 255, GUILayout.Width ((float)win["width"] - 100f));
 			});
 
-
-			foreach(Dictionary<string, object> craft in KerbalX.existing_craft){
-				object value = craft ["name"];
-				//craft.TryGetValue ("name", out value);
-				GUILayout.Label ("" + value);
-				//GUILayout.Label ((string)craft["id"]);
+			if(GUI.changed){
+				matching_name_found = KerbalX.existing_craft_by_name.AllKeys.Contains (craft_name.Trim ().ToLower ());
 			}
+				
+			if(matching_name_found){
+				GUILayout.Label ("match found");
+			}
+
+//			Dictionary<int, Dictionary<string, object>> data = KerbalX.existing_craft;
+//			GUILayout.Label ("" + data.Count);
+//			foreach(int id in data.Keys){
+//				GUILayout.Label ("id" + id + " name: " + data [id] ["name"]);
+//			}
+
+
 
 
 			image = GUILayout.TextField (image, 255);

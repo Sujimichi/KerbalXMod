@@ -65,7 +65,11 @@ namespace KerbalX
 			NameValueCollection data = new NameValueCollection (){{"lookup", "existing_craft"}};
 			KerbalXAPI.get (KerbalX.url_to ("api/craft.json"), data, (resp, code) => {
 				JSONNode craft_data = JSON.Parse (resp);
-				List<Dictionary<string, object>> craft_list = new List<Dictionary<string, object>>();
+				//List<Dictionary<string, object>> craft_list = new List<Dictionary<string, object>>();
+
+				Dictionary<int, Dictionary<string, object>> craft_list = new Dictionary<int, Dictionary<string, object>>();
+				KerbalX.existing_craft_by_name.Clear ();
+
 				for(int i=0; i<craft_data.Count; i++ ){
 					var c = craft_data[i];
 					Dictionary<string,object> cd = new Dictionary<string,object>(){
@@ -73,8 +77,12 @@ namespace KerbalX
 						{"name", c["name"]},
 						{"version", c["version"]}
 					};
-					craft_list.Add (cd);
+					int id = int.Parse((string)c["id"]);
+					craft_list.Add (id, cd);
+					string name = (string)c["name"];
+					KerbalX.existing_craft_by_name.Add (name.Trim ().ToLower (), id.ToString ());
 				}
+
 				KerbalX.existing_craft = craft_list;
 			});
 		}
