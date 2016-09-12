@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace KerbalX
 {
@@ -49,23 +50,46 @@ namespace KerbalX
 
 
 		//Definition of delegate to be passed into the grid method 
-		protected delegate void Content(Rect win);
+		protected delegate void Content(Dictionary<string, object> e);
 
 		/* Essentially wraps the function of a delegate in calls to BeginHorizontal and EndHorizontal
-		Takes a width float and a delegate/statement lambda and passes the width float to the call to BeginHorizontal 
-		then calls the delegate and lastly calls EndHorizontal
+		Takes a width float or string and a delegate/statement lambda and wraps the actions defined by the lambda in Being/EndHorizontals
+		The value for width is passed to the BeginHorizontal and can either be given as a float or a string 
+		If a string is used for the width it treats the given value to be x% of the window width
+		The lambda is passed a Dictionary containing keys 'width' (the width float) and 'pos' (the Rect for the window)
 		Usage:
-			grid (width, window => {
+			grid (width, win => {
 				// Calls to draw GUI elements inside a BeginHorizontal group ie;
 				// GUILayout.Label ("some nonsense", GUILayout.Width (60f));
-				//window is passed in as the Rect for the window position/size
+				// you can use win["width"] and win["pos"] inside the block
 			});	
 		*/
-		protected void grid(float width, Content con)
+		protected void grid(object width_in, Content con)
 		{
-			GUILayout.BeginHorizontal(GUILayout.Width(width));
-			con(window_pos);
+			float width = 100f;
+			if(width_in is float){
+				width = (float)width_in;
+			}else if(width_in is String){
+				string width_s = (string)width_in;
+				//width = (window_pos.width / 100f) * float.Parse(width_s.Replace ("%",""));
+				float win_width = window_pos.width - (GUI.skin.window.padding.left + GUI.skin.window.padding.right);
+				width = pcent (width_s, win_width);
+				if(width > win_width){width = win_width;}
+			}
+			//Debug.Log (window_pos.width - width);
+			//Debug.Log ("left: " + GUI.skin.window.padding.left + " right: " + GUI.skin.window.padding.right);
+
+			Dictionary<string, object> window = new Dictionary<string, object> (){{"width", width}, {"pos", window_pos}};
+
+			GUILayout.BeginHorizontal(GUILayout.Width((float)width), GUILayout.MaxWidth ((float)width));
+			con(window);
 			GUILayout.EndHorizontal ();
+		}
+
+		protected float pcent(string percent, object width_in){
+			float p = float.Parse (percent.Replace ("%", ""));
+			float w = (float)width_in;
+			return (float)Math.Floor ((w / 100) * p);
 		}
 
 		//called on each frame, handles drawing the window and will assign the next window id if it's not set

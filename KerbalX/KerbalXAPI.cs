@@ -61,6 +61,24 @@ namespace KerbalX
 			});
 		}
 
+		public static void fetch_existing_craft(){
+			NameValueCollection data = new NameValueCollection (){{"lookup", "existing_craft"}};
+			KerbalXAPI.get (KerbalX.url_to ("api/craft.json"), data, (resp, code) => {
+				JSONNode craft_data = JSON.Parse (resp);
+				List<Dictionary<string, object>> craft_list = new List<Dictionary<string, object>>();
+				for(int i=0; i<craft_data.Count; i++ ){
+					var c = craft_data[i];
+					Dictionary<string,object> cd = new Dictionary<string,object>(){
+						{"id", c["id"]},
+						{"name", c["name"]},
+						{"version", c["version"]}
+					};
+					craft_list.Add (cd);
+				}
+				KerbalX.existing_craft = craft_list;
+			});
+		}
+
 		//define delegate to be used to pass lambda statement as a callback to get, post and request methods.
 		public delegate void RequestCallback(string data, int status_code);
 

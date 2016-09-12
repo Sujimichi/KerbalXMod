@@ -25,6 +25,8 @@ namespace KerbalX
 		public static bool show_login = false;
 		public static string site_url = "http://localhost:3000";
 
+		public static List<Dictionary<string, object>> existing_craft; //container for listing of users craft already on KX
+
 		//window handles
 		public static KerbalXConsole console = null;
 		public static KerbalXEditorWindow editor_gui = null;
@@ -99,12 +101,12 @@ namespace KerbalX
 		{
 			if(KerbalX.show_login == true){					
 				GUI.enabled = enable_login;
-				grid (310f, window => {
+				grid (310f, e => {
 					GUILayout.Label ("username", GUILayout.Width (60f));
 					username = GUILayout.TextField (username, 255, GUILayout.Width (250f));
 				});
 
-				grid (310f, window => {
+				grid (310f, e => {
 					GUILayout.Label ("password", GUILayout.Width(60f));
 					password = GUILayout.PasswordField (password, '*', 255, GUILayout.Width(250f));
 				});
@@ -142,7 +144,11 @@ namespace KerbalX
 	{
 		public string current_editor = null;
 		private string craft_name = null;
+		private string editor_craft_name = "";
 		private string[] upload_errors = new string[0];
+
+
+		private string image = "";
 
 		GUIStyle alert_style = new GUIStyle();
 
@@ -152,15 +158,37 @@ namespace KerbalX
 			window_pos = new Rect(250, 400, 310, 5);
 			alert_style.normal.textColor = Color.red;
 			KerbalX.editor_gui = this;
+			KerbalXAPI.fetch_existing_craft ();
 		}
 
 		protected override void WindowContent(int win_id)
 		{
-			craft_name = EditorLogic.fetch.shipNameField.text;
-			GUILayout.Label (craft_name);
 			GUILayout.Label ("Yo fat ass is in the " + current_editor);
 
+			//get the craft name from the editor field, but allow the user to set a alternative name to upload as without changing the editor field
+			//but if the user changes the editor field then reset the craft_name to that. make sense? good, shutup. 
+			if(editor_craft_name != EditorLogic.fetch.shipNameField.text){
+				craft_name = EditorLogic.fetch.shipNameField.text;
+			}
+			editor_craft_name = EditorLogic.fetch.shipNameField.text;
 
+			//GUILayout.Label (craft_name);
+
+			grid ("100%", win => {
+				GUILayout.Label ("craft name", GUILayout.Width (60f));
+				craft_name = GUILayout.TextField (craft_name, 255, GUILayout.Width ((float)win["width"] - 100f));
+			});
+
+
+			foreach(Dictionary<string, object> craft in KerbalX.existing_craft){
+				object value = craft ["name"];
+				//craft.TryGetValue ("name", out value);
+				GUILayout.Label ("" + value);
+				//GUILayout.Label ((string)craft["id"]);
+			}
+
+
+			image = GUILayout.TextField (image, 255);
 
 			if (upload_errors.Length > 0) {
 				GUILayout.Label ("errors and shit");
@@ -168,11 +196,10 @@ namespace KerbalX
 					GUILayout.Label (error, alert_style, GUILayout.Width (310f));
 				}
 			}
-
 			var part_list = EditorLogic.fetch.ship.parts;
 			foreach(Part part in part_list){
-				//GUILayout.Label (part.name);
-				//GUILayout.Label (part.partName);
+//				GUILayout.Label (part.name);
+//				GUILayout.Label (part.partName);
 
 				//GUILayout.Label (part.partInfo.partUrl.Split('/')[0]);
 				//GUILayout.Label (part.partInfo.partConfig.ToString ());
@@ -183,12 +210,13 @@ namespace KerbalX
 				//KerbalX.log (path);
 				//EditorLogic.fetch.ship.SaveShip ().Save (path);
 				//Debug.Log (EditorLogic.fetch.ship.SaveShip ());
-
+				window_pos = new Rect(250, 400, 600, 5);
+				//part_info ();
 				string s = JSONX.toJSON (part_info ());
-				string s2 = JSONX.toJSON (part_info (), true);
-				Debug.Log ("json output:");
+//				string s2 = JSONX.toJSON (part_info (), true);
+//				Debug.Log ("json output:");
 				Debug.Log (s);
-				Debug.Log (s2);
+//				Debug.Log (s2);
 
 
 
@@ -216,7 +244,7 @@ namespace KerbalX
 			Dictionary<string, object> part_data = new Dictionary<string, object>();
 			var part_list = EditorLogic.fetch.ship.parts;
 			foreach(Part part in part_list){
-				if (!part_data.ContainsKey (part.partName)) {
+				if (!part_data.ContainsKey (part.name)) {
 					Dictionary<string, object> part_detail = new Dictionary<string, object>();
 					part_detail.Add ("mod", part.partInfo.partUrl.Split ('/') [0]);
 					//part.partInfo.partConfig
@@ -311,8 +339,8 @@ namespace KerbalX
 
 		protected override void WindowContent(int win_id)
 		{
-			grid (300f, window => { GUILayout.Label (KerbalX.last_log ());	});
-			grid (300f, window => { GUILayout.Label (KerbalXAPI.token); 	});
+			grid (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
+			grid (300f, e => { GUILayout.Label (KerbalXAPI.token); 	});
 
 			if (GUILayout.Button ("print log to console")) { KerbalX.show_log (); }
 
