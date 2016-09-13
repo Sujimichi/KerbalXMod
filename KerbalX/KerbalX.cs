@@ -143,6 +143,13 @@ namespace KerbalX
 	}
 
 
+	public struct DropdownData{
+		public int id;
+		public string value;
+		public bool show_select;
+		public Vector2 scroll_pos;
+	}
+	
 	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
 	public class KerbalXEditorWindow : KerbalXWindow
 	{
@@ -153,14 +160,14 @@ namespace KerbalX
 
 		//private string image = "";
 
-		private string cs_selected;
-		private int cs_selected_id;
-		private bool cs_show_select = false;
-		private Vector2 cs_scroll_pos;
+		private DropdownData craft_select;
 
 		private Dictionary<int, string> remote_craft = new Dictionary<int, string> (); //will contain a mapping of KX database ID to craft name
 		List<int> matching_craft_ids = new List<int> ();	//will contain any matching craft names
 
+		private Dictionary<int, string> craft_styles = new Dictionary<int, string> (){
+			{0, "Ship"}, {1, "Aircraft"}, {2, "spaceplane"}, {3, "lander"}, {4, "satellite"}, {5, "station"}, {6, "base"}, {7, "probe"}, {8, "rover"}, {9, "lifter"}
+		};
 
 		GUIStyle alert_style = new GUIStyle();
 
@@ -203,28 +210,19 @@ namespace KerbalX
 					}
 				}
 				if(matching_craft_ids.Count == 1){
-					cs_selected_id = matching_craft_ids.First ();
+					craft_select.id = matching_craft_ids.First ();
 				}
 
 			}
-
-
-				
+										
 			if(matching_craft_ids.Count > 0){
 				GUILayout.Label ("match found");
 			}
 
-
-
-			dropdown (310f, 100f, remote_craft, cs_selected_id, cs_show_select, cs_scroll_pos, (ss, sp, sid, s) => {
-				cs_show_select = ss;
-				cs_scroll_pos = sp;
-				cs_selected_id = sid;
-				cs_selected = s;			
-			});
+			craft_select = dropdown (remote_craft, craft_select, 310f, 100f);
 
 			
-			GUILayout.Label ("id:" + cs_selected_id + ", name:" + cs_selected);
+			GUILayout.Label ("id:" + craft_select.id + ", name:" + craft_select.value);
 
 
 

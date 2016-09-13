@@ -51,10 +51,6 @@ namespace KerbalX
 
 		//Definition of delegate to be passed into the section method 
 		protected delegate void Content(float width);
-		protected delegate void DropDownResponder(bool show_select, Vector2 scroll_pos, int selected_id, string selected);
-
-	
-
 
 		/* Essentially wraps the function of a delegate in calls to BeginHorizontal and EndHorizontal
 		Takes a width float or string and a delegate/statement lambda and wraps the actions defined by the lambda in Being/EndHorizontals
@@ -88,7 +84,7 @@ namespace KerbalX
 			return scroll_pos;
 		}
 
-		protected void dropdown(float outer_width, float height, Dictionary<int, string> collection, int selected_id, bool show_select, Vector2 scroll_pos, DropDownResponder callback){
+		protected DropdownData dropdown(Dictionary<int, string> collection, DropdownData drop_data, float outer_width, float height){
 			GUIStyle dropdown_field = new GUIStyle (GUI.skin.textField);
 			GUIStyle dropdown_menu_item = new GUIStyle (GUI.skin.label);
 			//dropdown_menu_item.normal.textColor = Color.magenta;
@@ -97,25 +93,25 @@ namespace KerbalX
 			dropdown_menu_item.padding = new RectOffset (0, 0, 0, 0);
 
 			string selected;
-			collection.TryGetValue (selected_id, out selected);
+			collection.TryGetValue (drop_data.id, out selected);
 
 			v_section (outer_width, (width) => {
 				section (width, w => {
 					if (GUILayout.Button (selected, dropdown_field, GUILayout.Width (width - 20) )) {
-						show_select = !show_select;	
+						drop_data.show_select = !drop_data.show_select;	
 					}
 					if (GUILayout.Button ("\\/", GUILayout.Width (20f) )) {
-						show_select = !show_select;
+						drop_data.show_select = !drop_data.show_select;	
 					}
 				});
 				section (width, w => {
-					if(show_select){
-						scroll_pos = scroll (scroll_pos, w, height, (w2) => {
+					if(drop_data.show_select){
+						drop_data.scroll_pos = scroll (drop_data.scroll_pos, w, height, (w2) => {
 							foreach(KeyValuePair<int, string> item in collection){
 								if(GUILayout.Button (item.Value, dropdown_menu_item, GUILayout.Width (w2-25))){
-									selected = item.Value;
-									selected_id = item.Key;
-									show_select = false;
+									drop_data.value = item.Value;
+									drop_data.id = item.Key;
+									drop_data.show_select = false;
 								}
 							}
 						});
@@ -123,8 +119,7 @@ namespace KerbalX
 					}
 				});
 			});
-			callback (show_select, scroll_pos, selected_id, selected);
-
+			return drop_data;
 		}
 
 		protected float pcent(string percent, object width_in){
