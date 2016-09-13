@@ -12,6 +12,8 @@ using System.Threading;
 using SimpleJSON;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
+
 
 
 namespace KerbalX
@@ -26,10 +28,9 @@ namespace KerbalX
 		public static string site_url = "http://localhost:3000";
 
 
-		public static Dictionary<int, Dictionary<string, object>> existing_craft; //container for listing of users craft already on KX
-		public static NameValueCollection existing_craft_by_name = new NameValueCollection();
+		public static Dictionary<int, Dictionary<string, string>> existing_craft; //container for listing of user's craft already on KX and some details about them.
 
-		//window handles
+		//window handles (cos a window without a handle is just a pane)
 		public static KerbalXConsole console = null;
 		public static KerbalXEditorWindow editor_gui = null;
 
@@ -103,12 +104,12 @@ namespace KerbalX
 		{
 			if(KerbalX.show_login == true){					
 				GUI.enabled = enable_login;
-				grid (310f, e => {
+				section (310f, e => {
 					GUILayout.Label ("username", GUILayout.Width (60f));
 					username = GUILayout.TextField (username, 255, GUILayout.Width (250f));
 				});
 
-				grid (310f, e => {
+				section (310f, e => {
 					GUILayout.Label ("password", GUILayout.Width(60f));
 					password = GUILayout.PasswordField (password, '*', 255, GUILayout.Width(250f));
 				});
@@ -117,11 +118,11 @@ namespace KerbalX
 
 			if (KerbalX.notice != "") {
 				GUILayout.Label (KerbalX.notice, GUILayout.Width (310f));
-			};
+			}
 
 			if (KerbalX.alert != "") {	
 				GUILayout.Label (KerbalX.alert, alert_style, GUILayout.Width (310f) );
-			};
+			}
 
 			GUI.enabled = enable_login;
 			if (KerbalX.show_login == true) {
@@ -141,6 +142,7 @@ namespace KerbalX
 		}
 	}
 
+
 	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
 	public class KerbalXEditorWindow : KerbalXWindow
 	{
@@ -148,9 +150,17 @@ namespace KerbalX
 		private string craft_name = null;
 		private string editor_craft_name = "";
 		private string[] upload_errors = new string[0];
-		private bool matching_name_found = false;
 
-		private string image = "";
+		//private string image = "";
+
+		private string cs_selected;
+		private int cs_selected_id;
+		private bool cs_show_select = false;
+		private Vector2 cs_scroll_pos;
+
+		private Dictionary<int, string> remote_craft = new Dictionary<int, string> (); //will contain a mapping of KX database ID to craft name
+		List<int> matching_craft_ids = new List<int> ();	//will contain any matching craft names
+
 
 		GUIStyle alert_style = new GUIStyle();
 
@@ -160,13 +170,17 @@ namespace KerbalX
 			window_pos = new Rect(250, 400, 310, 5);
 			alert_style.normal.textColor = Color.red;
 			KerbalX.editor_gui = this;
-			KerbalXAPI.fetch_existing_craft ();
+			KerbalXAPI.fetch_existing_craft (() => {
+				remote_craft.Clear ();
+				foreach(KeyValuePair<int, Dictionary<string, string>> craft in KerbalX.existing_craft){
+					remote_craft.Add (craft.Key, craft.Value["name"]);
+				}
+			});
 		}
 
 		protected override void WindowContent(int win_id)
 		{
 			GUILayout.Label ("Yo fat ass is in the " + current_editor);
-
 			//get the craft name from the editor field, but allow the user to set a alternative name to upload as without changing the editor field
 			//but if the user changes the editor field then reset the craft_name to that. make sense? good, shutup. 
 			if(editor_craft_name != EditorLogic.fetch.shipNameField.text){
@@ -174,63 +188,59 @@ namespace KerbalX
 			}
 			editor_craft_name = EditorLogic.fetch.shipNameField.text;
 
-			//GUILayout.Label (craft_name);
-
-			grid ("100%", win => {
+			section (310f , width => {
 				GUILayout.Label ("craft name", GUILayout.Width (60f));
-				craft_name = GUILayout.TextField (craft_name, 255, GUILayout.Width ((float)win["width"] - 100f));
+				craft_name = GUILayout.TextField (craft_name, 255, GUILayout.Width (width - 60));
 			});
 
 			if(GUI.changed){
-				matching_name_found = KerbalX.existing_craft_by_name.AllKeys.Contains (craft_name.Trim ().ToLower ());
+				string lower_name = craft_name.Trim ().ToLower ();
+				matching_craft_ids.Clear ();
+				foreach(KeyValuePair<int, string> craft in remote_craft){
+					string rc_lower = craft.Value.Trim ().ToLower ();
+					if( lower_name == rc_lower || lower_name == rc_lower.Replace ("-", " ")){
+						matching_craft_ids.Add (craft.Key);
+					}
+				}
+				if(matching_craft_ids.Count == 1){
+					cs_selected_id = matching_craft_ids.First ();
+				}
+
 			}
+
+
 				
-			if(matching_name_found){
+			if(matching_craft_ids.Count > 0){
 				GUILayout.Label ("match found");
 			}
 
-//			Dictionary<int, Dictionary<string, object>> data = KerbalX.existing_craft;
-//			GUILayout.Label ("" + data.Count);
-//			foreach(int id in data.Keys){
-//				GUILayout.Label ("id" + id + " name: " + data [id] ["name"]);
-//			}
+
+
+			dropdown (310f, 100f, remote_craft, cs_selected_id, cs_show_select, cs_scroll_pos, (ss, sp, sid, s) => {
+				cs_show_select = ss;
+				cs_scroll_pos = sp;
+				cs_selected_id = sid;
+				cs_selected = s;			
+			});
+
+			
+			GUILayout.Label ("id:" + cs_selected_id + ", name:" + cs_selected);
 
 
 
 
-			image = GUILayout.TextField (image, 255);
+			//string image = GUILayout.TextField (image, 255);
 
+			if (KerbalX.alert != "") {	
+				GUILayout.Label (KerbalX.alert, alert_style, GUILayout.Width (310f) );
+			}
 			if (upload_errors.Length > 0) {
 				GUILayout.Label ("errors and shit");
 				foreach (string error in upload_errors) {
 					GUILayout.Label (error, alert_style, GUILayout.Width (310f));
 				}
 			}
-			var part_list = EditorLogic.fetch.ship.parts;
-			foreach(Part part in part_list){
-//				GUILayout.Label (part.name);
-//				GUILayout.Label (part.partName);
 
-				//GUILayout.Label (part.partInfo.partUrl.Split('/')[0]);
-				//GUILayout.Label (part.partInfo.partConfig.ToString ());
-			}
-
-			if (GUILayout.Button ("test")) {
-				//string path = craft_path ();
-				//KerbalX.log (path);
-				//EditorLogic.fetch.ship.SaveShip ().Save (path);
-				//Debug.Log (EditorLogic.fetch.ship.SaveShip ());
-				window_pos = new Rect(250, 400, 600, 5);
-				//part_info ();
-				string s = JSONX.toJSON (part_info ());
-//				string s2 = JSONX.toJSON (part_info (), true);
-//				Debug.Log ("json output:");
-				Debug.Log (s);
-//				Debug.Log (s2);
-
-
-
-			}
 
 			if (GUILayout.Button ("upload")) {
 				upload_craft ();
@@ -250,6 +260,8 @@ namespace KerbalX
 			return path + ".craft";
 		}
 
+		//returns a unique set of the craft's parts and data about each part;
+		//{"partname1" => {"mod" => "mod_name"}, "partname2" => {"mod" => "mod_name"}, ....} #yeah, explained in Ruby hash notation, cos...it's terse. 
 		private Dictionary<string, object> part_info(){
 			Dictionary<string, object> part_data = new Dictionary<string, object>();
 			var part_list = EditorLogic.fetch.ship.parts;
@@ -306,24 +318,11 @@ namespace KerbalX
 
 
 	
-	[KSPAddon(KSPAddon.Startup.EditorVAB, false)]
-	public class WhoEditVAB : WhoEdit
-	{ 
-		private void Start()
-		{ 
-			editor = "VAB";
-		} 
-	}
 
-//	[KSPAddon(KSPAddon.Startup.EditorSPH, false)]
-//	public class WhoEditSPH : WhoEdit
-//	{ 
-//		private void Start(){ 
-//			editor = "SPH";
-//		}
-//	}
 
-	public class WhoEdit : MonoBehaviour
+
+	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
+	public class EditorActions : MonoBehaviour
 	{
 		private bool set_state = true;
 		public string editor = null;
@@ -332,8 +331,7 @@ namespace KerbalX
 			if(set_state){
 				set_state = false;
 				KerbalX.console.window_pos = new Rect(250, 10, 310, 5);
-				KerbalX.log ("WhoEdit says: " + editor	);
-				KerbalX.editor_gui.current_editor = editor;
+				KerbalX.editor_gui.current_editor = EditorLogic.fetch.ship.shipFacility.ToString ();
 			}
 		}
 	}
@@ -349,8 +347,8 @@ namespace KerbalX
 
 		protected override void WindowContent(int win_id)
 		{
-			grid (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
-			grid (300f, e => { GUILayout.Label (KerbalXAPI.token); 	});
+			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
+			section (300f, e => { GUILayout.Label (KerbalXAPI.token); 	});
 
 			if (GUILayout.Button ("print log to console")) { KerbalX.show_log (); }
 
@@ -378,6 +376,11 @@ namespace KerbalX
 						KerbalX.log (resp);
 					}
 				});
+			}
+
+			if (GUILayout.Button ("test method")) {
+				Debug.Log ("Editor:" + EditorLogic.fetch.ship.shipFacility.ToString ());
+
 			}
 		}
 	}

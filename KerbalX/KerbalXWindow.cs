@@ -49,8 +49,12 @@ namespace KerbalX
 
 
 
-		//Definition of delegate to be passed into the grid method 
-		protected delegate void Content(Dictionary<string, object> e);
+		//Definition of delegate to be passed into the section method 
+		protected delegate void Content(float width);
+		protected delegate void DropDownResponder(bool show_select, Vector2 scroll_pos, int selected_id, string selected);
+
+	
+
 
 		/* Essentially wraps the function of a delegate in calls to BeginHorizontal and EndHorizontal
 		Takes a width float or string and a delegate/statement lambda and wraps the actions defined by the lambda in Being/EndHorizontals
@@ -64,26 +68,63 @@ namespace KerbalX
 				// you can use win["width"] and win["pos"] inside the block
 			});	
 		*/
-		protected void grid(object width_in, Content con)
+		protected void section(float width, Content content)
 		{
-			float width = 100f;
-			if(width_in is float){
-				width = (float)width_in;
-			}else if(width_in is String){
-				string width_s = (string)width_in;
-				//width = (window_pos.width / 100f) * float.Parse(width_s.Replace ("%",""));
-				float win_width = window_pos.width - (GUI.skin.window.padding.left + GUI.skin.window.padding.right);
-				width = pcent (width_s, win_width);
-				if(width > win_width){width = win_width;}
-			}
-			//Debug.Log (window_pos.width - width);
-			//Debug.Log ("left: " + GUI.skin.window.padding.left + " right: " + GUI.skin.window.padding.right);
-
-			Dictionary<string, object> window = new Dictionary<string, object> (){{"width", width}, {"pos", window_pos}};
-
-			GUILayout.BeginHorizontal(GUILayout.Width((float)width), GUILayout.MaxWidth ((float)width));
-			con(window);
+			GUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.MaxWidth (width));
+			content((float)width);
 			GUILayout.EndHorizontal ();
+		}
+
+		protected void v_section(float width, Content content){
+			GUILayout.BeginVertical (GUILayout.Width(width), GUILayout.MaxWidth (width));
+			content (width);
+			GUILayout.EndVertical ();
+		}
+
+		protected Vector2 scroll(Vector2 scroll_pos, float width, float height, Content content){
+			scroll_pos = GUILayout.BeginScrollView(scroll_pos, GUILayout.Width(width), GUILayout.Height(height));
+			content (width);
+			GUILayout.EndScrollView();
+			return scroll_pos;
+		}
+
+		protected void dropdown(float outer_width, float height, Dictionary<int, string> collection, int selected_id, bool show_select, Vector2 scroll_pos, DropDownResponder callback){
+			GUIStyle dropdown_field = new GUIStyle (GUI.skin.textField);
+			GUIStyle dropdown_menu_item = new GUIStyle (GUI.skin.label);
+			//dropdown_menu_item.normal.textColor = Color.magenta;
+			dropdown_menu_item.onHover.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
+			dropdown_menu_item.hover.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
+			dropdown_menu_item.padding = new RectOffset (0, 0, 0, 0);
+
+			string selected;
+			collection.TryGetValue (selected_id, out selected);
+
+			v_section (outer_width, (width) => {
+				section (width, w => {
+					if (GUILayout.Button (selected, dropdown_field, GUILayout.Width (width - 20) )) {
+						show_select = !show_select;	
+					}
+					if (GUILayout.Button ("\\/", GUILayout.Width (20f) )) {
+						show_select = !show_select;
+					}
+				});
+				section (width, w => {
+					if(show_select){
+						scroll_pos = scroll (scroll_pos, w, height, (w2) => {
+							foreach(KeyValuePair<int, string> item in collection){
+								if(GUILayout.Button (item.Value, dropdown_menu_item, GUILayout.Width (w2-25))){
+									selected = item.Value;
+									selected_id = item.Key;
+									show_select = false;
+								}
+							}
+						});
+
+					}
+				});
+			});
+			callback (show_select, scroll_pos, selected_id, selected);
+
 		}
 
 		protected float pcent(string percent, object width_in){
@@ -105,10 +146,8 @@ namespace KerbalX
 		//Callback methods which is passed to GUILayout.Window in OnGUI.  Calls WindowContent and performs common window actions
 		private void DrawWindow(int window_id)
 		{
-			
-			var link_label_style = new GUIStyle (GUI.skin.label);
-			link_label_style.normal.textColor = new Color (0.4f,0.5f,0.9f,1);
-							
+			GUIStyle link_label_style = new GUIStyle (GUI.skin.label);
+			link_label_style.normal.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
 
 			//GUI.BringWindowToFront(window_id);
 			WindowContent (window_id);			//Draw the main content of the window as defined by WindowContent
