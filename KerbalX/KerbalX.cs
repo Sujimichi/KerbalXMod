@@ -143,13 +143,7 @@ namespace KerbalX
 	}
 
 
-	public struct DropdownData{
-		public int id;
-		public string value;
-		public bool show_select;
-		public Vector2 scroll_pos;
-	}
-	
+
 	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
 	public class KerbalXEditorWindow : KerbalXWindow
 	{
@@ -161,6 +155,8 @@ namespace KerbalX
 		//private string image = "";
 
 		private DropdownData craft_select;
+		private DropdownData style_select;
+
 
 		private Dictionary<int, string> remote_craft = new Dictionary<int, string> (); //will contain a mapping of KX database ID to craft name
 		List<int> matching_craft_ids = new List<int> ();	//will contain any matching craft names
@@ -221,6 +217,7 @@ namespace KerbalX
 
 			craft_select = dropdown (remote_craft, craft_select, 310f, 100f);
 
+			style_select = dropdown (craft_styles, style_select, 100f, 80f);
 			
 			GUILayout.Label ("id:" + craft_select.id + ", name:" + craft_select.value);
 

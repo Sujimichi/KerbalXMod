@@ -4,6 +4,14 @@ using System.Collections.Generic;
 
 namespace KerbalX
 {
+
+	public struct DropdownData{
+		public int id;
+		public string value;
+		public bool show_select;
+		public Vector2 scroll_pos;
+	}
+
 	/* KerbalXWindow is a base class to be inherited by classes which draw GUI windows
 	It provides common setup required to draw a GUI window, enabling DRY and minimal window classes.
 	A class which inherits KerbalXWindow needs to override the WindowContent method to define the content of the window
@@ -84,7 +92,7 @@ namespace KerbalX
 			return scroll_pos;
 		}
 
-		protected DropdownData dropdown(Dictionary<int, string> collection, DropdownData drop_data, float outer_width, float height){
+		protected DropdownData dropdown(Dictionary<int, string> collection, DropdownData drop_data, float outer_width, float menu_height){
 			GUIStyle dropdown_field = new GUIStyle (GUI.skin.textField);
 			GUIStyle dropdown_menu_item = new GUIStyle (GUI.skin.label);
 			//dropdown_menu_item.normal.textColor = Color.magenta;
@@ -106,7 +114,7 @@ namespace KerbalX
 				});
 				section (width, w => {
 					if(drop_data.show_select){
-						drop_data.scroll_pos = scroll (drop_data.scroll_pos, w, height, (w2) => {
+						drop_data.scroll_pos = scroll (drop_data.scroll_pos, w, menu_height, (w2) => {
 							foreach(KeyValuePair<int, string> item in collection){
 								if(GUILayout.Button (item.Value, dropdown_menu_item, GUILayout.Width (w2-25))){
 									drop_data.value = item.Value;
@@ -115,7 +123,6 @@ namespace KerbalX
 								}
 							}
 						});
-
 					}
 				});
 			});
