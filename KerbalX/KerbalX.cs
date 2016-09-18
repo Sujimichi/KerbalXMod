@@ -177,6 +177,7 @@ namespace KerbalX
 		{
 			window_title = "KerbalX::EditorInterface";
 			window_pos = new Rect(250, 400, win_width, 5);
+			prevent_editor_click_through = true;
 
 			KerbalX.editor_gui = this;
 			KerbalXAPI.fetch_existing_craft (() => {
@@ -192,12 +193,12 @@ namespace KerbalX
 			alert_style.normal.textColor = Color.red;
 			large_button = new GUIStyle (GUI.skin.button);
 			large_button.fontSize = 20;
-//			large_button.padding.Add (new Rect(3,3,10,10));
 			large_button.padding = new RectOffset (3, 3, 10, 10);
 		}
 
 		protected override void WindowContent(int win_id)
 		{
+
 
 			if (first_pass) {
 				first_pass = false;
@@ -220,7 +221,6 @@ namespace KerbalX
 			if(GUI.changed){
 				check_for_matching_craft_name ();
 			}
-										
 
 			if(mode == "upload"){
 				style_select = dropdown (craft_styles, style_select, 100f, 80f);
@@ -281,10 +281,14 @@ namespace KerbalX
 				//EditorLogic.fetch.newBtn.onClick.Invoke ();
 				//HighLogic.fetch.showConsole = true;
 				//EditorLogic.fetch.saveBtn.onClick.Invoke ();
-				DebugToolbar.toolbarShown = true;
-				Debug.Log(large_button.padding.ToString ());
+				//DebugToolbar.toolbarShown = true;
+				Debug.Log (DebugToolbar.toolbarShown.ToString ());
+				KerbalX.log ("win height: " + window_pos.height);
+
+
 
 			}
+
 		}
 
 		//check if craft_name matches any of the user's existing craft.  Sets matching_craft_ids to contain KX database ids of any matching craft

@@ -52,15 +52,15 @@ namespace KerbalX
 	{
 		public Rect window_pos = new Rect();
 		protected string window_title = "untitled window";
-		protected int window_id = 0;
 		protected bool footer = true;
 		protected bool draggable = true;
+		protected bool prevent_editor_click_through = false;
+		protected int window_id = 0;
 		static int last_window_id = 0;
-
-
 
 		//Definition of delegate to be passed into the section method 
 		protected delegate void Content(float width);
+
 
 		/* Essentially wraps the function of a delegate in calls to BeginHorizontal and EndHorizontal
 		Takes a width float or string and a delegate/statement lambda and wraps the actions defined by the lambda in Being/EndHorizontals
@@ -136,6 +136,18 @@ namespace KerbalX
 			return (float)Math.Floor ((w / 100) * p);
 		}
 
+		protected void prevent_click_through(string mode){
+			if(mode == "editor"){
+				Vector2 mouse_pos = Input.mousePosition;
+				mouse_pos.y = Screen.height - mouse_pos.y;
+				if(window_pos.Contains (mouse_pos)){
+					EditorLogic.fetch.Lock (true, true, true, window_id.ToString ());
+				}else{
+					EditorLogic.fetch.Unlock (window_id.ToString ());				
+				}
+			}
+		}
+
 		//called on each frame, handles drawing the window and will assign the next window id if it's not set
 		protected void OnGUI()
 		{
@@ -143,23 +155,30 @@ namespace KerbalX
 				window_id = last_window_id + 1;
 				last_window_id = last_window_id + 1;
 			}
-			window_pos = GUILayout.Window (window_id, window_pos, DrawWindow, window_title,  GUILayout.Width( window_pos.width ), GUILayout.ExpandHeight (true));
+			window_pos = GUILayout.Window (window_id, window_pos, DrawWindow, window_title, GUILayout.Width( window_pos.width ), GUILayout.ExpandHeight (true));
 		}
 
 		//Callback methods which is passed to GUILayout.Window in OnGUI.  Calls WindowContent and performs common window actions
 		private void DrawWindow(int window_id)
 		{
-			GUIStyle link_label_style = new GUIStyle (GUI.skin.label);
-			link_label_style.normal.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
+			if(prevent_editor_click_through){
+				prevent_click_through ("editor");
+			}
 
-			//GUI.BringWindowToFront(window_id);
-			WindowContent (window_id);			//Draw the main content of the window as defined by WindowContent
+			//Draw the main content of the window as defined by WindowContent
+			WindowContent (window_id);			
+
+			//add common footer elements for all windows
 			if(footer){
+				GUIStyle link_label_style = new GUIStyle (GUI.skin.label);
+				link_label_style.normal.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
+				
 				if(GUILayout.Button ("KerbalX.com", link_label_style)){
 					Application.OpenURL (KerbalX.site_url);
 				}
 				GUILayout.Label ("window id: " + window_id);
 			}
+
 			if(draggable){
 				GUI.DragWindow();
 			}
