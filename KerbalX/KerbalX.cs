@@ -143,7 +143,6 @@ namespace KerbalX
 	}
 
 
-
 	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
 	public class KerbalXEditorWindow : KerbalXWindow
 	{
@@ -153,7 +152,7 @@ namespace KerbalX
 
 		private string[] upload_errors = new string[0];
 		private string mode = "upload";
-		private float win_width = 310f;
+		private float win_width = 400f;
 
 		private bool first_pass = true;
 		//private string image = "";
@@ -162,23 +161,25 @@ namespace KerbalX
 		private DropdownData style_select;
 
 
-		private Dictionary<int, string> remote_craft = new Dictionary<int, string> (); //will contain a mapping of KX database ID to craft name
+		private Dictionary<int, string> remote_craft = new Dictionary<int, string> (); //will contain a mapping of KX database-ID to craft name
 		List<int> matching_craft_ids = new List<int> ();	//will contain any matching craft names
 
 		private Dictionary<int, string> craft_styles = new Dictionary<int, string> (){
 			{0, "Ship"}, {1, "Aircraft"}, {2, "Spaceplane"}, {3, "Lander"}, {4, "Satellite"}, {5, "Station"}, {6, "Base"}, {7, "Probe"}, {8, "Rover"}, {9, "Lifter"}
 		};
 
-		GUIStyle alert_style = new GUIStyle();
-		public GUIStyle large_button = new GUIStyle();
+		GUIStyle alert_style 	= new GUIStyle();
+		GUIStyle upload_button  = new GUIStyle();
+		GUIStyle wrapped_button = new GUIStyle();
+		GUIStyle centered 		= new GUIStyle();
+		GUIStyle header_label	= new GUIStyle();
 
 
 		private void Start()
 		{
-			window_title = "KerbalX::EditorInterface";
+			window_title = "KerbalX::Upload";
 			window_pos = new Rect(250, 400, win_width, 5);
 			prevent_editor_click_through = true;
-
 			KerbalX.editor_gui = this;
 			KerbalXAPI.fetch_existing_craft (() => {
 				remote_craft.Clear ();
@@ -187,19 +188,29 @@ namespace KerbalX
 					remote_craft.Add (craft.Key, craft.Value["name"]);
 				}
 			});
+
 		}
 
 		private void set_stylz(){
 			alert_style.normal.textColor = Color.red;
-			large_button = new GUIStyle (GUI.skin.button);
-			large_button.fontSize = 20;
-			large_button.padding = new RectOffset (3, 3, 10, 10);
+			upload_button = new GUIStyle (GUI.skin.button);
+			upload_button.fontSize = 20;
+			upload_button.padding = new RectOffset (3, 3, 10, 10);
+
+			wrapped_button = new GUIStyle (GUI.skin.button);
+			wrapped_button.wordWrap = true;
+
+			centered = new GUIStyle (GUI.skin.label);
+			centered.alignment = TextAnchor.UpperCenter;
+
+			header_label = new GUIStyle (GUI.skin.label);
+			header_label.fontSize = 15;
+			header_label.fontStyle = FontStyle.Bold;
+//			GUI.skin.label.fontSize = 20;
 		}
 
 		protected override void WindowContent(int win_id)
 		{
-
-
 			if (first_pass) {
 				first_pass = false;
 				set_stylz ();
@@ -213,65 +224,88 @@ namespace KerbalX
 			}
 			editor_craft_name = EditorLogic.fetch.ship.shipName;
 
-			section (win_width , width => {
-				GUILayout.Label ("craft name", GUILayout.Width (70f));
-				craft_name = GUILayout.TextField (craft_name, 255, GUILayout.Width (width - 70));
-			});
+			GUILayout.Label ("Upload '" + craft_name + "' to KerbalX.com", header_label);
 
-			if(GUI.changed){
-				check_for_matching_craft_name ();
-			}
 
 			if(mode == "upload"){
-				style_select = dropdown (craft_styles, style_select, 100f, 80f);
-				section (win_width, width => {
-					if (GUILayout.Button ("Update Existing Craft", GUILayout.Width (width))) {
+				section (win_width, w => {
+					GUILayout.Label ("Enter details about your craft", width(w*0.45f));
+					GUILayout.Label ("OR", centered, width(w*0.1f));
+					if (GUILayout.Button ("Update An Existing Craft", width(w*0.45f))) {
 						mode = "update";
 					}
 				});
 
+				section (win_width , w => {
+					string current_craft_name = craft_name; //used to detect if user changes craft_name field (GUI.changed gets triggered by above button)
+					GUILayout.Label ("Craft name:", width(80f));
+					craft_name = GUILayout.TextField (craft_name, 255, width(w - 80));
+					if(craft_name != current_craft_name){check_for_matching_craft_name (); } //check for matching existing craft
+				});
+
+				section (win_width, w => {
+					GUILayout.Label ("Select craft type:", width(100f));
+					style_select = dropdown (craft_styles, style_select, 100f, 100f);
+				});
+
+				section (win_width, w => {
+					if (GUILayout.Button ("Edit Action Group info", width(w*0.5f), height(30)) ) {
+					}					
+					if (GUILayout.Button ("Add Pictures", width(w*0.5f), height (30)) ) {
+					}					
+				});
+
+
 			}else if(mode == "update"){
 				if (matching_craft_ids.Count > 0) {
 					GUILayout.Label ("This craft's name matches the name of " + (matching_craft_ids.Count == 1 ? "a" : "several") + " craft you've already uploaded");
-					if (matching_craft_ids.Count == 1) {
-						GUILayout.Label ("The matching craft has been selected below");
-					}else{
+					if (matching_craft_ids.Count > 1) {
 						GUILayout.Label ("Select which one you want to update");
 					}
 				}
 
-				craft_select = dropdown (remote_craft, craft_select, win_width, 100f);
+				section (win_width, w => {
+					v_section (w*0.7f, inner_w => {
+						section (inner_w, inner_w2 => {
+							GUILayout.Label ("Select Craft on KerbalX to update:");
+						});
+						craft_select = dropdown (remote_craft, craft_select, inner_w, 100f);
+					});
+					v_section (w*0.3f, inner_w => {
+						section (inner_w, inner_w2 => {
+							if (GUILayout.Button ("OR upload this as a new craft", wrapped_button, width (inner_w2), height (50) )) {
+								mode = "upload";
+							}
+						});
+					});
+				});
+
+
 				if (craft_select.id > 0) {
 					GUILayout.Label ("id:" + craft_select.id + ", name:" + KerbalX.existing_craft [craft_select.id] ["name"] + " - " + KerbalX.existing_craft [craft_select.id] ["url"]);
 				}
-
-				section (win_width, width => {
-					GUILayout.Label ("or you can", GUILayout.Width (80f));
-					if (GUILayout.Button ("upload this as a new craft", GUILayout.Width (width - 80))) {
-						mode = "upload";
-					}
-				});
-
 			}
 
 
 			//string image = GUILayout.TextField (image, 255);
 
 			if (KerbalX.alert != "") {	
-				GUILayout.Label (KerbalX.alert, alert_style, GUILayout.Width (win_width) );
+				GUILayout.Label (KerbalX.alert, alert_style, width (win_width) );
 			}
 			if (upload_errors.Count () > 0) {
 				GUILayout.Label ("errors and shit");
 				foreach (string error in upload_errors) {
-					GUILayout.Label (error.Trim (), alert_style, GUILayout.Width (win_width));
+					GUILayout.Label (error.Trim (), alert_style, width (win_width));
 				}
 			}
 
-
-
-			if (GUILayout.Button ("upload", large_button)) {
-				upload_craft ();
-			}
+			style_override = new GUIStyle();
+			style_override.padding = new RectOffset (20, 20, 10, 10);
+			section (win_width, w => {
+				if (GUILayout.Button (mode, upload_button)) {
+					upload_craft ();
+				}
+			});
 
 			if(GUILayout.Button ("test")){
 //				EditorLogic.fetch.newBtn.onClick.AddListener (() => {
@@ -294,6 +328,7 @@ namespace KerbalX
 		//check if craft_name matches any of the user's existing craft.  Sets matching_craft_ids to contain KX database ids of any matching craft
 		//if only one match is found then craft_select.id is also set to the matched id (which them selects the craft in the select menu)
 		private void check_for_matching_craft_name(){
+			KerbalX.log ("checking for matching craft - " + craft_name);
 			string lower_name = craft_name.Trim ().ToLower ();
 			matching_craft_ids.Clear ();
 			foreach(KeyValuePair<int, string> craft in remote_craft){

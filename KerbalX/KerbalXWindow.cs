@@ -58,6 +58,10 @@ namespace KerbalX
 		protected int window_id = 0;
 		static int last_window_id = 0;
 
+		protected GUIStyle style_override = null;
+		protected GUIStyle section_style = new GUIStyle();
+//		protected GUISkin cust_skin = null;
+
 		//Definition of delegate to be passed into the section method 
 		protected delegate void Content(float width);
 
@@ -76,9 +80,12 @@ namespace KerbalX
 		*/
 		protected void section(float width, Content content)
 		{
-			GUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.MaxWidth (width));
+//			section_style.padding = new RectOffset (0, 0, 0, 0);
+//			section_style.margin = new RectOffset (0, 0, 0, 0);
+			GUILayout.BeginHorizontal(style_override == null ? section_style : style_override, GUILayout.Width(width), GUILayout.MaxWidth (width));
 			content((float)width);
 			GUILayout.EndHorizontal ();
+			style_override = null;
 		}
 
 		protected void v_section(float width, Content content){
@@ -88,7 +95,7 @@ namespace KerbalX
 		}
 
 		protected Vector2 scroll(Vector2 scroll_pos, float width, float height, Content content){
-			scroll_pos = GUILayout.BeginScrollView(scroll_pos, GUILayout.Width(width), GUILayout.Height(height));
+			scroll_pos = GUILayout.BeginScrollView(scroll_pos, GUILayout.Width(width), GUILayout.MaxWidth (width), GUILayout.Height(height));
 			content (width);
 			GUILayout.EndScrollView();
 			return scroll_pos;
@@ -105,20 +112,20 @@ namespace KerbalX
 			string selected;
 			collection.TryGetValue (drop_data.id, out selected);
 
-			v_section (outer_width, (width) => {
-				section (width, w => {
-					if (GUILayout.Button (selected, dropdown_field, GUILayout.Width (width - 20) )) {
+			v_section (outer_width, (inner_width) => {
+				section (inner_width, w2 => {
+					if (GUILayout.Button (selected, dropdown_field, GUILayout.Width (inner_width - 20) )) {
 						drop_data.show_select = !drop_data.show_select;	
 					}
 					if (GUILayout.Button ("\\/", GUILayout.Width (20f) )) {
 						drop_data.show_select = !drop_data.show_select;	
 					}
 				});
-				section (width, w => {
+				section (inner_width, w2 => {
 					if(drop_data.show_select){
-						drop_data.scroll_pos = scroll (drop_data.scroll_pos, w, menu_height, (w2) => {
+						drop_data.scroll_pos = scroll (drop_data.scroll_pos, w2, menu_height, (w3) => {
 							foreach(KeyValuePair<int, string> item in collection){
-								if(GUILayout.Button (item.Value, dropdown_menu_item, GUILayout.Width (w2-25))){
+								if(GUILayout.Button (item.Value, dropdown_menu_item, GUILayout.Width (w3-25))){
 									drop_data.selected (item.Key);
 									drop_data.show_select = false;
 								}
@@ -130,11 +137,20 @@ namespace KerbalX
 			return drop_data;
 		}
 
-		protected float pcent(string percent, object width_in){
-			float p = float.Parse (percent.Replace ("%", ""));
-			float w = (float)width_in;
-			return (float)Math.Floor ((w / 100) * p);
+		//shorthand for GUILayout.width()
+		protected GUILayoutOption width(float w){
+			return GUILayout.Width (w);
 		}
+		//shorthand for GUILayout.height()
+		protected GUILayoutOption height(float h){
+			return GUILayout.Height (h);
+		}
+
+//		protected float pcent(string percent, object width_in){
+//			float p = float.Parse (percent.Replace ("%", ""));
+//			float w = (float)width_in;
+//			return (float)Math.Floor ((w / 100) * p);
+//		}
 
 		protected void prevent_click_through(string mode){
 			if(mode == "editor"){
