@@ -181,14 +181,13 @@ namespace KerbalX
 			window_pos = new Rect(250, 400, win_width, 5);
 			prevent_editor_click_through = true;
 			KerbalX.editor_gui = this;
-			KerbalXAPI.fetch_existing_craft (() => {
+			KerbalXAPI.fetch_existing_craft (() => {  //Query KX for the user's current craft (which gets stashed on KerablX.existing_craft). lambda gets called once request completes.
 				remote_craft.Clear ();
-				remote_craft.Add (0, "select a craft");
+				remote_craft.Add (0, "select a craft");	//remote_craft populates the select menu, ID 0 (which can't exist on KX) is used as the placeholder
 				foreach(KeyValuePair<int, Dictionary<string, string>> craft in KerbalX.existing_craft){
 					remote_craft.Add (craft.Key, craft.Value["name"]);
 				}
 			});
-
 		}
 
 		private void set_stylz(){
@@ -213,7 +212,7 @@ namespace KerbalX
 		{
 			if (first_pass) {
 				first_pass = false;
-				set_stylz ();
+				set_stylz ();//it's like we need a sorta sheet of styles, maybe one that can cascade, a cascading style sheet if you will.
 			}
 
 			//get the craft name from the editor field, but allow the user to set a alternative name to upload as without changing the editor field
@@ -226,13 +225,13 @@ namespace KerbalX
 
 			GUILayout.Label ("Upload '" + craft_name + "' to KerbalX.com", header_label);
 
-
 			if(mode == "upload"){
 				section (win_width, w => {
 					GUILayout.Label ("Enter details about your craft", width(w*0.45f));
 					GUILayout.Label ("OR", centered, width(w*0.1f));
 					if (GUILayout.Button ("Update An Existing Craft", width(w*0.45f))) {
 						mode = "update";
+						if (matching_craft_ids.Count != 1) { craft_select.id = 0;};
 					}
 				});
 
@@ -258,17 +257,16 @@ namespace KerbalX
 
 			}else if(mode == "update"){
 				if (matching_craft_ids.Count > 0) {
-					GUILayout.Label ("This craft's name matches the name of " + (matching_craft_ids.Count == 1 ? "a" : "several") + " craft you've already uploaded");
+					string label_text = "This craft's name matches the name of " + (matching_craft_ids.Count == 1 ? "a" : "several") + " craft you've already uploaded.";
 					if (matching_craft_ids.Count > 1) {
-						GUILayout.Label ("Select which one you want to update");
+						label_text = label_text + " Select which one you want to update";
 					}
+					GUILayout.Label (label_text);
 				}
 
 				section (win_width, w => {
 					v_section (w*0.7f, inner_w => {
-						section (inner_w, inner_w2 => {
-							GUILayout.Label ("Select Craft on KerbalX to update:");
-						});
+						section (inner_w, inner_w2 => { GUILayout.Label ("Select Craft on KerbalX to update:"); });
 						craft_select = dropdown (remote_craft, craft_select, inner_w, 100f);
 					});
 					v_section (w*0.3f, inner_w => {
@@ -279,7 +277,6 @@ namespace KerbalX
 						});
 					});
 				});
-
 
 				if (craft_select.id > 0) {
 					GUILayout.Label ("id:" + craft_select.id + ", name:" + KerbalX.existing_craft [craft_select.id] ["name"] + " - " + KerbalX.existing_craft [craft_select.id] ["url"]);
