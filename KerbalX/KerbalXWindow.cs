@@ -7,9 +7,11 @@ namespace KerbalX
 
 	public struct DropdownData{
 		public int id;
-		public string value;
 		public bool show_select;
 		public Vector2 scroll_pos;
+		public void selected(int set_id){
+			id = set_id;
+		}
 	}
 
 	/* KerbalXWindow is a base class to be inherited by classes which draw GUI windows
@@ -117,8 +119,7 @@ namespace KerbalX
 						drop_data.scroll_pos = scroll (drop_data.scroll_pos, w, menu_height, (w2) => {
 							foreach(KeyValuePair<int, string> item in collection){
 								if(GUILayout.Button (item.Value, dropdown_menu_item, GUILayout.Width (w2-25))){
-									drop_data.value = item.Value;
-									drop_data.id = item.Key;
+									drop_data.selected (item.Key);
 									drop_data.show_select = false;
 								}
 							}
@@ -157,6 +158,7 @@ namespace KerbalX
 				if(GUILayout.Button ("KerbalX.com", link_label_style)){
 					Application.OpenURL (KerbalX.site_url);
 				}
+				GUILayout.Label ("window id: " + window_id);
 			}
 			if(draggable){
 				GUI.DragWindow();
@@ -171,6 +173,7 @@ namespace KerbalX
 
 		private void onDestroy(){
 			print ("shit was destroyed yo"); 
+
 		}
 
 	}

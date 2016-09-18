@@ -73,7 +73,8 @@ namespace KerbalX
 						Dictionary<string,string> cd = new Dictionary<string,string>(){
 							{"id", c["id"]},
 							{"name", c["name"]},
-							{"version", c["version"]}
+							{"version", c["version"]},
+							{"url", c["url"]}
 						};
 						craft_list.Add (id, cd);
 					}
