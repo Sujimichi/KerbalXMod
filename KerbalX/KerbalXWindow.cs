@@ -168,7 +168,7 @@ namespace KerbalX
 			}
 		}
 
-		protected void autoheight(){
+		public void autoheight(){
 			window_pos.height = 5;
 		}
 

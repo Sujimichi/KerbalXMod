@@ -33,6 +33,7 @@ namespace KerbalX
 
 		//window handles (cos a window without a handle is just a pane)
 		public static KerbalXConsole console = null;
+		public static KerbalXLoginWindow login_gui = null;
 		public static KerbalXEditorWindow editor_gui = null;
 
 		//methodical things
@@ -94,6 +95,7 @@ namespace KerbalX
 		private void Start(){
 			window_title = "KerbalX::Login";
 			window_pos = new Rect((Screen.width/2 - 310/2),100, 310, 5);
+			KerbalX.login_gui = this;
 			alert_style.normal.textColor = Color.red;
 			KerbalX.show_login = false;
 			if (KerbalXAPI.token == null) {
@@ -520,7 +522,7 @@ namespace KerbalX
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class JumpStart : MonoBehaviour
 	{
-		public static bool autostart = true;
+		public static bool autostart = false;
 		public static string save_name = "default";
 		public static string craft_name = "testy";
 

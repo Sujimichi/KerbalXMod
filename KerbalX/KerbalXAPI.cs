@@ -36,6 +36,7 @@ namespace KerbalX
 					KerbalX.show_login = true;
 					KerbalX.notify("Enter your KerbalX username and password");
 				}
+				KerbalX.login_gui.autoheight ();
 			});
 		}
 
@@ -58,6 +59,7 @@ namespace KerbalX
 					KerbalX.notice = "";
 				}
 				KerbalXLoginWindow.enable_login = true;
+				KerbalX.login_gui.autoheight ();
 			});
 		}
 
