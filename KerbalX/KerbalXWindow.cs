@@ -115,6 +115,7 @@ namespace KerbalX
 		}
 
 		//Works in the same way as section but wraps the lambda in Begin/End Vertical instead.
+		protected void v_section(Content content){ v_section (-1, content); } //alias (overload) for v_section when used without a width float, just a lambda.
 		protected void v_section(float section_width, Content content){
 			//Call BeginHorizontal giving the style as either default GUIStyle or style_override and any GUILayoutOptions
 			GUILayout.BeginVertical(style_override == null ? section_style : style_override, section_options (section_width)); 
@@ -214,6 +215,7 @@ namespace KerbalX
 		public void hide(){
 			visible = false;
 			on_hide ();
+			EditorLogic.fetch.Unlock (window_id.ToString ());				
 		}
 		public void toggle(){
 			if(visible){
