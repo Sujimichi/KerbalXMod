@@ -52,6 +52,7 @@ namespace KerbalX
 	{
 		public Rect window_pos = new Rect();
 		protected string window_title = "untitled window";
+		public bool visible = true;
 		protected bool footer = true;
 		protected bool draggable = true;
 		protected bool prevent_editor_click_through = false;
@@ -171,7 +172,9 @@ namespace KerbalX
 				window_id = last_window_id + 1;
 				last_window_id = last_window_id + 1;
 			}
-			window_pos = GUILayout.Window (window_id, window_pos, DrawWindow, window_title, GUILayout.Width( window_pos.width ), GUILayout.ExpandHeight (true));
+			if(visible){
+				window_pos = GUILayout.Window (window_id, window_pos, DrawWindow, window_title, GUILayout.Width( window_pos.width ), GUILayout.ExpandHeight (true));
+			}
 		}
 
 		//Callback methods which is passed to GUILayout.Window in OnGUI.  Calls WindowContent and performs common window actions
