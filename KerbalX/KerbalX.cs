@@ -155,7 +155,7 @@ namespace KerbalX
 
 		private string[] upload_errors = new string[0];
 		private string mode = "upload";
-		private float win_width = 400f;
+		private float win_width = 410f;
 
 		private bool first_pass = true;
 		//private string image = "";
@@ -176,6 +176,9 @@ namespace KerbalX
 		GUIStyle wrapped_button = new GUIStyle();
 		GUIStyle centered 		= new GUIStyle();
 		GUIStyle header_label	= new GUIStyle();
+
+		//private Texture2D kx_logo = new Texture2D(56, 56, TextureFormat.ARGB32, false);
+		//kx_logo = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo"), false);
 
 
 		private void Start()
@@ -246,7 +249,7 @@ namespace KerbalX
 				GUILayout.Label (mode_title + " '" + craft_name + "' " + (mode == "update" ? "on" : "to") + " KerbalX", header_label);
 				
 				if(mode == "upload"){
-					section (win_width, w => {
+					section (w => {
 						GUILayout.Label ("Enter details about your craft", width(w*0.45f));
 						GUILayout.Label ("OR", centered, width(w*0.1f));
 						if (GUILayout.Button ("Update An Existing Craft", width(w*0.45f))) {
@@ -255,19 +258,19 @@ namespace KerbalX
 						}
 					});
 					
-					section (win_width , w => {
+					section (w => {
 						string current_craft_name = craft_name; //used to detect if user changes craft_name field (GUI.changed gets triggered by above button)
 						GUILayout.Label ("Craft name:", width(80f));
 						craft_name = GUILayout.TextField (craft_name, 255, width(w - 80));
 						if(craft_name != current_craft_name){check_for_matching_craft_name (); } //check for matching existing craft
 					});
 					
-					section (win_width, w => {
+					section (w => {
 						GUILayout.Label ("Select craft type:", width(100f));
 						style_select = dropdown (craft_styles, style_select, 100f, 100f);
 					});
 					
-					section (win_width, w => {
+					section (w => {
 						if (GUILayout.Button ("Edit Action Group info", width(w*0.5f), height(30)) ) {
 						}					
 						if (GUILayout.Button ("Add Pictures", width(w*0.5f), height (30)) ) {
@@ -284,14 +287,14 @@ namespace KerbalX
 						GUILayout.Label (label_text);
 					}
 					
-					section (win_width, w => {
+					section (w => {
 						v_section (w*0.7f, inner_w => {
 							section (inner_w, inner_w2 => { GUILayout.Label ("Select Craft on KerbalX to update:"); });
 							craft_select = dropdown (remote_craft, craft_select, inner_w, 100f);
 						});
 						v_section (w*0.3f, inner_w => {
 							section (inner_w, inner_w2 => {
-								if (GUILayout.Button ("OR upload this as a new craft", wrapped_button, width (inner_w2), height (50) )) {
+								if (GUILayout.Button ("OR upload this as a new craft", wrapped_button, height (50) )) {
 									change_mode("upload");
 								}
 							});
@@ -318,7 +321,7 @@ namespace KerbalX
 				
 				style_override = new GUIStyle();
 				style_override.padding = new RectOffset (20, 20, 10, 10);
-				section (win_width, w => {
+				section (w => {
 					if (GUILayout.Button (mode_title + "!", upload_button)) {
 						upload_craft ();
 					}
@@ -334,7 +337,11 @@ namespace KerbalX
 				//EditorLogic.fetch.newBtn.onClick.Invoke ();
 				//EditorLogic.fetch.saveBtn.onClick.Invoke ();
 
-				KerbalX.log (part_info ().Count.ToString ());
+//				this.visible = false;
+//				Application.CaptureScreenshot ("fibble");
+//				this.visible = true;
+				
+				window_pos.width = window_pos.width + 10;
 
 
 			}
@@ -522,7 +529,7 @@ namespace KerbalX
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class JumpStart : MonoBehaviour
 	{
-		public static bool autostart = false;
+		public static bool autostart = true;
 		public static string save_name = "default";
 		public static string craft_name = "testy";
 

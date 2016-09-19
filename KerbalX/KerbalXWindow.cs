@@ -50,18 +50,24 @@ namespace KerbalX
  	*/
 	public class KerbalXWindow : MonoBehaviour
 	{
-		public Rect window_pos = new Rect();
 		protected string window_title = "untitled window";
+
+		public Rect window_pos = new Rect();
 		public bool visible = true;
+
 		protected bool footer = true;
 		protected bool draggable = true;
 		protected bool prevent_editor_click_through = false;
+
 		protected int window_id = 0;
 		static int last_window_id = 0;
 
 		protected GUIStyle style_override = null;
 		protected GUIStyle section_style = new GUIStyle();
 //		protected GUISkin cust_skin = null;
+
+		private Texture2D kx_logo_small = new Texture2D(166,30, TextureFormat.ARGB32, false);
+
 
 		//Definition of delegate to be passed into the section method 
 		protected delegate void Content(float width);
@@ -79,14 +85,26 @@ namespace KerbalX
 				// you can use win["width"] and win["pos"] inside the block
 			});	
 		*/
-		protected void section(float width, Content content)
+		protected void section(float section_width, Content content)
 		{
-//			section_style.padding = new RectOffset (0, 0, 0, 0);
-//			section_style.margin = new RectOffset (0, 0, 0, 0);
-			GUILayout.BeginHorizontal(style_override == null ? section_style : style_override, GUILayout.Width(width), GUILayout.MaxWidth (width));
-			content((float)width);
+			GUILayoutOption[] opts = new GUILayoutOption[]{};
+			if (section_width != -1){
+				opts = new GUILayoutOption[]{ GUILayout.Width(section_width), GUILayout.MaxWidth (section_width) };
+			}
+
+			GUILayout.BeginHorizontal(style_override == null ? section_style : style_override, opts);
+			if(section_width == -1){
+				content (window_pos.width - GUI.skin.window.padding.horizontal - GUI.skin.window.border.horizontal);
+			}else{
+				content(section_width);
+			}
+
 			GUILayout.EndHorizontal ();
 			style_override = null;
+		}
+		protected void section(Content content)
+		{
+			section (-1, content);
 		}
 
 		protected void v_section(float width, Content content){
@@ -172,7 +190,11 @@ namespace KerbalX
 			window_pos.height = 5;
 		}
 
-		//called on each frame, handles drawing the window and will assign the next window id if it's not set
+		protected void Awake(){
+			kx_logo_small = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo_small"), false);
+		}
+
+				//called on each frame, handles drawing the window and will assign the next window id if it's not set
 		protected void OnGUI()
 		{
 			if(window_id == 0){
@@ -181,7 +203,7 @@ namespace KerbalX
 			}
 
 			if(visible){
-				window_pos = GUILayout.Window (window_id, window_pos, DrawWindow, window_title, GUILayout.Width( window_pos.width ), GUILayout.ExpandHeight (true));
+				window_pos = GUILayout.Window (window_id, window_pos, DrawWindow, window_title, GUILayout.Width( window_pos.width ), GUILayout.MaxWidth( window_pos.width ), GUILayout.ExpandHeight (true));
 			}
 		}
 
@@ -199,10 +221,14 @@ namespace KerbalX
 			if(footer){
 				GUIStyle link_label_style = new GUIStyle (GUI.skin.label);
 				link_label_style.normal.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
-				
-				if(GUILayout.Button ("KerbalX.com", link_label_style, width (75f))){
-					Application.OpenURL (KerbalX.site_url);
-				}
+
+				section (w => {
+					if(GUILayout.Button ("KerbalX.com", link_label_style, width (75f))){
+						Application.OpenURL (KerbalX.site_url);
+					}
+					GUILayout.FlexibleSpace ();
+					GUILayout.Label (kx_logo_small);
+				});
 				//GUILayout.Label ("window id: " + window_id);
 			}
 
