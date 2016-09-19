@@ -117,9 +117,11 @@ namespace KerbalX
 				section (inner_width, w2 => {
 					if (GUILayout.Button (selected, dropdown_field, GUILayout.Width (inner_width - 20) )) {
 						drop_data.show_select = !drop_data.show_select;	
+						autoheight ();
 					}
 					if (GUILayout.Button ("\\/", GUILayout.Width (20f) )) {
 						drop_data.show_select = !drop_data.show_select;	
+						autoheight ();
 					}
 				});
 				section (inner_width, w2 => {
@@ -129,6 +131,7 @@ namespace KerbalX
 								if(GUILayout.Button (item.Value, dropdown_menu_item, GUILayout.Width (w3-25))){
 									drop_data.selected (item.Key);
 									drop_data.show_select = false;
+									autoheight ();
 								}
 							}
 						});
@@ -165,6 +168,10 @@ namespace KerbalX
 			}
 		}
 
+		protected void autoheight(){
+			window_pos.height = 5;
+		}
+
 		//called on each frame, handles drawing the window and will assign the next window id if it's not set
 		protected void OnGUI()
 		{
@@ -172,6 +179,7 @@ namespace KerbalX
 				window_id = last_window_id + 1;
 				last_window_id = last_window_id + 1;
 			}
+
 			if(visible){
 				window_pos = GUILayout.Window (window_id, window_pos, DrawWindow, window_title, GUILayout.Width( window_pos.width ), GUILayout.ExpandHeight (true));
 			}
@@ -192,10 +200,10 @@ namespace KerbalX
 				GUIStyle link_label_style = new GUIStyle (GUI.skin.label);
 				link_label_style.normal.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
 				
-				if(GUILayout.Button ("KerbalX.com", link_label_style)){
+				if(GUILayout.Button ("KerbalX.com", link_label_style, width (75f))){
 					Application.OpenURL (KerbalX.site_url);
 				}
-				GUILayout.Label ("window id: " + window_id);
+				//GUILayout.Label ("window id: " + window_id);
 			}
 
 			if(draggable){

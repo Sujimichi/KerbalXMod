@@ -224,9 +224,11 @@ namespace KerbalX
 			}
 			editor_craft_name = EditorLogic.fetch.ship.shipName;
 
-			//Perform checks to see if craft is not untitled and a craft file exists
+			//Perform checks to see if there is a craft,  its not untitled and a craft file for it exists.
 			string trimmed_lowered_name = editor_craft_name.Trim ().ToLower ().Replace (" ", "");
-			if(trimmed_lowered_name == "untitledspacecraft" || trimmed_lowered_name == EditorLogic.autoShipName){
+			if(part_info ().Count == 0){
+				GUILayout.Label ("No craft loaded. Create or load a craft to continue.", header_label);
+			}else if(trimmed_lowered_name == "untitledspacecraft" || trimmed_lowered_name == EditorLogic.autoShipName){
 				GUILayout.Label (editor_craft_name + "? Really?\nHow about you name the poor thing before uploading!", header_label);
 			}else if(!craft_file_exists ()){
 				section (win_width, w => {
@@ -239,14 +241,14 @@ namespace KerbalX
 				//if checks pass continue with drawing rest of interface (TODO check for unsaved changes).
 
 				string mode_title = new CultureInfo ("en-US", false).TextInfo.ToTitleCase (mode);
-				GUILayout.Label (mode_title + " '" + craft_name + "' " + (mode == "update" ? "on" : "to") + " KerbalX.com", header_label);
+				GUILayout.Label (mode_title + " '" + craft_name + "' " + (mode == "update" ? "on" : "to") + " KerbalX", header_label);
 				
 				if(mode == "upload"){
 					section (win_width, w => {
 						GUILayout.Label ("Enter details about your craft", width(w*0.45f));
 						GUILayout.Label ("OR", centered, width(w*0.1f));
 						if (GUILayout.Button ("Update An Existing Craft", width(w*0.45f))) {
-							mode = "update";
+							change_mode("update");
 							if (matching_craft_ids.Count != 1) { craft_select.id = 0;};
 						}
 					});
@@ -288,7 +290,7 @@ namespace KerbalX
 						v_section (w*0.3f, inner_w => {
 							section (inner_w, inner_w2 => {
 								if (GUILayout.Button ("OR upload this as a new craft", wrapped_button, width (inner_w2), height (50) )) {
-									mode = "upload";
+									change_mode("upload");
 								}
 							});
 						});
@@ -328,27 +330,9 @@ namespace KerbalX
 //				});
 				//EditorLogic.fetch.newBtn.Select ();
 				//EditorLogic.fetch.newBtn.onClick.Invoke ();
-				//HighLogic.fetch.showConsole = true;
 				//EditorLogic.fetch.saveBtn.onClick.Invoke ();
-				//DebugToolbar.toolbarShown = true;
-				Debug.Log (DebugToolbar.toolbarShown.ToString ());
-				KerbalX.log ("win height: " + window_pos.height);
 
-				KerbalX.log (craft_path ());
-				KerbalX.log ("file exists: " + craft_file_exists ().ToString ());
-				KerbalX.log (EditorLogic.fetch.ship.SaveShip ().ToString ().GetHashCode ().ToString ());
-				if(craft_file_exists ()){
-					KerbalX.log (craft_file ().GetHashCode ().ToString ());
-				}
-
-				KerbalX.log (ShipConstruction.GetSavePath (editor_craft_name));
-
-//				string p1 = Paths.joined (KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, "Ships", current_editor, "test1.craft");
-//				string p2 = Paths.joined (KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, "Ships", current_editor, "test2.craft");
-//				System.IO.File.WriteAllText(p1, EditorLogic.fetch.ship.SaveShip ().ToString ());
-//				System.IO.File.WriteAllText(p2, craft_file ());
-
-				//ShipConstruction.SaveShip ("wigglywoo.craft");
+				KerbalX.log (part_info ().Count.ToString ());
 
 
 			}
@@ -368,14 +352,19 @@ namespace KerbalX
 				}
 			}
 			if (matching_craft_ids.Count > 0) {
-				mode = "update";
+				change_mode ("update");
 			} else {
-				mode = "upload";
+				change_mode ("upload");
 			}
 
 			if(matching_craft_ids.Count == 1){
 				craft_select.id = matching_craft_ids.First ();
 			}			
+		}
+
+		private void change_mode(string new_mode){
+			mode = new_mode;
+			autoheight ();
 		}
 
 		//returns the craft file
