@@ -69,10 +69,19 @@ namespace KerbalX
 		private Texture2D kx_logo_small = new Texture2D(166,30, TextureFormat.ARGB32, false);
 
 
-		//Definition of delegate to be passed into the section method 
+
+		//shorthand for GUILayout.width()
+		protected GUILayoutOption width(float w){
+			return GUILayout.Width (w);
+		}
+		//shorthand for GUILayout.height()
+		protected GUILayoutOption height(float h){
+			return GUILayout.Height (h);
+		}
+
+		//Definition of delegate to be passed into the section, v_section and scroll methods
 		protected delegate void Content(float width);
-
-
+		
 		/* Essentially wraps the actions of a delegate (lambda) in calls to BeginHorizontal and EndHorizontal
 		 * Can take an optional width float which if given will be passed to BeginHorizontal as GUILayoutOption params for Width and MaxWidth
 		 * Takes a lambda statement as the delegate Content which is called inbetween calls to Begin/End Horizontal
@@ -133,7 +142,7 @@ namespace KerbalX
 			}
 			return opts;
 		}
-
+		//either simply returns the given width, unless it's given as -1 in which case it returns the window width (minus padding and margin)
 		private float callback_width(float section_width){
 			if(section_width == -1){				//if width was given as -1 then the with of the window (minus its padding and margins) is used instead
 				section_width = window_pos.width - GUI.skin.window.padding.horizontal - GUI.skin.window.border.horizontal;
@@ -181,20 +190,6 @@ namespace KerbalX
 			return drop_data;
 		}
 
-		//shorthand for GUILayout.width()
-		protected GUILayoutOption width(float w){
-			return GUILayout.Width (w);
-		}
-		//shorthand for GUILayout.height()
-		protected GUILayoutOption height(float h){
-			return GUILayout.Height (h);
-		}
-
-//		protected float pcent(string percent, object width_in){
-//			float p = float.Parse (percent.Replace ("%", ""));
-//			float w = (float)width_in;
-//			return (float)Math.Floor ((w / 100) * p);
-//		}
 
 		protected void prevent_click_through(string mode){
 			if(mode == "editor"){
@@ -233,6 +228,9 @@ namespace KerbalX
 			
 		protected virtual void on_hide(){ }
 		protected virtual void on_show(){ }
+
+
+		//MonoBehaviour methods
 
 		protected void Awake(){
 			kx_logo_small = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo_small"), false);

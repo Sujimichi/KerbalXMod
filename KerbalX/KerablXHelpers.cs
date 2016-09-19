@@ -8,6 +8,8 @@ namespace KerbalX
 {
 
 	public class Paths{
+		//takes any number of strings and returns them joined together with OS specific path divider, ie:
+		//Paths.joined("follow", "the", "yellow", "brick", "road") -> "follow/the/yellow/brick/road or follow\the\yellow\brick\road
 		static public string joined(params string[] paths){
 			string path = paths [0];
 			for(int i=1; i<paths.Length; i++){
@@ -19,8 +21,8 @@ namespace KerbalX
 
 	//The most redneck implementation of a JSON serializer ever!
 	//it can take a Dictionary<string, object> and the objects in the dictionary can be a string, a numeric, or a nested Dictionary<string, object>
-	//it can also an optional second argument which is either a bool or an int.  If given as (bool)true then it will generate JSON with spacing and indentation 
-	//(the same arg is also used to pass the level of indentation on when called recusively)
+	//it can also take an optional second argument which is either a bool or an int.  If given as (bool)true then it will generate JSON with spacing and indentation 
+	//(the same arg is also used to pass on the level of indentation when called recusively)
 	//handle with caution, if swallowed seek medical attention.
 	public class JSONX{
 		public static string toJSON(Dictionary<string, object> data, params object[] opts){

@@ -33,10 +33,10 @@ namespace KerbalX
 		public static Dictionary<int, Dictionary<string, string>> existing_craft; //container for listing of user's craft already on KX and some details about them.
 
 		//window handles (cos a window without a handle is just a pane)
-		public static KerbalXConsole console = null;
-		public static KerbalXLoginWindow login_gui = null;
-		public static KerbalXEditorWindow editor_gui = null;
-		public static KerbalXImageSelector image_selector = null;
+		public static KerbalXConsole console 				= null;
+		public static KerbalXLoginWindow login_gui 			= null;
+		public static KerbalXEditorWindow editor_gui 		= null;
+		public static KerbalXImageSelector image_selector 	= null;
 
 
 		//methodical things
@@ -467,8 +467,13 @@ namespace KerbalX
 		private Vector2 scroll_pos;
 		private PicData selected_pic;
 
-		GUIStyle pic_link = new GUIStyle();
-		GUIStyle pic_hover= new GUIStyle();
+		GUIStyle pic_link 	 = new GUIStyle();
+		GUIStyle pic_hover	 = new GUIStyle();
+		GUIStyle header_label= new GUIStyle();
+
+		Texture2D pic_highlight 	= new Texture2D(1, 1, TextureFormat.RGBA32, false);
+		Texture2D scroll_background = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+
 		private string hover_ele = "";
 
 		private void Start(){
@@ -478,8 +483,14 @@ namespace KerbalX
 			visible = true;
 			prevent_editor_click_through = true;
 			KerbalX.image_selector = this;
-			load_pics ();
 			
+			pic_highlight.SetPixel(0, 0, new Color (0.4f,0.5f,0.9f,1));
+			pic_highlight.Apply ();
+			
+			scroll_background.SetPixel(0, 0, new Color (0.12f,0.12f,0.12f,0.7f));
+			scroll_background.Apply ();
+
+			load_pics ();
 		}
 
 		protected override void on_show(){
@@ -493,21 +504,16 @@ namespace KerbalX
 			pic_link.margin = new RectOffset (0, 0, 0, 0);
 
 			pic_hover = new GUIStyle (pic_link);
-
-			var pic_highlight = new Texture2D(1, 1, TextureFormat.RGBA32, false);
-			pic_highlight.SetPixel(0, 0, new Color (0.4f,0.5f,0.9f,1));
-			pic_highlight.Apply ();
-
-			var scroll_background = new Texture2D(1, 1, TextureFormat.RGBA32, false);
-			scroll_background.SetPixel(0, 0, new Color (0.12f,0.12f,0.12f,0.7f));
-			scroll_background.Apply ();
-
 			pic_hover.normal.background = pic_highlight;
 			pic_hover.normal.textColor = Color.black;
 
+			header_label = new GUIStyle (GUI.skin.label);
+			header_label.fontSize = 15;
+			header_label.fontStyle = FontStyle.Bold;
 
 
-			GUILayout.Label ("The PiccyWickyTHing");
+			GUILayout.Label ("Select a picture for your craft", header_label);
+
 
 			if (pictures.Count > 0) {
 				scroll_pos = scroll (scroll_pos, 620f, 300f, w => {
