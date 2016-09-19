@@ -28,6 +28,7 @@ namespace KerbalX
 		public static bool show_login = false;
 		public static string site_url = "http://localhost:3000";
 
+		public static string screenshot_dir = Paths.joined (KSPUtil.ApplicationRootPath, "Screenshots"); //TODO make this a setting, oh and make settings.
 
 		public static Dictionary<int, Dictionary<string, string>> existing_craft; //container for listing of user's craft already on KX and some details about them.
 
@@ -360,12 +361,7 @@ namespace KerbalX
 					matching_craft_ids.Add (craft.Key);
 				}
 			}
-			if (matching_craft_ids.Count > 0) {
-				change_mode ("update");
-			} else {
-				change_mode ("upload");
-			}
-
+			change_mode (matching_craft_ids.Count > 0 ? "update" : "upload");
 			if(matching_craft_ids.Count == 1){
 				craft_select.id = matching_craft_ids.First ();
 			}			
@@ -407,16 +403,6 @@ namespace KerbalX
 				}
 			}
 			return part_data;
-		}
-
-		//returns a list of unique part names in the craft
-		private string[] craft_part_names(){
-			List<string> part_names_list = new List<string> ();
-			var part_list = EditorLogic.fetch.ship.parts;
-			foreach(Part part in part_list){
-				part_names_list.Add (part.name);
-			}
-			return part_names_list.Distinct ().ToArray ();
 		}
 
 		private void upload_craft(){
