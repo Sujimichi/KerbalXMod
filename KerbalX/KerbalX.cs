@@ -36,6 +36,8 @@ namespace KerbalX
 		public static KerbalXConsole console = null;
 		public static KerbalXLoginWindow login_gui = null;
 		public static KerbalXEditorWindow editor_gui = null;
+		public static KerbalXImageSelector image_selector = null;
+
 
 		//methodical things
 		//takes partial url and returns full url to site; ie url_to("some/place") -> "http://whatever_domain_site_url_defines.com/some/place"
@@ -275,6 +277,7 @@ namespace KerbalX
 						if (GUILayout.Button ("Edit Action Group info", width(w*0.5f), height(30)) ) {
 						}					
 						if (GUILayout.Button ("Add Pictures", width(w*0.5f), height (30)) ) {
+							KerbalX.image_selector.toggle ();
 						}					
 					});
 					
@@ -307,8 +310,6 @@ namespace KerbalX
 					}
 				}
 				
-				
-				//string image = GUILayout.TextField (image, 255);
 				
 				if (KerbalX.alert != "") {	
 					GUILayout.Label (KerbalX.alert, alert_style, width (win_width) );
@@ -445,7 +446,149 @@ namespace KerbalX
 
 
 	
+	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
+	public class KerbalXImageSelector : KerbalXWindow
+	{
+		public struct PicData{
+			public string name;
+			public FileInfo file;
+			public Texture2D texture;
+			public void initialize(string new_name, FileInfo new_file, Texture2D new_texture){
+				name = new_name;
+				file = new_file;
+				texture = new_texture;
+			}
+		}
+		private List<PicData> pictures = new List<PicData>();				//populated by load_pics, contains PicData objects for each pic 
+		private List<List<PicData>> groups = new List<List<PicData>> ();	//nested list of lists - rows of pictures for display in the interface
 
+		private int pics_per_row = 4;
+		private string[] file_types = new string[]{"jpg", "png"};
+		private Vector2 scroll_pos;
+		private PicData selected_pic;
+
+		GUIStyle pic_link = new GUIStyle();
+		GUIStyle pic_hover= new GUIStyle();
+		private string hover_ele = "";
+
+		private void Start(){
+			window_title = "KerbalX::ScreenShots";
+			float w = 610;
+			window_pos = new Rect((Screen.width/2 - w/2), Screen.height/4, w, 5);
+			visible = true;
+			prevent_editor_click_through = true;
+			KerbalX.image_selector = this;
+			load_pics ();
+			
+		}
+
+		protected override void on_show(){
+			load_pics ();
+		}
+
+		protected override void WindowContent(int win_id)
+		{
+			pic_link = new GUIStyle (GUI.skin.label);
+			pic_link.padding = new RectOffset (5, 5, 5, 5);
+			pic_link.margin = new RectOffset (0, 0, 0, 0);
+
+			pic_hover = new GUIStyle (pic_link);
+
+			var pic_highlight = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+			pic_highlight.SetPixel(0, 0, new Color (0.4f,0.5f,0.9f,1));
+			pic_highlight.Apply ();
+
+			var scroll_background = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+			scroll_background.SetPixel(0, 0, new Color (0.12f,0.12f,0.12f,0.7f));
+			scroll_background.Apply ();
+
+			pic_hover.normal.background = pic_highlight;
+			pic_hover.normal.textColor = Color.black;
+
+
+
+			GUILayout.Label ("The PiccyWickyTHing");
+
+			if (pictures.Count > 0) {
+				scroll_pos = scroll (scroll_pos, 620f, 300f, w => {
+					foreach(List<PicData> row in groups){
+						style_override = new GUIStyle ();
+						style_override.normal.background = scroll_background;
+						section (600f, sw => {
+							foreach(PicData pic in row){
+								v_section (150f, w2 => {
+									if(GUILayout.Button (pic.texture, (hover_ele==pic.name ? pic_hover : pic_link), width (150f), height (150f*0.75f))){
+										select_pic (pic);
+									}
+									if(GUILayout.Button (pic.name, (hover_ele==pic.name ? pic_hover : pic_link), width(150f))){
+										select_pic (pic);
+									}
+								});
+								if(GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition)){
+									hover_ele = pic.name;
+								}
+							}
+						});
+					}
+				});
+			}
+
+			if(GUILayout.Button ("refresh")){
+				load_pics ();
+			}
+			GUILayout.Label (selected_pic.name);
+
+		}
+
+
+
+		private void select_pic(PicData pic){
+			selected_pic = pic;
+		}
+
+
+
+		private void load_pics(){
+			DirectoryInfo dir = new DirectoryInfo (KerbalX.screenshot_dir);
+			List<FileInfo> files = new List<FileInfo> ();
+
+			//Get file info for all files of defined file_types within the given dir
+			foreach(string file_type in file_types){
+				foreach(FileInfo file in dir.GetFiles ("*." + file_type)){
+					files.Add (file);
+				}
+			}
+
+			pictures.Clear ();
+			foreach(FileInfo file in files){
+				//prepare the texture for the image
+				Texture2D tex = new Texture2D (2, 2);
+				byte[] pic_data = File.ReadAllBytes (file.FullName);
+				tex.LoadImage (pic_data);
+
+				//add a PicData struct for each picture into pictures (struct defines name, file and texture)
+				PicData data = new PicData ();
+				data.initialize (file.Name, file, tex);
+				pictures.Add (data);
+			}
+			group_pics (); //divide pictures into "rows" of x pics_per_row 
+		}
+
+		//constructs a List of Lists containing PicData.  Divides pictures into 'rows' of x pics_per_row 
+		private void group_pics(){
+			groups.Clear ();							//clear any existing groups
+			groups.Add (new List<PicData>());			//add first row to groups
+			int i = 0;
+			foreach (PicData pic in pictures) {
+				groups.Last ().Add (pic);				//add picture to the last row
+				i++;
+				if(i >= pics_per_row){					//once a row is full (row count == pics_per_row)
+					groups.Add (new List<PicData>());	//then add another row to groups 
+					i = 0;								//and reset i
+				}
+			}
+		}
+	}
 
 
 	[KSPAddon(KSPAddon.Startup.EditorAny, false)]

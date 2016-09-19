@@ -113,8 +113,9 @@ namespace KerbalX
 			GUILayout.EndVertical ();
 		}
 
+
 		protected Vector2 scroll(Vector2 scroll_pos, float width, float height, Content content){
-			scroll_pos = GUILayout.BeginScrollView(scroll_pos, GUILayout.Width(width), GUILayout.MaxWidth (width), GUILayout.Height(height));
+			scroll_pos = GUILayout.BeginScrollView(scroll_pos, (style_override == null ? section_style : style_override), GUILayout.Width(width), GUILayout.MaxWidth (width), GUILayout.Height(height));
 			content (width);
 			GUILayout.EndScrollView();
 			return scroll_pos;
@@ -190,11 +191,33 @@ namespace KerbalX
 			window_pos.height = 5;
 		}
 
+		public void show(){
+			visible = true;
+			on_show ();
+		}
+		public void hide(){
+			visible = false;
+			on_hide ();
+		}
+		public void toggle(){
+			if(visible){
+				hide ();
+			}else{
+				show ();
+			}
+		}
+		public bool is_visible(){
+			return visible;
+		}
+			
+		protected virtual void on_hide(){ }
+		protected virtual void on_show(){ }
+
 		protected void Awake(){
 			kx_logo_small = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo_small"), false);
 		}
 
-				//called on each frame, handles drawing the window and will assign the next window id if it's not set
+		//called on each frame, handles drawing the window and will assign the next window id if it's not set
 		protected void OnGUI()
 		{
 			if(window_id == 0){
@@ -245,9 +268,7 @@ namespace KerbalX
 
 		private void onDestroy(){
 			print ("shit was destroyed yo"); 
-
 		}
-
 	}
 }
 
