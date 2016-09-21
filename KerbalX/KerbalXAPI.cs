@@ -147,7 +147,11 @@ namespace KerbalX
 		}
 
 		public void send(RequestCallback callback){
-			RequestHandler.instance.send_request (request, callback);
+			if(RequestHandler.instance == null){
+				throw new Exception ("[KerbalX] RequestHandler is not ready, unable to make request");
+			}else{
+				RequestHandler.instance.send_request (request, callback);
+			}
 		}
 	}
 

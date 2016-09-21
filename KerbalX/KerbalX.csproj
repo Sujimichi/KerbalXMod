@@ -54,6 +54,8 @@
     <Compile Include="KerbalXAPI.cs" />
     <Compile Include="assets\plugins\simpleJSON.cs" />
     <Compile Include="KerablXHelpers.cs" />
+    <Compile Include="KerbalXUploadInterface.cs" />
+    <Compile Include="KerbalXImageSelector.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
