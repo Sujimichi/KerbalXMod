@@ -204,6 +204,7 @@ namespace KerbalX
 			}
 		}
 
+
 		public void autoheight(){
 			window_pos.height = 5;
 		}
@@ -231,6 +232,13 @@ namespace KerbalX
 		protected virtual void on_hide(){ }
 		protected virtual void on_show(){ }
 
+		protected void enable_request_handler(){
+			if(RequestHandler.instance == null){
+				KerbalX.log ("starting web request handler");
+				RequestHandler request_handler = gameObject.AddOrGetComponent<RequestHandler> ();
+				RequestHandler.instance = request_handler;
+			}
+		}
 
 		//MonoBehaviour methods
 
@@ -267,7 +275,7 @@ namespace KerbalX
 				link_label_style.normal.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
 
 				section (w => {
-					if(GUILayout.Button ("KerbalX.com", link_label_style, width (75f))){
+					if(GUILayout.Button ("KerbalX.com", link_label_style, width (75f), height (30f))){
 						Application.OpenURL (KerbalX.site_url);
 					}
 					GUILayout.FlexibleSpace ();

@@ -14,6 +14,7 @@ using SimpleJSON;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.Networking;
 
 
 
@@ -101,6 +102,7 @@ namespace KerbalX
 			KerbalX.login_gui = this;
 			alert_style.normal.textColor = Color.red;
 			KerbalX.show_login = false;
+			enable_request_handler ();
 			if (KerbalXAPI.token == null) {
 				KerbalX.load_token ();
 			}
@@ -191,6 +193,7 @@ namespace KerbalX
 			window_title = "KerbalX::Upload";
 			window_pos = new Rect ((Screen.width - win_width - 100), 60, win_width, 5);
 			prevent_editor_click_through = true;
+			enable_request_handler ();
 			KerbalX.editor_gui = this;
 			KerbalXAPI.fetch_existing_craft (() => {  //Query KX for the user's current craft (which gets stashed on KerablX.existing_craft). lambda gets called once request completes.
 				remote_craft.Clear ();
@@ -440,10 +443,11 @@ namespace KerbalX
 			KerbalX.alert = "";
 
 			NameValueCollection data = new NameValueCollection ();	//contruct upload data
-			//data.Add ("craft_file", craft_file());
+			data.Add ("craft_file", craft_file());
 			data.Add ("craft_name", craft_name);
 			data.Add ("part_data", JSONX.toJSON (part_info ()));
-			KerbalXAPI.post (KerbalX.url_to ("api/craft.json"), data, (resp, code) => {
+			HTTP.post (KerbalX.url_to ("api/craft.json"), data).set_header ("token", KerbalXAPI.token).send ((resp, code) => {
+				
 				string message = "";
 				if(code == 200){
 					var resp_data = JSON.Parse (resp);
@@ -534,6 +538,8 @@ namespace KerbalX
 
 		protected override void WindowContent(int win_id)
 		{
+			GUILayout.Label (GUI.skin.name);
+
 			pic_link = new GUIStyle (GUI.skin.label);
 			pic_link.padding = new RectOffset (5, 5, 5, 5);
 			pic_link.margin = new RectOffset (0, 0, 0, 0);
@@ -676,59 +682,90 @@ namespace KerbalX
 		}
 	}
 
-	[KSPAddon(KSPAddon.Startup.AllGameScenes, false)]
+	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
 	public class KerbalXConsole : KerbalXWindow
 	{
 		private void Start()
 		{
 			window_title = "test window";
 			KerbalX.console = this;
+			enable_request_handler ();
 		}
+
 
 		protected override void WindowContent(int win_id)
 		{
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
 			section (300f, e => { GUILayout.Label (KerbalXAPI.token); 	});
 
+
+			if(GUILayout.Button ("test 1")){
+				HTTP http = HTTP.get ("http://localhost:3000/katateochi.json");
+				http.set_header ("token", "foobar").send ((resp,code) => {
+					Debug.Log (resp);
+				});
+			}
+
+			if(GUILayout.Button ("ping production")){
+				HTTP.get ("https://KerbalX.com/katateochi.json").send ((resp,code) => {
+					Debug.Log (resp);
+				});
+			}
+
+
+			if (GUILayout.Button ("open")) {
+				//Foobar fb = gameObject.AddComponent (typeof(Foobar)) as Foobar;
+				Foobar ff = gameObject.AddOrGetComponent<Foobar> ();
+				Foobar.this_instance = ff;
+			}
+			if (GUILayout.Button ("close")) {
+				Foobar ff = gameObject.AddOrGetComponent<Foobar> ();
+				GameObject.Destroy (ff);
+			}
+
+			if (GUILayout.Button ("add text")) {
+				Foobar ff = gameObject.AddOrGetComponent<Foobar> ();
+				ff.some_text = "marmalade";
+			}
+
 			if (GUILayout.Button ("print log to console")) { KerbalX.show_log (); }
-
-			if (GUILayout.Button ("test fetch http")) {
-				KerbalXAPI.get ("http://kerbalx-stage.herokuapp.com/katateochi.json", (resp, code) => {
-					KerbalX.notify ("callback start, got data");
-					Debug.Log ("code: " + code);
-					var data = JSON.Parse (resp);
-					KerbalX.notify (data["username"]);
-				});
-			}
-			
-			if (GUILayout.Button ("test fetch https")) {
-				KerbalXAPI.get ("https://kerbalx.com/katateochi.json", (resp, code) => {
-					KerbalX.notify ("callback start, got data");
-					Debug.Log ("code: " + code);
-					var data = JSON.Parse (resp);
-					KerbalX.notify (data["username"]);
-				});
-			}
-
-			if (GUILayout.Button ("test api/craft")) {
-				KerbalXAPI.get (KerbalX.url_to ("api/craft.json"), (resp, code) => {
-					if(code==200){
-						KerbalX.log (resp);
-					}
-				});
-			}
-
-			if (GUILayout.Button ("test method")) {
-				KerbalX.editor_gui.visible = !KerbalX.editor_gui.visible;
-			}
 		}
 	}
+
+	//[KSPAddon(KSPAddon.Startup.MainMenu, false)]
+	public class Foobar : MonoBehaviour
+	{
+		private int window_id = 42;
+		private Rect window_pos = new Rect(200, 200, 200, 200);
+
+		public string some_text = "";
+		public static Foobar this_instance = null;
+
+		void Start(){
+				
+		}
+
+		protected void OnGUI()
+		{
+			window_pos = GUILayout.Window (window_id, window_pos, DrawWindow, "testy moo");
+		}
+
+		public void DrawWindow(int win_id){
+
+			GUILayout.Label ("this is a test");
+			GUILayout.Label (some_text);
+			GUI.DragWindow();
+
+		}
+
+	}
+
 
 		
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class JumpStart : MonoBehaviour
 	{
-		public static bool autostart = true;
+		public static bool autostart = false;
 		public static string save_name = "default";
 		public static string craft_name = "testy";
 
