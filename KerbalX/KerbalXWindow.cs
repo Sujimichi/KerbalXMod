@@ -81,7 +81,10 @@ namespace KerbalX
 
 		//Definition of delegate to be passed into the section, v_section and scroll methods
 		protected delegate void Content(float width);
-		
+
+
+
+
 		/* Essentially wraps the actions of a delegate (lambda) in calls to BeginHorizontal and EndHorizontal
 		 * Can take an optional width float which if given will be passed to BeginHorizontal as GUILayoutOption params for Width and MaxWidth
 		 * Takes a lambda statement as the delegate Content which is called inbetween calls to Begin/End Horizontal

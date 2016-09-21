@@ -26,7 +26,7 @@ namespace KerbalX
 		public static List<string> log_data = new List<string>();
 		public static string notice = "";
 		public static string alert = "";
-		public static bool show_login = false;
+
 		public static string site_url = "http://localhost:3000";
 
 		public static string screenshot_dir = Paths.joined (KSPUtil.ApplicationRootPath, "Screenshots"); //TODO make this a setting, oh and make settings.
@@ -69,22 +69,36 @@ namespace KerbalX
 			log (s);
 		}
 
-		public static void load_token(){
-			KerbalX.notify("Reading token from " + token_path);
-			try{
-				string token = System.IO.File.ReadAllText(token_path);
-				KerbalXAPI.authenticate_token (token);
-			}
-			catch{
-				KerbalX.notify("Enter your KerbalX username and password");
-				KerbalX.show_login = true;
-			}
-		}
-		public static void save_token(string token){
-			System.IO.File.WriteAllText(token_path, token);
-		}
+
 	}
 
+	public delegate void DialogAction();
+	public class KerbalXDialog : KerbalXWindow
+	{
+		public static KerbalXDialog instance;
+		public float dialog_width = 300f;
+		public string message = "";
+		public DialogAction ok_action = null;
+		public string ok_text = "OK";
+
+		private void Start(){
+			window_pos = new Rect((Screen.width/2 - dialog_width/2), Screen.height/4, dialog_width, 5);	
+			window_title = "";
+			footer = false;
+			ok_action = () => {
+				GameObject.Destroy (KerbalXDialog.instance);
+			};
+		}
+
+		protected override void WindowContent(int win_id){
+			GUILayout.Label (message);
+			if(ok_action != null){
+				if(GUILayout.Button (ok_text)){
+					ok_action ();
+				}
+			}
+		}
+	}
 
 
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
@@ -92,61 +106,85 @@ namespace KerbalX
 	{
 		private string username = "";
 		private string password = "";
-		public static bool enable_login = true;  //used to toggle enabled/disabled state on login fields and button
+		public bool enable_login = true;  //used to toggle enabled/disabled state on login fields and button
+		public bool show_login = false;
+		public bool login_failed = false;
+		public bool login_successful = false;
+
+
 		GUIStyle alert_style = new GUIStyle();
 
 
 		private void Start(){
 			window_title = "KerbalX::Login";
-			window_pos = new Rect((Screen.width/2 - 310/2),100, 310, 5);
+			window_pos = new Rect((Screen.width/2 - 400/2),100, 400, 5);
 			KerbalX.login_gui = this;
 			alert_style.normal.textColor = Color.red;
-			KerbalX.show_login = false;
 			enable_request_handler ();
-			if (KerbalXAPI.token == null) {
-				KerbalX.load_token ();
+
+			//try to load a token from file and if present authenticate it with KerbalX.  if token isn't present or authentication fails the show login fields
+			if (KerbalXAPI.token_not_loaded()) {
+				KerbalXAPI.load_and_authenticate_token ();	
 			}
 		}
 
 		protected override void WindowContent(int win_id)
 		{
-			if(KerbalX.show_login == true){					
+			if(show_login){					
 				GUI.enabled = enable_login;
-				section (310f, e => {
+				GUILayout.Label ("Enter your KerbalX username and password");
+				section (w => {
 					GUILayout.Label ("username", GUILayout.Width (60f));
-					username = GUILayout.TextField (username, 255, GUILayout.Width (250f));
+					username = GUILayout.TextField (username, 255, width (w-60f));
 				});
-
-				section (310f, e => {
+				section (w => {
 					GUILayout.Label ("password", GUILayout.Width(60f));
-					password = GUILayout.PasswordField (password, '*', 255, GUILayout.Width(250f));
+					password = GUILayout.PasswordField (password, '*', 255, width (w-60f));
 				});
 				GUI.enabled = true;
 			}
 
-			if (KerbalX.notice != "") {
-				GUILayout.Label (KerbalX.notice, GUILayout.Width (310f));
+			if (KerbalXAPI.token_loaded ()) {
+				GUILayout.Label ("You are logged in");
 			}
-
-			if (KerbalX.alert != "") {	
-				GUILayout.Label (KerbalX.alert, alert_style, GUILayout.Width (310f) );
+			if(login_successful){
+				section (w => {
+					GUILayout.Label ("KerbalX.key saved in KSP root", width (w-20f));
+					if (GUILayout.Button ("?", width (20f))) {
+						KerbalXDialog dialog = gameObject.AddOrGetComponent<KerbalXDialog> ();
+						KerbalXDialog.instance = dialog;
+						dialog.message = "The KerbalX.key is a token that is used to authenticate you with the site." +
+							"\nIt will also persist your login, so next time you start KSP you won't need to login again." +
+							"\nIf you want to login to KerbalX from multiple instances of KSP copy the KerbalX.key file into each install.";
+					}
+				});
 			}
 
 			GUI.enabled = enable_login;
-			if (KerbalX.show_login == true) {
+			if (show_login) {
 				if (GUILayout.Button ("Login")) {				
 					KerbalX.alert = "";
 					enable_login = false;
+					login_failed = false;
 					KerbalXAPI.login (username, password);
 				}
 			}else{
 				if (GUILayout.Button ("Log out")) {
-					KerbalX.show_login = true;
-					KerbalXAPI.token = null;
+					show_login = true;
+					KerbalXAPI.clear_token ();
 					KerbalX.notify ("logged out");
 				}				
 			}
 			GUI.enabled = true;
+
+			if(login_failed){
+				v_section (w => {
+					GUILayout.Label ("Login failed, check your things", alert_style);
+					if (GUILayout.Button ("Forgot your password? Go to KerbalX to reset it.")) {
+						Application.OpenURL ("https://kerbalx.com/users/password/new");
+					}
+				});
+			}
 		}
 	}
 
@@ -446,7 +484,7 @@ namespace KerbalX
 			data.Add ("craft_file", craft_file());
 			data.Add ("craft_name", craft_name);
 			data.Add ("part_data", JSONX.toJSON (part_info ()));
-			HTTP.post (KerbalX.url_to ("api/craft.json"), data).set_header ("token", KerbalXAPI.token).send ((resp, code) => {
+			HTTP.post (KerbalX.url_to ("api/craft.json"), data).set_header ("token", KerbalXAPI.temp_view_token ()).send ((resp, code) => {
 				
 				string message = "";
 				if(code == 200){
@@ -676,12 +714,12 @@ namespace KerbalX
 		}
 	}
 
-	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
+	[KSPAddon(KSPAddon.Startup.AllGameScenes, false)]
 	public class KerbalXConsole : KerbalXWindow
 	{
 		private void Start()
 		{
-			window_title = "test window";
+			window_title = "KX::Konsole";
 			KerbalX.console = this;
 			enable_request_handler ();
 		}
@@ -690,7 +728,6 @@ namespace KerbalX
 		protected override void WindowContent(int win_id)
 		{
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
-			section (300f, e => { GUILayout.Label (KerbalXAPI.token); 	});
 
 
 			if(GUILayout.Button ("test 1")){
@@ -759,7 +796,7 @@ namespace KerbalX
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class JumpStart : MonoBehaviour
 	{
-		public static bool autostart = true;
+		public static bool autostart = false;
 		public static string save_name = "default";
 		public static string craft_name = "testy";
 

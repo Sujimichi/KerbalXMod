@@ -9,6 +9,8 @@ using System.Collections.Specialized;
 using UnityEngine;
 using UnityEngine.Networking;
 
+using System.Threading;
+
 using SimpleJSON;
 
 
@@ -20,7 +22,39 @@ namespace KerbalX
 
 	public class KerbalXAPI
 	{
-		public static string token = null; 
+		private static string token = null; 
+
+		public static bool token_not_loaded(){
+			return token == null;
+		}
+		public static bool token_loaded(){
+			return token != null;
+		}
+
+
+		public static void load_and_authenticate_token(){
+			KerbalX.notify("Reading token from " + KerbalX.token_path);
+			try{
+				string token = System.IO.File.ReadAllText(KerbalX.token_path);
+				KerbalXAPI.authenticate_token (token);
+			}
+			catch{
+				KerbalX.login_gui.show_login = true;
+			}
+		}
+
+		private static void save_token(string token){
+			System.IO.File.WriteAllText(KerbalX.token_path, token);
+		}
+
+		public static void clear_token(){
+			token = null; 
+			//TODO delete token file.
+		}
+
+		public static string temp_view_token(){ //TODO remove this - just a temp method to access the token from other classes.
+			return token;
+		}
 
 		//make request to site to authenticate token 
 		public static void authenticate_token(string new_token){
@@ -30,11 +64,9 @@ namespace KerbalX
 			HTTP.post (KerbalX.url_to ("api/authenticate"), data).send ((resp, code) => {
 				if(code==200){
 					token = new_token;
-					KerbalX.show_login = false;
-					KerbalX.notify("You are logged in.");
+					KerbalX.login_gui.show_login = false;
 				}else{
-					KerbalX.show_login = true;
-					KerbalX.notify("Enter your KerbalX username and password");
+					KerbalX.login_gui.show_login = true;
 				}
 				KerbalX.login_gui.autoheight ();
 			});
@@ -50,15 +82,14 @@ namespace KerbalX
 				if(code==200){
 					var resp_data = JSON.Parse (resp);
 					token = resp_data["token"];
-					KerbalX.save_token (resp_data["token"]);
-					KerbalX.show_login = false;
-					KerbalX.notify("login succsessful! KerbalX.key saved in KSP root");
+					save_token (resp_data["token"]);
+					KerbalX.login_gui.show_login = false;
+					KerbalX.login_gui.login_successful = true;
 				}else{
-					KerbalX.show_login = true;
-					KerbalX.alert = "login failed, check yo shit.";
-					KerbalX.notice = "";
+					KerbalX.login_gui.show_login = true;
+					KerbalX.login_gui.login_failed = true;
 				}
-				KerbalXLoginWindow.enable_login = true;
+				KerbalX.login_gui.enable_login = true;
 				KerbalX.login_gui.autoheight ();
 			});
 		}
@@ -136,13 +167,14 @@ namespace KerbalX
 			yield return request.Send ();
 
 			if (request.isError){
-				Debug.Log ("shit went wrong!!");
+				KerbalX.log ("request failed: " + request.error);
+				KerbalX.log ("response headers:");
 				Dictionary<string, string> t = request.GetResponseHeaders ();
 				foreach(KeyValuePair<string, string> r in t){
-					Debug.Log ("header: " + r.Key);
+					KerbalX.log ("header: " + r.Key + " value " + r.Value);
 				}
 			}else{
-				Debug.Log ("request successfull"); 
+				KerbalX.log ("request successfull"); 
 				callback (request.downloadHandler.text, (int)request.responseCode);
 			}
 		}
