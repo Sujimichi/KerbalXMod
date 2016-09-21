@@ -451,22 +451,16 @@ namespace KerbalX
 				string message = "";
 				if(code == 200){
 					var resp_data = JSON.Parse (resp);
-					try{
-						message = resp_data["message"];
-					}
-					catch{
-						message = "failed to read response";
-					}
+					KerbalX.log ("holy fuck! it uploaded");
+				
+				}else if(code == 422){
+					var resp_data = JSON.Parse (resp);
+					KerbalX.log ("upload failed");
+					KerbalX.log (resp);
+					string resp_errs = resp_data["errors"];
+					upload_errors = resp_errs.Split (',');
+					KerbalX.alert = "Craft Failed to Upload";
 
-					if(message == "uploaded"){
-						KerbalX.log ("holy fuck! it uploaded");
-
-					}else{
-						KerbalX.log ("upload failed");
-						string resp_errs = resp_data["errors"];
-						upload_errors = resp_errs.Split (',');
-						KerbalX.alert = "my fish escaped";
-					}
 				}else{
 					message = "upload failed - server error";
 					KerbalX.alert = message;
@@ -765,7 +759,7 @@ namespace KerbalX
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class JumpStart : MonoBehaviour
 	{
-		public static bool autostart = false;
+		public static bool autostart = true;
 		public static string save_name = "default";
 		public static string craft_name = "testy";
 

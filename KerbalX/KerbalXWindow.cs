@@ -240,6 +240,8 @@ namespace KerbalX
 			}
 		}
 
+
+
 		//MonoBehaviour methods
 
 		protected void Awake(){
@@ -293,10 +295,6 @@ namespace KerbalX
 		protected virtual void WindowContent(int window_id)
 		{
 
-		}
-
-		private void onDestroy(){
-			print ("shit was destroyed yo"); 
 		}
 	}
 }
