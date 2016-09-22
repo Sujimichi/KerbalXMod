@@ -57,6 +57,7 @@ namespace KerbalX
 
 		protected bool footer = true;
 		protected bool draggable = true;
+		protected bool require_login = false;
 		protected bool prevent_editor_click_through = false;
 
 		protected int window_id = 0;
@@ -281,10 +282,18 @@ namespace KerbalX
 				prevent_click_through ("editor");
 			}
 
-			if(KerbalX.failed_to_connect){
+			if (KerbalX.failed_to_connect) {
 				GUILayout.Label ("Unable to Connect to KerbalX.com!");
-				if(GUILayout.Button ("try again")){
+				if (GUILayout.Button ("try again")) {
 					RequestHandler.instance.try_again ();
+				}
+			}else if(require_login && KerbalXAPI.logged_out ()){
+				GUILayout.Label ("You are not logged in.");
+				if (GUILayout.Button ("Login")) {
+					KerbalXLoginWindow login_window = gameObject.AddOrGetComponent<KerbalXLoginWindow> ();
+					login_window.after_login_action = () => {
+						on_login ();
+					};
 				}
 			}else{
 				//Draw the main content of the window as defined by WindowContent
@@ -299,6 +308,10 @@ namespace KerbalX
 			if(draggable){
 				GUI.DragWindow();
 			}
+		}
+
+		protected virtual void on_login(){
+			Debug.Log ("called after login");
 		}
 
 		//The main method which defines the content of a window.  This method is provided so as to be overridden in inherited classes

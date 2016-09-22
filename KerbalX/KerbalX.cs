@@ -82,7 +82,7 @@ namespace KerbalX
 		}
 	}
 
-
+	public delegate void AfterLoginAction();
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class KerbalXLoginWindow : KerbalXWindow
 	{
@@ -91,6 +91,7 @@ namespace KerbalX
 		public bool enable_login = true;  //used to toggle enabled/disabled state on login fields and button
 		public bool login_failed = false;
 		public bool login_successful = false;
+		public AfterLoginAction after_login_action = () => {};
 
 
 		GUIStyle alert_style = new GUIStyle();
@@ -174,7 +175,7 @@ namespace KerbalX
 	}
 
 
-	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
+	[KSPAddon(KSPAddon.Startup.AllGameScenes, false)]
 	public class KerbalXConsole : KerbalXWindow
 	{
 		private void Start()
@@ -185,22 +186,37 @@ namespace KerbalX
 			enable_request_handler ();
 		}
 
-
 		protected override void WindowContent(int win_id)
 		{
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
 
 			GUILayout.Label (KerbalXAPI.temp_view_token());
 
+			if (GUILayout.Button ("count existing craft")) {
+				Debug.Log ("existing craft count: " + KerbalX.existing_craft.Keys.Count);
+			}
+
 			if(GUILayout.Button ("test 1")){
 				HTTP http = HTTP.get ("http://localhost:3000/katateochi.json");
 				http.set_header ("token", "foobar").send ((resp,code) => {
 					Debug.Log (resp);
 				});
+			}
 
+			if (GUILayout.Button ("Login")) {
+				KerbalXLoginWindow login_window = gameObject.AddOrGetComponent<KerbalXLoginWindow> ();
+				login_window.after_login_action = () => {
+					on_login ();
+				};
 			}
 
 			if (GUILayout.Button ("print log to console")) { KerbalX.show_log (); }
+		}
+
+		protected override void on_login ()
+		{
+			base.on_login ();
+			Debug.Log ("dis shit called from conosle");
 		}
 	}
 
@@ -208,7 +224,7 @@ namespace KerbalX
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class JumpStart : MonoBehaviour
 	{
-		public static bool autostart = false;
+		public static bool autostart = true;
 		public static string save_name = "default";
 		public static string craft_name = "testy";
 

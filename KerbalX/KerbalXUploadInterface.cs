@@ -63,19 +63,32 @@ namespace KerbalX
 
 		private void Start()
 		{
+			KerbalX.editor_gui = this;
 			window_title = "KerbalX::Upload";
 			window_pos = new Rect ((Screen.width - win_width - 100), 60, win_width, 5);
 			//current_editor = EditorLogic.fetch.ship.shipFacility.ToString ();
+			require_login = true;
 			prevent_editor_click_through = true;
 			enable_request_handler ();
-			KerbalX.editor_gui = this;
+			fetch_existing_craft ();
+		}
+
+
+		private void fetch_existing_craft(){
 			KerbalXAPI.fetch_existing_craft (() => {  //Query KX for the user's current craft (which gets stashed on KerablX.existing_craft). lambda gets called once request completes.
 				remote_craft.Clear ();
 				remote_craft.Add (0, "select a craft");	//remote_craft populates the select menu, ID 0 (which can't exist on KX) is used as the placeholder
 				foreach(KeyValuePair<int, Dictionary<string, string>> craft in KerbalX.existing_craft){
 					remote_craft.Add (craft.Key, craft.Value["name"]);
 				}
+				check_for_matching_craft_name ();
 			});
+		}
+
+		protected override void on_login ()
+		{
+			GameObject.Destroy (KerbalX.login_gui);
+			fetch_existing_craft ();
 		}
 
 		private void set_stylz(){
@@ -195,6 +208,8 @@ namespace KerbalX
 						}
 						GUILayout.Label (label_text);
 					}
+
+					GUILayout.Label ("remote craft count: " + remote_craft.Count);
 
 					section (w => {
 						v_section (w*0.7f, inner_w => {

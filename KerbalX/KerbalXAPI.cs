@@ -86,6 +86,7 @@ namespace KerbalX
 					token = resp_data["token"];
 					save_token (resp_data["token"]);
 					KerbalX.login_gui.login_successful = true;
+					KerbalX.login_gui.after_login_action();
 				}else{
 					KerbalX.login_gui.login_failed = true;
 				}
@@ -103,7 +104,6 @@ namespace KerbalX
 
 
 		public static void fetch_existing_craft(ActionCallback callback){
-			//NameValueCollection data = new NameValueCollection (){{"lookup", "existing_craft"}};
 			HTTP.get (url_to ("api/existing_craft.json")).set_header ("token", KerbalXAPI.token).send ((resp, code) => {
 				if(code==200){
 					JSONNode craft_data = JSON.Parse (resp);
@@ -180,12 +180,12 @@ namespace KerbalX
 		}
 
 		public IEnumerator transmit(UnityWebRequest request, RequestCallback callback){
-			last_request = new UnityWebRequest (request.url, request.method);					//create a copy of the request which is about to be sent
-			if(request.method != "GET"){														//if the request fails because of inability to connect to site
-				last_request.uploadHandler = new UploadHandlerRaw (request.uploadHandler.data);;//then try_again() can be used to fire the copied request
-			}																					//and the user can carry on from where they were when connection was lost.
-			last_request.downloadHandler = request.downloadHandler;								//upload and download handlers have to be duplicated too
-			last_callback = callback;															//and the callback is also stuffed into a var for reuse.
+			last_request = new UnityWebRequest (request.url, request.method);					//  \ create a copy of the request which is about to be sent
+			if(request.method != "GET"){														//  | if the request fails because of inability to connect to site
+				last_request.uploadHandler = new UploadHandlerRaw (request.uploadHandler.data);;// <  then try_again() can be used to fire the copied request
+			}																					//  | and the user can carry on from where they were when connection was lost.
+			last_request.downloadHandler = request.downloadHandler;								//  | upload and download handlers have to be duplicated too
+			last_callback = callback;															// /  and the callback is also stuffed into a var for reuse.
 
 			KerbalX.alert = "";
 			KerbalX.failed_to_connect = false;
@@ -204,14 +204,6 @@ namespace KerbalX
 				}else{
 					KerbalX.log ("request returned " + status_code); 
 					callback (request.downloadHandler.text, status_code);
-				}
-				try{
-					request.Dispose ();
-					last_request.Dispose ();
-					last_callback = null;
-				}
-				catch{
-					//no need to catch anything here. If it can dispose of the request objects then great, if not then they've already been disposed (I think).
 				}
 			}
 		}
