@@ -25,7 +25,6 @@ namespace KerbalX
 		public static string alert = "";
 
 		public static string site_url = "http://localhost:3000";
-
 		public static string screenshot_dir = Paths.joined (KSPUtil.ApplicationRootPath, "Screenshots"); //TODO make this a setting, oh and make settings.
 
 		public static Dictionary<int, Dictionary<string, string>> existing_craft; //container for listing of user's craft already on KX and some details about them.
@@ -186,27 +185,11 @@ namespace KerbalX
 	}
 
 
-
-
-
-	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
-	public class EditorActions : MonoBehaviour
-	{
-		private bool set_state = true;
-		public string editor = null;
-
-		private void Update(){
-			if(set_state){
-				set_state = false;
-				KerbalX.console.window_pos = new Rect(250, 10, 310, 5);
-				KerbalX.editor_gui.current_editor = EditorLogic.fetch.ship.shipFacility.ToString ();
-			}
-		}
-	}
-
 	[KSPAddon(KSPAddon.Startup.AllGameScenes, false)]
 	public class KerbalXConsole : KerbalXWindow
 	{
+
+
 		private void Start()
 		{
 			window_title = "KX::Konsole";
@@ -225,14 +208,8 @@ namespace KerbalX
 				http.set_header ("token", "foobar").send ((resp,code) => {
 					Debug.Log (resp);
 				});
-			}
 
-			if(GUILayout.Button ("ping production")){
-				HTTP.get ("https://KerbalX.com/katateochi.json").send ((resp,code) => {
-					Debug.Log (resp);
-				});
 			}
-
 
 			if (GUILayout.Button ("open")) {
 				//Foobar fb = gameObject.AddComponent (typeof(Foobar)) as Foobar;
@@ -286,7 +263,7 @@ namespace KerbalX
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class JumpStart : MonoBehaviour
 	{
-		public static bool autostart = false;
+		public static bool autostart = true;
 		public static string save_name = "default";
 		public static string craft_name = "testy";
 

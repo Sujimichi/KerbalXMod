@@ -11,9 +11,24 @@ namespace KerbalX
 {
 
 	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
+	public class EditorActions : MonoBehaviour
+	{
+		private bool set_state = true;
+		public string editor = null;
+
+		private void Update(){
+			if(set_state){
+				set_state = false;
+				KerbalX.console.window_pos = new Rect(250, 10, 310, 5);
+				//KerbalX.editor_gui.current_editor = EditorLogic.fetch.ship.shipFacility.ToString ();
+			}
+		}
+	}
+
+	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
 	public class KerbalXUploadInterface : KerbalXWindow
 	{
-		public string current_editor = null;
+		//private string current_editor = null;
 		private string craft_name = null;
 		private string editor_craft_name = "";
 
@@ -22,7 +37,6 @@ namespace KerbalX
 		private float win_width = 410f;
 
 		private bool first_pass = true;
-		//private string image = "";
 
 		private DropdownData craft_select;
 		private DropdownData style_select;
@@ -51,6 +65,7 @@ namespace KerbalX
 		{
 			window_title = "KerbalX::Upload";
 			window_pos = new Rect ((Screen.width - win_width - 100), 60, win_width, 5);
+			//current_editor = EditorLogic.fetch.ship.shipFacility.ToString ();
 			prevent_editor_click_through = true;
 			enable_request_handler ();
 			KerbalX.editor_gui = this;

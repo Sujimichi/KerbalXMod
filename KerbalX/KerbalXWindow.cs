@@ -194,7 +194,7 @@ namespace KerbalX
 			return drop_data;
 		}
 
-
+		//prevents mouse actions on the GUI window from affecting things behind it.  Only works in the editors at present.
 		protected void prevent_click_through(string mode){
 			if(mode == "editor"){
 				Vector2 mouse_pos = Input.mousePosition;
@@ -208,6 +208,8 @@ namespace KerbalX
 		}
 
 
+		//As window will have been drawn with GUILayout.ExpandHeight(true) setting the height to a small value will cause the 
+		//window to readjust its height.  Only call after actions which reduce the height of the content, don't call it constantly OnGUI (unless Epilepsy is something you enjoy)
 		public void autoheight(){
 			window_pos.height = 5;
 		}
@@ -219,7 +221,7 @@ namespace KerbalX
 		public void hide(){
 			visible = false;
 			on_hide ();
-			EditorLogic.fetch.Unlock (window_id.ToString ());				
+			EditorLogic.fetch.Unlock (window_id.ToString ()); //ensure any locks on the editor interface are release when hiding.
 		}
 		public void toggle(){
 			if(visible){
@@ -235,6 +237,7 @@ namespace KerbalX
 		protected virtual void on_hide(){ }
 		protected virtual void on_show(){ }
 
+
 		protected void enable_request_handler(){
 			if(RequestHandler.instance == null){
 				KerbalX.log ("starting web request handler");
@@ -242,7 +245,6 @@ namespace KerbalX
 				RequestHandler.instance = request_handler;
 			}
 		}
-
 
 
 		//MonoBehaviour methods
@@ -274,19 +276,9 @@ namespace KerbalX
 			//Draw the main content of the window as defined by WindowContent
 			WindowContent (window_id);			
 
-			//add common footer elements for all windows
+			//add common footer elements for all windows if footer==true
 			if(footer){
-				GUIStyle link_label_style = new GUIStyle (GUI.skin.label);
-				link_label_style.normal.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
-
-				section (w => {
-					if(GUILayout.Button ("KerbalX.com", link_label_style, width (75f), height (30f))){
-						Application.OpenURL (KerbalX.site_url);
-					}
-					GUILayout.FlexibleSpace ();
-					GUILayout.Label (kx_logo_small);
-				});
-				//GUILayout.Label ("window id: " + window_id);
+				FooterContent (window_id);
 			}
 
 			if(draggable){
@@ -298,6 +290,21 @@ namespace KerbalX
 		protected virtual void WindowContent(int window_id)
 		{
 
+		}
+
+		//Default Footer for all windows, can be overridden only called if footer==true
+		protected virtual void FooterContent(int window_id){
+			GUIStyle link_label_style = new GUIStyle (GUI.skin.label);
+			link_label_style.normal.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
+
+			section (w => {
+				if(GUILayout.Button ("KerbalX.com", link_label_style, width (75f), height (30f))){
+					Application.OpenURL (KerbalX.site_url);
+				}
+				GUILayout.FlexibleSpace ();
+				GUILayout.Label (kx_logo_small);
+			});
+			//GUILayout.Label ("window id: " + window_id);			
 		}
 	}
 }
