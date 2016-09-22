@@ -94,14 +94,12 @@ namespace KerbalX
 		public AfterLoginAction after_login_action = () => {};
 
 
-		GUIStyle alert_style = new GUIStyle();
 
 
 		private void Start(){
 			window_title = "KerbalX::Login";
 			window_pos = new Rect((Screen.width/2 - 400/2),100, 400, 5);
 			KerbalX.login_gui = this;
-			alert_style.normal.textColor = Color.red;
 			enable_request_handler ();
 
 			//try to load a token from file and if present authenticate it with KerbalX.  if token isn't present or token authentication fails then show login fields.

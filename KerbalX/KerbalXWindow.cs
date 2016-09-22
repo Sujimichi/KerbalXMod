@@ -65,7 +65,17 @@ namespace KerbalX
 
 		protected GUIStyle style_override = null;
 		protected GUIStyle section_style = new GUIStyle();
-//		protected GUISkin cust_skin = null;
+
+
+		protected GUIStyle header_label		= new GUIStyle();
+		protected GUIStyle alert_style 		= new GUIStyle();
+		protected GUIStyle centered 		= new GUIStyle();
+		protected GUIStyle pic_link 	 	= new GUIStyle();
+		protected GUIStyle pic_hover	 	= new GUIStyle();
+		protected GUIStyle upload_button  	= new GUIStyle();
+		protected GUIStyle wrapped_button 	= new GUIStyle();
+
+		protected bool first_run = true;
 
 		private Texture2D kx_logo_small = new Texture2D(166,30, TextureFormat.ARGB32, false);
 
@@ -262,9 +272,42 @@ namespace KerbalX
 			kx_logo_small = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo_small"), false);
 		}
 
+		//it's like we need a sorta sheet of styles, maybe one that can cascade, a cascading style sheet if you will.
+		protected void style_modifiers(){
+			alert_style.normal.textColor = Color.red;
+			
+			upload_button = new GUIStyle (GUI.skin.button);
+			upload_button.fontSize = 20;
+			upload_button.padding = new RectOffset (3, 3, 10, 10);
+			
+			wrapped_button = new GUIStyle (GUI.skin.button);
+			wrapped_button.wordWrap = true;
+			
+			centered = new GUIStyle (GUI.skin.label);
+			centered.alignment = TextAnchor.UpperCenter;
+			
+			header_label = new GUIStyle (GUI.skin.label);
+			header_label.fontSize = 15;
+			header_label.fontStyle = FontStyle.Bold;
+
+			pic_link = new GUIStyle (GUI.skin.label);
+			pic_link.padding = new RectOffset (5, 5, 5, 5);
+			pic_link.margin = new RectOffset (0, 0, 0, 0);
+
+			pic_hover = new GUIStyle (pic_link);
+			pic_hover.normal.textColor = Color.black;
+
+		}
+
 		//called on each frame, handles drawing the window and will assign the next window id if it's not set
 		protected void OnGUI()
 		{
+			if(first_run){
+				first_run = false;
+				style_modifiers ();
+				//css = new StyleSheet ();
+			}
+
 			if(window_id == 0){
 				window_id = last_window_id + 1;
 				last_window_id = last_window_id + 1;

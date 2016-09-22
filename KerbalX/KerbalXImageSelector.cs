@@ -35,10 +35,6 @@ namespace KerbalX
 		private Vector2 scroll_pos;
 		private int file_count = 0;
 
-		GUIStyle pic_link 	 = new GUIStyle();
-		GUIStyle pic_hover	 = new GUIStyle();
-		GUIStyle header_label= new GUIStyle();
-
 		Texture2D pic_highlight 	= new Texture2D(1, 1, TextureFormat.RGBA32, false);
 		Texture2D scroll_background = new Texture2D(1, 1, TextureFormat.RGBA32, false);
 
@@ -72,19 +68,7 @@ namespace KerbalX
 
 		protected override void WindowContent(int win_id)
 		{
-			GUILayout.Label (GUI.skin.name);
-
-			pic_link = new GUIStyle (GUI.skin.label);
-			pic_link.padding = new RectOffset (5, 5, 5, 5);
-			pic_link.margin = new RectOffset (0, 0, 0, 0);
-
-			pic_hover = new GUIStyle (pic_link);
 			pic_hover.normal.background = pic_highlight;
-			pic_hover.normal.textColor = Color.black;
-
-			header_label = new GUIStyle (GUI.skin.label);
-			header_label.fontSize = 15;
-			header_label.fontStyle = FontStyle.Bold;
 
 			if(mode == "url_entry"){
 				v_section (w => {

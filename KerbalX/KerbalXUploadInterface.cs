@@ -36,7 +36,6 @@ namespace KerbalX
 		private string mode = "upload";
 		private float win_width = 410f;
 
-		private bool first_pass = true;
 
 		private DropdownData craft_select;
 		private DropdownData style_select;
@@ -51,11 +50,6 @@ namespace KerbalX
 
 		public List<PicData> pictures = new List<PicData> ();
 
-		GUIStyle alert_style 	= new GUIStyle();
-		GUIStyle upload_button  = new GUIStyle();
-		GUIStyle wrapped_button = new GUIStyle();
-		GUIStyle centered 		= new GUIStyle();
-		GUIStyle header_label	= new GUIStyle();
 
 		//private Texture2D kx_logo = new Texture2D(56, 56, TextureFormat.ARGB32, false);
 		//kx_logo = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo"), false);
@@ -91,30 +85,8 @@ namespace KerbalX
 			fetch_existing_craft ();
 		}
 
-		private void set_stylz(){
-			alert_style.normal.textColor = Color.red;
-			upload_button = new GUIStyle (GUI.skin.button);
-			upload_button.fontSize = 20;
-			upload_button.padding = new RectOffset (3, 3, 10, 10);
-
-			wrapped_button = new GUIStyle (GUI.skin.button);
-			wrapped_button.wordWrap = true;
-
-			centered = new GUIStyle (GUI.skin.label);
-			centered.alignment = TextAnchor.UpperCenter;
-
-			header_label = new GUIStyle (GUI.skin.label);
-			header_label.fontSize = 15;
-			header_label.fontStyle = FontStyle.Bold;
-			//			GUI.skin.label.fontSize = 20;
-		}
-
 		protected override void WindowContent(int win_id)
 		{
-			if (first_pass) {
-				first_pass = false;
-				set_stylz ();//it's like we need a sorta sheet of styles, maybe one that can cascade, a cascading style sheet if you will.
-			}
 
 			//get the craft name from the editor field, but allow the user to set a alternative name to upload as without changing the editor field
 			//but if the user changes the editor field then reset the craft_name to that. make sense? good, shutup. 
