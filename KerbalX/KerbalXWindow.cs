@@ -281,8 +281,15 @@ namespace KerbalX
 				prevent_click_through ("editor");
 			}
 
-			//Draw the main content of the window as defined by WindowContent
-			WindowContent (window_id);			
+			if(KerbalX.failed_to_connect){
+				GUILayout.Label ("Unable to Connect to KerbalX.com!");
+				if(GUILayout.Button ("try again")){
+					RequestHandler.instance.try_again ();
+				}
+			}else{
+				//Draw the main content of the window as defined by WindowContent
+				WindowContent (window_id);			
+			}
 
 			//add common footer elements for all windows if footer==true
 			if(footer){

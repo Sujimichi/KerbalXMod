@@ -23,6 +23,8 @@ namespace KerbalX
 		public static List<string> log_data = new List<string>();
 		public static string notice = "";
 		public static string alert = "";
+		public static bool failed_to_connect = false;
+
 
 		public static string site_url = "http://localhost:3000";
 		public static string screenshot_dir = Paths.joined (KSPUtil.ApplicationRootPath, "Screenshots"); //TODO make this a setting, oh and make settings.
@@ -37,11 +39,7 @@ namespace KerbalX
 
 
 		//methodical things
-		//takes partial url and returns full url to site; ie url_to("some/place") -> "http://whatever_domain_site_url_defines.com/some/place"
-		public static string url_to (string path){
-			if(!path.StartsWith ("/")){ path = "/" + path;}
-			return site_url + path;
-		}
+
 
 		//logging stuf, not suitable for lumberjacks
 		public static void log (string s){ 
@@ -180,14 +178,13 @@ namespace KerbalX
 	}
 
 
-	[KSPAddon(KSPAddon.Startup.AllGameScenes, false)]
+	[KSPAddon(KSPAddon.Startup.EveryScene, false)]
 	public class KerbalXConsole : KerbalXWindow
 	{
-
-
 		private void Start()
 		{
 			window_title = "KX::Konsole";
+			window_pos = new Rect(0, 0, 310, 5);
 			KerbalX.console = this;
 			enable_request_handler ();
 		}
@@ -197,6 +194,7 @@ namespace KerbalX
 		{
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
 
+			GUILayout.Label (KerbalXAPI.temp_view_token());
 
 			if(GUILayout.Button ("test 1")){
 				HTTP http = HTTP.get ("http://localhost:3000/katateochi.json");
@@ -206,53 +204,9 @@ namespace KerbalX
 
 			}
 
-			if (GUILayout.Button ("open")) {
-				//Foobar fb = gameObject.AddComponent (typeof(Foobar)) as Foobar;
-				Foobar ff = gameObject.AddOrGetComponent<Foobar> ();
-				Foobar.this_instance = ff;
-			}
-			if (GUILayout.Button ("close")) {
-				Foobar ff = gameObject.AddOrGetComponent<Foobar> ();
-				GameObject.Destroy (ff);
-			}
-
-			if (GUILayout.Button ("add text")) {
-				Foobar ff = gameObject.AddOrGetComponent<Foobar> ();
-				ff.some_text = "marmalade";
-			}
-
 			if (GUILayout.Button ("print log to console")) { KerbalX.show_log (); }
 		}
 	}
-
-	//[KSPAddon(KSPAddon.Startup.MainMenu, false)]
-	public class Foobar : MonoBehaviour
-	{
-		private int window_id = 42;
-		private Rect window_pos = new Rect(200, 200, 200, 200);
-
-		public string some_text = "";
-		public static Foobar this_instance = null;
-
-		void Start(){
-				
-		}
-
-		protected void OnGUI()
-		{
-			window_pos = GUILayout.Window (window_id, window_pos, DrawWindow, "testy moo");
-		}
-
-		public void DrawWindow(int win_id){
-
-			GUILayout.Label ("this is a test");
-			GUILayout.Label (some_text);
-			GUI.DragWindow();
-
-		}
-
-	}
-
 
 		
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]

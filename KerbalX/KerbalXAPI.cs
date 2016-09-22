@@ -56,12 +56,18 @@ namespace KerbalX
 			return token;
 		}
 
+		//takes partial url and returns full url to site; ie url_to("some/place") -> "http://whatever_domain_site_url_defines.com/some/place"
+		public static string url_to (string path){
+			if(!path.StartsWith ("/")){ path = "/" + path;}
+			return KerbalX.site_url + path;
+		}
+
 		//make request to site to authenticate token 
 		public static void authenticate_token(string new_token){
 			KerbalX.notify("Authenticating with KerbalX.com...");
 			NameValueCollection data = new NameValueCollection ();
 			data.Add ("token", new_token);
-			HTTP.post (KerbalX.url_to ("api/authenticate"), data).send ((resp, code) => {
+			HTTP.post (url_to ("api/authenticate"), data).send ((resp, code) => {
 				if(code==200){
 					token = new_token;
 					KerbalX.login_gui.show_login = false;
@@ -78,7 +84,7 @@ namespace KerbalX
 			NameValueCollection data = new NameValueCollection ();
 			data.Add ("username", username);
 			data.Add ("password", password);
-			HTTP.post (KerbalX.url_to ("api/login"), data).send ((resp, code) => {
+			HTTP.post (url_to ("api/login"), data).send ((resp, code) => {
 				if(code==200){
 					var resp_data = JSON.Parse (resp);
 					token = resp_data["token"];
@@ -96,7 +102,7 @@ namespace KerbalX
 
 		public static void fetch_existing_craft(ActionCallback callback){
 			//NameValueCollection data = new NameValueCollection (){{"lookup", "existing_craft"}};
-			HTTP.get (KerbalX.url_to ("api/existing_craft.json")).set_header ("token", KerbalXAPI.token).send ((resp, code) => {
+			HTTP.get (url_to ("api/existing_craft.json")).set_header ("token", KerbalXAPI.token).send ((resp, code) => {
 				if(code==200){
 					JSONNode craft_data = JSON.Parse (resp);
 					Dictionary<int, Dictionary<string, string>> craft_list = new Dictionary<int, Dictionary<string, string>>();
@@ -160,29 +166,59 @@ namespace KerbalX
 	public class RequestHandler : MonoBehaviour
 	{
 		public static RequestHandler instance = null;
+		private UnityWebRequest last_request;
+		private RequestCallback last_callback;
 
 		public void send_request(UnityWebRequest request, RequestCallback callback){
 			StartCoroutine (transmit (request, callback));
 		}
 
+		public void try_again(){			
+			send_request(last_request, last_callback);
+		}
+
 		public IEnumerator transmit(UnityWebRequest request, RequestCallback callback){
+			last_request = new UnityWebRequest (request.url, request.method);					//create a copy of the request which is about to be sent
+			if(request.method != "GET"){														//if the request fails because of inability to connect to site
+				last_request.uploadHandler = new UploadHandlerRaw (request.uploadHandler.data);;//then try_again() can be used to fire the copied request
+			}																					//and the user can carry on from where they were when connection was lost.
+			last_request.downloadHandler = request.downloadHandler;								//upload and download handlers have to be duplicated too
+			last_callback = callback;															//and the callback is also stuffed into a var for reuse.
+
+			KerbalX.alert = "";
+			KerbalX.failed_to_connect = false;
 			KerbalX.log("sending request to: " + request.url);
 
 			yield return request.Send ();
 
 			if (request.isError){
+				KerbalX.failed_to_connect = true;
 				KerbalX.log ("request failed: " + request.error);
-//				KerbalX.log ("response headers:");
-//				Dictionary<string, string> t = request.GetResponseHeaders ();
-//				foreach(KeyValuePair<string, string> r in t){
-//					KerbalX.log ("header: " + r.Key + " value " + r.Value);
-//				}
+				KerbalX.alert = "request failed: " + request.error;
 			}else{
-				KerbalX.log ("request successfull"); 
-				callback (request.downloadHandler.text, (int)request.responseCode);
+				int status_code = (int)request.responseCode;
+				if(status_code == 500){
+					KerbalX.log ("request returned 500 - Server Error!");	
+				}else{
+					KerbalX.log ("request returned " + status_code); 
+					callback (request.downloadHandler.text, status_code);
+				}
+				try{
+					request.Dispose ();
+					last_request.Dispose ();
+					last_callback = null;
+				}
+				catch{
+					//no need to catch anything here. If it can dispose of the request objects then great, if not then they've already been disposed (I think).
+				}
 			}
 		}
 	}
 
 }
+//				KerbalX.log ("response headers:");
+//				Dictionary<string, string> t = request.GetResponseHeaders ();
+//				foreach(KeyValuePair<string, string> r in t){
+//					KerbalX.log ("header: " + r.Key + " value " + r.Value);
+//				}
 

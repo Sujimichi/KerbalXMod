@@ -320,7 +320,7 @@ namespace KerbalX
 			data.Add ("craft_file", craft_file());
 			data.Add ("craft_name", craft_name);
 			data.Add ("part_data", JSONX.toJSON (part_info ()));
-			HTTP.post (KerbalX.url_to ("api/craft.json"), data).set_header ("token", KerbalXAPI.temp_view_token ()).send ((resp, code) => {
+			HTTP.post (KerbalXAPI.url_to ("api/craft.json"), data).set_header ("token", KerbalXAPI.temp_view_token ()).send ((resp, code) => {
 
 				string message = "";
 				if(code == 200){
