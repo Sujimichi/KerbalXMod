@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Linq;
 using System.Globalization;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 
 using System.IO;
+using System.Threading;
 
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace KerbalX
 {
@@ -41,6 +44,8 @@ namespace KerbalX
 
 		private string pic_url = "";
 		private string hover_ele = "";
+		private int current_row = 0;
+		private string current_pic_loading = "";
 
 		private void Start(){
 			window_title = "KerbalX::ScreenShots";
@@ -96,29 +101,45 @@ namespace KerbalX
 					};
 				});
 
+				GUILayout.Label ("scroll_pos: " + scroll_pos.y.ToString ());
+				GUILayout.Label ("current_row: " + current_row.ToString ());
+
 				if (pictures.Count > 0) {
 					scroll_pos = scroll (scroll_pos, 620f, 300f, w => {
+						int row_n = 1;
 						foreach(List<PicData> row in groups){
+
+							if((row_n * 150) - scroll_pos.y <= 450){
+								current_row = row_n;
+								foreach(PicData pic in row){
+									if (pic.texture.width == 2){
+										load_image2 (pic.file.FullName, pic.texture);
+									}
+								}
+							}
+							row_n++;
+
 							style_override = new GUIStyle ();
 							style_override.normal.background = scroll_background;
 							section (600f, sw => {
 								foreach(PicData pic in row){
 									v_section (150f, w2 => {
-										if(GUILayout.Button (pic.texture, (hover_ele==pic.name ? pic_hover : pic_link), width (w2), height (w2*0.75f))){
+										if(GUILayout.Button (pic.texture, (hover_ele==pic.file.FullName ? pic_hover : pic_link), width (w2), height (w2*0.75f))){
 											select_pic (pic);
 										}
-										if(GUILayout.Button (pic.name, (hover_ele==pic.name ? pic_hover : pic_link), width(w2))){
+										if(GUILayout.Button (pic.name, (hover_ele==pic.file.FullName ? pic_hover : pic_link), width(w2), height (37.5f))){
 											select_pic (pic);
 										}
 									});
 									if(GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition)){
-										hover_ele = pic.name;
+										hover_ele = pic.file.FullName;
 									}
 								}
 							});
 						}
 					});
 				}
+
 
 				if(GUILayout.Button ("refresh")){
 					prepare_pics ();
@@ -153,19 +174,37 @@ namespace KerbalX
 		private void prepare_pics(){
 			List<FileInfo> files = picture_files ();
 			pictures.Clear ();
+			scroll_pos.y = 0;
 			foreach(FileInfo file in files){
 				//prepare the texture for the image
 				Texture2D tex = new Texture2D (2, 2);
-				byte[] pic_data = File.ReadAllBytes (file.FullName);
-				tex.LoadImage (pic_data);
-
+				//load_image (file.FullName, tex);
+				//StartCoroutine (load_image (file.FullName, tex));
 				//add a PicData struct for each picture into pictures (struct defines name, file and texture)
 				PicData data = new PicData ();
 				data.initialize (file.Name, file, tex);
 				pictures.Add (data);
 			}
+
+			KerbalX.log ("picture_count: " + pictures.Count);
 			file_count = files.Count;
 			group_pics (); //divide pictures into "rows" of x pics_per_row 
+		}
+
+		public IEnumerator load_image(string path, Texture2D texture){
+			//var loader = new WWW ("file://" + path);
+			Debug.Log ("loading image " + path);
+			yield return texture;
+			byte[] pic_data = File.ReadAllBytes (path);
+			texture.LoadImage (pic_data);
+
+			//texture = (loader.texture);
+		}
+		public void load_image2(string path, Texture2D texture){
+			//var loader = new WWW ("file://" + path);
+			Debug.Log ("loading image " + path);
+			byte[] pic_data = File.ReadAllBytes (path);
+			texture.LoadImage (pic_data);
 		}
 
 		//constructs a List of Lists containing PicData.  Divides pictures into 'rows' of x pics_per_row 

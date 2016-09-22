@@ -279,6 +279,7 @@ namespace KerbalX
 			upload_button = new GUIStyle (GUI.skin.button);
 			upload_button.fontSize = 20;
 			upload_button.padding = new RectOffset (3, 3, 10, 10);
+			upload_button.margin = new RectOffset (20, 20, 20, 5);
 			
 			wrapped_button = new GUIStyle (GUI.skin.button);
 			wrapped_button.wordWrap = true;

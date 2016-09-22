@@ -79,6 +79,7 @@ namespace KerbalX
 			});
 		}
 
+		//Called after a succsessful login, if the login dialog was opened from this window.
 		protected override void on_login ()
 		{
 			GameObject.Destroy (KerbalX.login_gui);
@@ -207,14 +208,12 @@ namespace KerbalX
 					GUILayout.Label (KerbalX.alert, alert_style, width (win_width) );
 				}
 				if (upload_errors.Count () > 0) {
-					GUILayout.Label ("errors and shit");
+					GUILayout.Label ("Craft Failed to Upload", alert_style);
 					foreach (string error in upload_errors) {
 						GUILayout.Label (error.Trim (), alert_style, width (win_width));
 					}
 				}
 
-				style_override = new GUIStyle();
-				style_override.padding = new RectOffset (20, 20, 10, 10);
 				section (w => {
 					if (GUILayout.Button (mode_title + "!", upload_button)) {
 						upload_craft ();
@@ -222,23 +221,20 @@ namespace KerbalX
 				});
 			}
 
-
-			if(GUILayout.Button ("test")){
-				//				EditorLogic.fetch.newBtn.onClick.AddListener (() => {
-				//					Debug.Log ("NEW CLICKED");
-				//				});
-				//EditorLogic.fetch.newBtn.Select ();
-				//EditorLogic.fetch.newBtn.onClick.Invoke ();
-				//EditorLogic.fetch.saveBtn.onClick.Invoke ();
-
-				//				this.visible = false;
-				//				Application.CaptureScreenshot ("fibble");
-				//				this.visible = true;
-
-				window_pos.width = window_pos.width + 10;
-
-
-			}
+//			if(GUILayout.Button ("test")){
+//				//				EditorLogic.fetch.newBtn.onClick.AddListener (() => {
+//				//					Debug.Log ("NEW CLICKED");
+//				//				});
+//				//EditorLogic.fetch.newBtn.Select ();
+//				//EditorLogic.fetch.newBtn.onClick.Invoke ();
+//				//EditorLogic.fetch.saveBtn.onClick.Invoke ();
+//
+//				//				this.visible = false;
+//				//				Application.CaptureScreenshot ("fibble");
+//				//				this.visible = true;
+//
+//				window_pos.width = window_pos.width + 10;
+//			}
 
 		}
 
@@ -320,7 +316,6 @@ namespace KerbalX
 					KerbalX.log (resp);
 					string resp_errs = resp_data["errors"];
 					upload_errors = resp_errs.Split (',');
-					KerbalX.alert = "Craft Failed to Upload";
 
 				}else{
 					message = "upload failed - server error";

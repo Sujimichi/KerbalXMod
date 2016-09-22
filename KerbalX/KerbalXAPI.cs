@@ -9,8 +9,6 @@ using System.Collections.Specialized;
 using UnityEngine;
 using UnityEngine.Networking;
 
-using System.Threading;
-
 using SimpleJSON;
 
 
