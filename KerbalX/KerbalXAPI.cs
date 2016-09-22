@@ -24,22 +24,23 @@ namespace KerbalX
 	{
 		private static string token = null; 
 
-		public static bool token_not_loaded(){
+		public static bool logged_out(){
 			return token == null;
 		}
-		public static bool token_loaded(){
+		public static bool logged_in(){
 			return token != null;
 		}
 
 
 		public static void load_and_authenticate_token(){
 			KerbalX.notify("Reading token from " + KerbalX.token_path);
+			KerbalX.login_gui.enable_login = false;
 			try{
 				string token = System.IO.File.ReadAllText(KerbalX.token_path);
 				KerbalXAPI.authenticate_token (token);
 			}
 			catch{
-				KerbalX.login_gui.show_login = true;
+				KerbalX.login_gui.enable_login = true;
 			}
 		}
 
@@ -47,10 +48,6 @@ namespace KerbalX
 			System.IO.File.WriteAllText(KerbalX.token_path, token);
 		}
 
-		public static void clear_token(){
-			token = null; 
-			//TODO delete token file.
-		}
 
 		public static string temp_view_token(){ //TODO remove this - just a temp method to access the token from other classes.
 			return token;
@@ -70,16 +67,15 @@ namespace KerbalX
 			HTTP.post (url_to ("api/authenticate"), data).send ((resp, code) => {
 				if(code==200){
 					token = new_token;
-					KerbalX.login_gui.show_login = false;
-				}else{
-					KerbalX.login_gui.show_login = true;
 				}
 				KerbalX.login_gui.autoheight ();
 			});
 		}
 
+		//make request to site to authenticate username and password and get token back
 		public static void login(string username, string password){
-			//make request to site to authenticate username and password and get token back
+			KerbalX.login_gui.enable_login = false; //disable interface while logging in to prevent multiple login clicks
+			KerbalX.login_gui.login_failed = false;
 			KerbalX.notify("loging into KerbalX.com...");
 			NameValueCollection data = new NameValueCollection ();
 			data.Add ("username", username);
@@ -89,16 +85,22 @@ namespace KerbalX
 					var resp_data = JSON.Parse (resp);
 					token = resp_data["token"];
 					save_token (resp_data["token"]);
-					KerbalX.login_gui.show_login = false;
 					KerbalX.login_gui.login_successful = true;
 				}else{
-					KerbalX.login_gui.show_login = true;
 					KerbalX.login_gui.login_failed = true;
 				}
 				KerbalX.login_gui.enable_login = true;
 				KerbalX.login_gui.autoheight ();
 			});
 		}
+
+		public static void log_out(){
+			token = null; 
+			KerbalX.login_gui.enable_login = true;
+			KerbalX.log ("logged out");
+			//TODO delete token file.
+		}
+
 
 		public static void fetch_existing_craft(ActionCallback callback){
 			//NameValueCollection data = new NameValueCollection (){{"lookup", "existing_craft"}};

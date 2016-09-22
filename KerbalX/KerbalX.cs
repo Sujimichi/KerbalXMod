@@ -89,7 +89,6 @@ namespace KerbalX
 		private string username = "";
 		private string password = "";
 		public bool enable_login = true;  //used to toggle enabled/disabled state on login fields and button
-		public bool show_login = false;
 		public bool login_failed = false;
 		public bool login_successful = false;
 
@@ -104,15 +103,15 @@ namespace KerbalX
 			alert_style.normal.textColor = Color.red;
 			enable_request_handler ();
 
-			//try to load a token from file and if present authenticate it with KerbalX.  if token isn't present or authentication fails the show login fields
-			if (KerbalXAPI.token_not_loaded()) {
+			//try to load a token from file and if present authenticate it with KerbalX.  if token isn't present or token authentication fails then show login fields.
+			if (KerbalXAPI.logged_out()) {
 				KerbalXAPI.load_and_authenticate_token ();	
 			}
 		}
 
 		protected override void WindowContent(int win_id)
 		{
-			if(show_login){					
+			if(KerbalXAPI.logged_out ()){					
 				GUI.enabled = enable_login;
 				GUILayout.Label ("Enter your KerbalX username and password");
 				section (w => {
@@ -126,9 +125,10 @@ namespace KerbalX
 				GUI.enabled = true;
 			}
 
-			if (KerbalXAPI.token_loaded ()) {
+			if (KerbalXAPI.logged_in ()) {
 				GUILayout.Label ("You are logged in");
 			}
+
 			if(login_successful){
 				section (w => {
 					GUILayout.Label ("KerbalX.key saved in KSP root", width (w-20f));
@@ -149,22 +149,18 @@ namespace KerbalX
 				});
 			}
 
-			GUI.enabled = enable_login;
-			if (show_login) {
+			if (KerbalXAPI.logged_out ()) {
+				GUI.enabled = enable_login;
 				if (GUILayout.Button ("Login")) {				
-					KerbalX.alert = "";
-					enable_login = false;
-					login_failed = false;
 					KerbalXAPI.login (username, password);
 				}
+				GUI.enabled = true;
 			}else{
 				if (GUILayout.Button ("Log out")) {
-					show_login = true;
-					KerbalXAPI.clear_token ();
-					KerbalX.notify ("logged out");
+					KerbalXAPI.log_out ();
 				}				
 			}
-			GUI.enabled = true;
+			GUI.enabled = true; //just in case
 
 			if(login_failed){
 				v_section (w => {
