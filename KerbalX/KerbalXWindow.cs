@@ -50,9 +50,9 @@ namespace KerbalX
  	*/
 	public class KerbalXWindow : MonoBehaviour
 	{
-		protected string window_title = "untitled window";
+		public string window_title = "untitled window";
 
-		public Rect window_pos = new Rect();
+		public Rect window_pos = new Rect((Screen.width/2 - 500f/2), Screen.height/2, 500f, 5);
 		public bool visible = true;
 
 		protected bool footer = true;
@@ -81,8 +81,6 @@ namespace KerbalX
 
 		//Definition of delegate to be passed into the section, v_section and scroll methods
 		protected delegate void Content(float width);
-
-
 
 
 		/* Essentially wraps the actions of a delegate (lambda) in calls to BeginHorizontal and EndHorizontal
@@ -154,7 +152,6 @@ namespace KerbalX
 			return section_width; //width to pass back into the lambda
 		}
 
-
 		protected DropdownData dropdown(Dictionary<int, string> collection, DropdownData drop_data, float outer_width, float menu_height){
 			GUIStyle dropdown_field = new GUIStyle (GUI.skin.textField);
 			GUIStyle dropdown_menu_item = new GUIStyle (GUI.skin.label);
@@ -193,6 +190,17 @@ namespace KerbalX
 			});
 			return drop_data;
 		}
+
+
+		protected KerbalXDialog show_dialog(DialogContent content){
+			KerbalXDialog dialog = gameObject.AddOrGetComponent<KerbalXDialog> ();
+			dialog.content = content;
+			return dialog;
+		}
+		protected void close_dialog(){
+			GameObject.Destroy (KerbalXDialog.instance);
+		}
+
 
 		//prevents mouse actions on the GUI window from affecting things behind it.  Only works in the editors at present.
 		protected void prevent_click_through(string mode){

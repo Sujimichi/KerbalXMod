@@ -172,11 +172,11 @@ namespace KerbalX
 
 			if (request.isError){
 				KerbalX.log ("request failed: " + request.error);
-				KerbalX.log ("response headers:");
-				Dictionary<string, string> t = request.GetResponseHeaders ();
-				foreach(KeyValuePair<string, string> r in t){
-					KerbalX.log ("header: " + r.Key + " value " + r.Value);
-				}
+//				KerbalX.log ("response headers:");
+//				Dictionary<string, string> t = request.GetResponseHeaders ();
+//				foreach(KeyValuePair<string, string> r in t){
+//					KerbalX.log ("header: " + r.Key + " value " + r.Value);
+//				}
 			}else{
 				KerbalX.log ("request successfull"); 
 				callback (request.downloadHandler.text, (int)request.responseCode);

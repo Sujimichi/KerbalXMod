@@ -68,31 +68,19 @@ namespace KerbalX
 
 	}
 
-	public delegate void DialogAction();
+	public delegate void DialogContent();
 	public class KerbalXDialog : KerbalXWindow
 	{
 		public static KerbalXDialog instance;
-		public float dialog_width = 300f;
-		public string message = "";
-		public DialogAction ok_action = null;
-		public string ok_text = "OK";
+		public DialogContent content;
 
 		private void Start(){
-			window_pos = new Rect((Screen.width/2 - dialog_width/2), Screen.height/4, dialog_width, 5);	
-			window_title = "";
+			KerbalXDialog.instance = this;
 			footer = false;
-			ok_action = () => {
-				GameObject.Destroy (KerbalXDialog.instance);
-			};
 		}
 
 		protected override void WindowContent(int win_id){
-			GUILayout.Label (message);
-			if(ok_action != null){
-				if(GUILayout.Button (ok_text)){
-					ok_action ();
-				}
-			}
+			content ();
 		}
 	}
 
@@ -147,11 +135,18 @@ namespace KerbalX
 				section (w => {
 					GUILayout.Label ("KerbalX.key saved in KSP root", width (w-20f));
 					if (GUILayout.Button ("?", width (20f))) {
-						KerbalXDialog dialog = gameObject.AddOrGetComponent<KerbalXDialog> ();
-						KerbalXDialog.instance = dialog;
-						dialog.message = "The KerbalX.key is a token that is used to authenticate you with the site." +
-							"\nIt will also persist your login, so next time you start KSP you won't need to login again." +
-							"\nIf you want to login to KerbalX from multiple instances of KSP copy the KerbalX.key file into each install.";
+
+						KerbalXDialog dialog = show_dialog(() => {
+							string message = "The KerbalX.key is a token that is used to authenticate you with the site." +
+								"\nIt will also persist your login, so next time you start KSP you won't need to login again." +
+								"\nIf you want to login to KerbalX from multiple instances of KSP copy the KerbalX.key file into each install.";
+							GUILayout.Label (message);
+							if(GUILayout.Button ("OK")){
+								close_dialog ();
+							};
+						});
+						dialog.window_pos = new Rect(window_pos.x + window_pos.width + 10, window_pos.y, 300f, 5);
+						dialog.window_title = "KerablX Token File";
 					}
 				});
 			}
@@ -263,7 +258,7 @@ namespace KerbalX
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class JumpStart : MonoBehaviour
 	{
-		public static bool autostart = true;
+		public static bool autostart = false;
 		public static string save_name = "default";
 		public static string craft_name = "testy";
 
