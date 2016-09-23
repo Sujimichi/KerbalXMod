@@ -1,6 +1,8 @@
 ﻿using System;
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace KerbalX
 {
@@ -68,11 +70,13 @@ namespace KerbalX
 
 
 		protected GUIStyle header_label		= new GUIStyle();
+		protected GUIStyle small			= new GUIStyle();
 		protected GUIStyle alert_style 		= new GUIStyle();
 		protected GUIStyle centered 		= new GUIStyle();
 		protected GUIStyle pic_link 	 	= new GUIStyle();
 		protected GUIStyle pic_hover	 	= new GUIStyle();
 		protected GUIStyle upload_button  	= new GUIStyle();
+		protected GUIStyle screenshot_button= new GUIStyle();
 		protected GUIStyle wrapped_button 	= new GUIStyle();
 
 		protected bool first_run = true;
@@ -240,8 +244,15 @@ namespace KerbalX
 		public void hide(){
 			visible = false;
 			on_hide ();
+			StartCoroutine (unlock_delay ());
+		}
+
+		public IEnumerator unlock_delay(){
+			yield return true;							//doesn't seem to matter what this returns
+			Thread.Sleep (100);
 			EditorLogic.fetch.Unlock (window_id.ToString ()); //ensure any locks on the editor interface are release when hiding.
 		}
+
 		public void toggle(){
 			if(visible){
 				hide ();
@@ -274,30 +285,38 @@ namespace KerbalX
 
 		//it's like we need a sorta sheet of styles, maybe one that can cascade, a cascading style sheet if you will.
 		protected void style_modifiers(){
+			header_label = new GUIStyle (GUI.skin.label);
+			header_label.fontSize = 20;
+			header_label.fontStyle = FontStyle.Bold;
+
+			alert_style = new GUIStyle (GUI.skin.label);
 			alert_style.normal.textColor = Color.red;
-			
-			upload_button = new GUIStyle (GUI.skin.button);
-			upload_button.fontSize = 20;
-			upload_button.padding = new RectOffset (3, 3, 10, 10);
-			upload_button.margin = new RectOffset (20, 20, 20, 5);
-			
-			wrapped_button = new GUIStyle (GUI.skin.button);
-			wrapped_button.wordWrap = true;
-			
+
+			small = new GUIStyle (GUI.skin.label);
+			small.fontSize = 12;
+
 			centered = new GUIStyle (GUI.skin.label);
 			centered.alignment = TextAnchor.UpperCenter;
-			
-			header_label = new GUIStyle (GUI.skin.label);
-			header_label.fontSize = 15;
-			header_label.fontStyle = FontStyle.Bold;
 
 			pic_link = new GUIStyle (GUI.skin.label);
 			pic_link.padding = new RectOffset (5, 5, 5, 5);
 			pic_link.margin = new RectOffset (0, 0, 0, 0);
-
+			
 			pic_hover = new GUIStyle (pic_link);
 			pic_hover.normal.textColor = Color.black;
+			
+			upload_button = new GUIStyle (GUI.skin.button);
+			upload_button.fontSize = 20;
+			upload_button.fontStyle = FontStyle.Bold;
+			upload_button.padding = new RectOffset (3, 3, 10, 10);
+			upload_button.margin = new RectOffset (20, 20, 20, 5);
 
+			screenshot_button = new GUIStyle (GUI.skin.button);
+			screenshot_button.fontSize = 15;
+			screenshot_button.padding = new RectOffset (3, 3, 10, 10);
+
+			wrapped_button = new GUIStyle (GUI.skin.button);
+			wrapped_button.wordWrap = true;
 		}
 
 		//called on each frame, handles drawing the window and will assign the next window id if it's not set

@@ -19,10 +19,12 @@ namespace KerbalX
 		public string url;
 		public FileInfo file;
 		public Texture2D texture;
-		public void initialize(string new_name, FileInfo new_file, Texture2D new_texture){
+		public int id;
+		public void initialize(string new_name, FileInfo new_file, Texture2D new_texture, int set_id){
 			name = new_name;
 			file = new_file;
 			texture = new_texture;
+			id = set_id;
 		}
 	}
 
@@ -31,6 +33,8 @@ namespace KerbalX
 	{
 		private List<PicData> pictures = new List<PicData>();				//populated by load_pics, contains PicData objects for each pic 
 		private List<List<PicData>> groups = new List<List<PicData>> ();	//nested list of lists - rows of pictures for display in the interface
+		//private List<string> loaded_filenames = new List<string> ();
+		private bool[] loaded_pics;
 
 		private string mode = "pic_selector";
 		private int pics_per_row = 4;
@@ -44,13 +48,11 @@ namespace KerbalX
 
 		private string pic_url = "";
 		private string hover_ele = "";
-		private int current_row = 0;
-		private string current_pic_loading = "";
 
 		private void Start(){
 			window_title = "KerbalX::ScreenShots";
-			float w = 610;
-			window_pos = new Rect((Screen.width/2 - w/2), Screen.height/4, w, 5);
+			float w = 640;
+			window_pos = new Rect((Screen.width/2 - w/2)+100, Screen.height/3, w, 5);
 			visible = false;
 			prevent_editor_click_through = true;
 			KerbalX.image_selector = this;
@@ -77,7 +79,10 @@ namespace KerbalX
 
 			if(mode == "url_entry"){
 				v_section (w => {
-					GUILayout.Label ("Enter the URL to your image", header_label);
+					section (w2 => {
+						GUILayout.Label ("Enter the URL to your image", header_label, width (w2-100f));
+						if(GUILayout.Button ("close", width (100f), height (30) )){ this.hide (); }
+					});
 					GUILayout.Label ("note: one of 'em urls what end with an extension ie .jpg");
 					section(w2 => {
 						pic_url = GUILayout.TextField (pic_url, width (w2-100f));
@@ -94,45 +99,72 @@ namespace KerbalX
 				});
 
 			}else{
+
 				section (w => {
-					GUILayout.Label ("Select a picture for your craft", header_label, width (w-100f));
-					if(GUILayout.Button ("or enter a url", width (100f))){
-						change_mode ("url_entry");
-					};
+					v_section (w-100f, w2 => {
+						GUILayout.Label ("Select a picture for your craft", header_label, width (w2));
+						GUILayout.Label ("Click on pics below to add them", width (w2));
+					});
+					v_section (100f, w2 => {
+						if(GUILayout.Button ("or enter a url", width (w2), height (30) )){ change_mode ("url_entry"); }
+						if(GUILayout.Button ("close", width (w2), height (30) )){ this.hide (); }
+					});
 				});
 
-				GUILayout.Label ("scroll_pos: " + scroll_pos.y.ToString ());
-				GUILayout.Label ("current_row: " + current_row.ToString ());
 
+				if (GUILayout.Button ("Take Screenshot now", screenshot_button)) {
+					grab_screenshot ();
+				}
+				GUILayout.Label ("Grabs a screen shot of the current view (KX windows will hide while taking the pic).", small);
+
+				//Display picture selector - scrolling container of selectable pictures.
+				//picture files will have already been selected and sorted (by prepare_pics()) and then grouped into rows of 4 pics per row (by group_pics())
+				//but the files won't have been read yet, so the picture textures haven't been set.  Trying to load all picture textures on load is very time consuming.
+				//so instead pictures are loaded and have their texture set row by row, on demand as the user scrolls down.
 				if (pictures.Count > 0) {
+					int n = 0;
+					foreach(bool p in loaded_pics){ if(p){n++;}}
+					section (w => {
+						GUILayout.Label ("loaded " + n + " of " + pictures.Count.ToString () + " pictures");
+						if(GUILayout.Button ("refresh", width (100f))){
+							prepare_pics ();
+						}
+					});
+
 					scroll_pos = scroll (scroll_pos, 620f, 300f, w => {
 						int row_n = 1;
 						foreach(List<PicData> row in groups){
 
-							if((row_n * 150) - scroll_pos.y <= 450){
-								current_row = row_n;
+							//On demand loading of textures.  As each row comes into focus it's picture's textures are loaded
+							//row_n * 150 (the height of each row) defines it's bottom offset. when that value minus the current scroll pos is less than
+							//the threshold (height of scroll container 300, plus 100 so images load before their in full view), then load the pictures on this row.
+							if((row_n * 150) - scroll_pos.y <= 400){	
 								foreach(PicData pic in row){
-									if (pic.texture.width == 2){
-										load_image2 (pic.file.FullName, pic.texture);
+									if(loaded_pics[pic.id] != true){
+										loaded_pics[pic.id] = true;		//bool array used to track which pictures have been loaded. checking the texture isn't good enough because of the coroutine
+										StartCoroutine (load_image (pic.file.FullName, pic.texture));  //Use a Coroutine to load the picture texture with as little interface lag as possible.
 									}
 								}
 							}
-							row_n++;
+							row_n++;//increment row count
 
+							//Draw each row, regardless of wheter picture textures have been loaded (will prob add a 'not yet loaded' texture in at some point TODO)
 							style_override = new GUIStyle ();
 							style_override.normal.background = scroll_background;
-							section (600f, sw => {
+							section (600f, sw => {	//horizontal section....sorry, BeginHorizontal container for the row (slightly narrower than outter container to account for scroll bar)
 								foreach(PicData pic in row){
-									v_section (150f, w2 => {
-										if(GUILayout.Button (pic.texture, (hover_ele==pic.file.FullName ? pic_hover : pic_link), width (w2), height (w2*0.75f))){
+									v_section (150f, w2 => {  //vertical section, ahem, BeginVertical container for each pic.  Contains to restyled buttons, each will call select_pic.
+										var style =  (hover_ele==pic.file.FullName ? pic_hover : pic_link); //flip-flop style depending on hover_ele, being == to file name (because I can't figure out how to make style.hover work yet)
+
+										if(GUILayout.Button (pic.texture, style, width (w2), height (w2*0.75f))){
 											select_pic (pic);
 										}
-										if(GUILayout.Button (pic.name, (hover_ele==pic.file.FullName ? pic_hover : pic_link), width(w2), height (37.5f))){
+										if(GUILayout.Button (pic.name, style, width(w2), height (37.5f))){
 											select_pic (pic);
 										}
 									});
-									if(GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition)){
-										hover_ele = pic.file.FullName;
+									if(GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition)){ //detect of mouse is over the last vertical section 
+										hover_ele = pic.file.FullName;											//and hover_ele to that pics filename. used to set on hover style
 									}
 								}
 							});
@@ -141,28 +173,51 @@ namespace KerbalX
 				}
 
 
-				if(GUILayout.Button ("refresh")){
-					prepare_pics ();
-				}
+
 
 			}
 		}
+
+		//Grab a screenshot of the craft (KX windows will be hidden for a 100ms while screenshot is taken).
+		private void grab_screenshot (){
+			string filename = "screenshot - " + string.Format ("{0:yyyy-MM-dd_hh-mm-ss}", DateTime.Now) + ".png";
+			KerbalX.log ("grabbing screenshot: " + filename);
+			KerbalX.editor_gui.hide ();
+			this.hide ();
+			StartCoroutine (shutter (filename));		//shutter re-opens the windows. well, it's kinda the exact opposite of what a shutter does, but yeah....whatever
+			Application.CaptureScreenshot (filename);
+		}
+
+		//Does the loading of the picture onto the Texture2D object, returns IEnumerator as this is called in a Coroutine.
+		public IEnumerator shutter(string filename){
+			yield return true;							//doesn't seem to matter what this returns
+			Thread.Sleep (100);							//delay before re-opening windows
+			//Application.CaptureScreenshot seems insistant on plonking the picture in KSP_Data, so this next bit relocates the pic to join it's friends in the screenshot folder
+			string path = Paths.joined (KerbalX.screenshot_dir, filename);
+			string origin = Paths.joined (KSPUtil.ApplicationRootPath, "KSP_Data", filename);
+			KerbalX.log ("moving file: " + origin);
+			if(File.Exists (origin)){File.Move (origin, path);}
+			KerbalX.editor_gui.show (); //re-open the KX windows.
+			this.show ();
+		}
+
 
 		private void change_mode(string new_mode){
 			mode = new_mode;
 			autoheight ();
 		}
 
+		//adds pic to list of selected pics on UploadInterface and closes (well, hides) the picture selector.
 		private void select_pic(PicData pic){
 			KerbalX.editor_gui.pictures.Add (pic);
 			this.hide ();
 		}
 
+		//Get file info for all files of defined file_types within the screenshot dir
 		private List<FileInfo> picture_files(){
 			DirectoryInfo dir = new DirectoryInfo (KerbalX.screenshot_dir);
 			List<FileInfo> files = new List<FileInfo> ();
 
-			//Get file info for all files of defined file_types within the given dir
 			foreach(string file_type in file_types){
 				foreach(FileInfo file in dir.GetFiles ("*." + file_type)){
 					files.Add (file);
@@ -171,40 +226,38 @@ namespace KerbalX
 			return files;
 		}
 
+		//sort pic files from picture_files (by date) and for each on initialise a PicData struct which will contain the name FileInfo and a blank texture (to be loaded on demand later)
 		private void prepare_pics(){
 			List<FileInfo> files = picture_files ();
-			pictures.Clear ();
-			scroll_pos.y = 0;
-			foreach(FileInfo file in files){
-				//prepare the texture for the image
-				Texture2D tex = new Texture2D (2, 2);
-				//load_image (file.FullName, tex);
-				//StartCoroutine (load_image (file.FullName, tex));
-				//add a PicData struct for each picture into pictures (struct defines name, file and texture)
-				PicData data = new PicData ();
-				data.initialize (file.Name, file, tex);
-				pictures.Add (data);
-			}
 
-			KerbalX.log ("picture_count: " + pictures.Count);
+			FileInfo[] sorted_files = files.ToArray ();
+			Array.Sort (sorted_files, delegate(FileInfo f1, FileInfo f2) {
+				return f2.CreationTime.CompareTo (f1.CreationTime);
+			});
+				
+			pictures.Clear ();
+			loaded_pics = new bool[files.Count];
+
+			scroll_pos.y = 0;
+			int i = 0;
+			foreach(FileInfo file in sorted_files){
+				Texture2D tex = new Texture2D (2, 2); //prepare the texture for the image
+				//add a PicData struct for each picture into pictures (struct defines name, file, texture and id) 
+				//id is used as index in loaded_pics, used for tracking which have had textures loaded 
+				PicData data = new PicData ();
+				data.initialize (file.Name, file, tex, i);
+				pictures.Add (data);
+				i++;
+			}
 			file_count = files.Count;
 			group_pics (); //divide pictures into "rows" of x pics_per_row 
 		}
 
+		//Does the loading of the picture onto the Texture2D object, returns IEnumerator as this is called in a Coroutine.
 		public IEnumerator load_image(string path, Texture2D texture){
-			//var loader = new WWW ("file://" + path);
-			Debug.Log ("loading image " + path);
-			yield return texture;
-			byte[] pic_data = File.ReadAllBytes (path);
-			texture.LoadImage (pic_data);
-
-			//texture = (loader.texture);
-		}
-		public void load_image2(string path, Texture2D texture){
-			//var loader = new WWW ("file://" + path);
-			Debug.Log ("loading image " + path);
-			byte[] pic_data = File.ReadAllBytes (path);
-			texture.LoadImage (pic_data);
+			yield return true;							//doesn't seem to matter what this returns
+			byte[] pic_data = File.ReadAllBytes (path);	//read image file
+			texture.LoadImage (pic_data);				//wop it all upside the texture.
 		}
 
 		//constructs a List of Lists containing PicData.  Divides pictures into 'rows' of x pics_per_row 

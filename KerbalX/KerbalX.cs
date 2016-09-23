@@ -195,10 +195,7 @@ namespace KerbalX
 			}
 
 			if(GUILayout.Button ("test 1")){
-				HTTP http = HTTP.get ("http://localhost:3000/katateochi.json");
-				http.set_header ("token", "foobar").send ((resp,code) => {
-					Debug.Log (resp);
-				});
+				Debug.Log (KerbalX.image_selector.window_pos.width.ToString ());
 			}
 
 			if (GUILayout.Button ("Login")) {

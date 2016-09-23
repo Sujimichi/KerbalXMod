@@ -59,7 +59,7 @@ namespace KerbalX
 		{
 			KerbalX.editor_gui = this;
 			window_title = "KerbalX::Upload";
-			window_pos = new Rect ((Screen.width - win_width - 100), 60, win_width, 5);
+			window_pos = new Rect ((Screen.width - win_width - 20), 50, win_width, 5);
 			//current_editor = EditorLogic.fetch.ship.shipFacility.ToString ();
 			require_login = true;
 			prevent_editor_click_through = true;
@@ -181,8 +181,6 @@ namespace KerbalX
 						}
 						GUILayout.Label (label_text);
 					}
-
-					GUILayout.Label ("remote craft count: " + remote_craft.Count);
 
 					section (w => {
 						v_section (w*0.7f, inner_w => {
