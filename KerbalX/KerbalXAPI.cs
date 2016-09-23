@@ -55,11 +55,6 @@ namespace KerbalX
 			File.WriteAllText(KerbalX.token_path, token);
 		}
 
-
-		public static string temp_view_token(){ //TODO remove this - just a temp method to access the token from other classes.
-			return token;
-		}
-
 		//takes partial url and returns full url to site; ie url_to("some/place") -> "http://whatever_domain_site_url_defines.com/some/place"
 		public static string url_to (string path){
 			if(!path.StartsWith ("/")){ path = "/" + path;}
@@ -134,12 +129,19 @@ namespace KerbalX
 				}
 			});
 		}
+
+		public static void upload_craft(WWWForm craft_data, RequestCallback callback){
+			HTTP http = HTTP.post (url_to ("api/craft"), craft_data);
+			http.set_header ("token", KerbalXAPI.token);
+			http.request.SetRequestHeader ("Content-Type", "multipart/form-data");
+			http.send (callback);
+		}
 	}
 
 
 	public class HTTP
 	{
-		private UnityWebRequest request; 
+		public UnityWebRequest request; 
 
 		public static HTTP get(string url){
 			HTTP http = new HTTP ();
@@ -152,6 +154,12 @@ namespace KerbalX
 			foreach(string key in data){
 				form_data.AddField (key, data[key]);
 			}
+			HTTP http = new HTTP ();
+			http.request = UnityWebRequest.Post (url, form_data);
+			return http;
+		}
+
+		public static HTTP post(string url, WWWForm form_data){
 			HTTP http = new HTTP ();
 			http.request = UnityWebRequest.Post (url, form_data);
 			return http;

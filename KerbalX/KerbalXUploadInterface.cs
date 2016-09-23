@@ -1,4 +1,6 @@
 ﻿using System;
+
+using System.IO;
 using System.Linq;
 using System.Globalization;
 using System.Collections.Generic;
@@ -6,6 +8,7 @@ using System.Collections.Specialized;
 
 using SimpleJSON;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace KerbalX
 {
@@ -310,30 +313,33 @@ namespace KerbalX
 		}
 
 		private void upload_craft(){
-			//Array.Clear (upload_errors, 0, upload_errors.Length);	//remove any previous upload errors
 			clear_errors ();
+			WWWForm craft_data = new WWWForm();
+			craft_data.AddField ("craft_name", craft_name);
+			craft_data.AddField ("craft_file", craft_file());
+			craft_data.AddField ("part_data", JSONX.toJSON (part_info ()));
+			craft_data.AddField ("foo[1]", "foo_1");
+			craft_data.AddField ("foo[2]", "foo_2");
 
-			NameValueCollection data = new NameValueCollection ();	//contruct upload data
-			data.Add ("craft_file", craft_file());
-			data.Add ("craft_name", craft_name);
-			data.Add ("part_data", JSONX.toJSON (part_info ()));
-			HTTP.post (KerbalXAPI.url_to ("api/craft.json"), data).set_header ("token", KerbalXAPI.temp_view_token ()).send ((resp, code) => {
+			int i = 0;
+			foreach(PicData pic in pictures){
+				i++;
+				byte[] pic_data = File.ReadAllBytes (pic.file.FullName);	//read image file
+				craft_data.AddField ("images[image_" + i + "]", Convert.ToBase64String (pic_data));
+			}
 
-				string message = "";
+
+			KerbalXAPI.upload_craft (craft_data, (resp, code) => {
 				if(code == 200){
 					var resp_data = JSON.Parse (resp);
 					KerbalX.log ("holy fuck! it uploaded");
-
+					KerbalX.log (resp_data.ToString ());
 				}else if(code == 422){
 					var resp_data = JSON.Parse (resp);
 					KerbalX.log ("upload failed");
 					KerbalX.log (resp);
 					string resp_errs = resp_data["errors"];
 					errors = resp_errs.Split (',');
-
-				}else{
-					message = "upload failed - server error";
-					KerbalX.log (message);
 				}
 			});
 		}
