@@ -193,15 +193,27 @@ namespace KerbalX
 			Application.CaptureScreenshot (filename);
 		}
 
-		//Does the loading of the picture onto the Texture2D object, returns IEnumerator as this is called in a Coroutine.
 		public IEnumerator shutter(string filename){
 			yield return true;							//doesn't seem to matter what this returns
 			Thread.Sleep (100);							//delay before re-opening windows
 			//Application.CaptureScreenshot seems insistant on plonking the picture in KSP_Data, so this next bit relocates the pic to join it's friends in the screenshot folder
-			string path = Paths.joined (KerbalX.screenshot_dir, filename);
-			string origin = Paths.joined (KSPUtil.ApplicationRootPath, "KSP_Data", filename);
-			KerbalX.log ("moving file: " + origin);
-			if(File.Exists (origin)){File.Move (origin, path);}
+			string origin_path 	= Paths.joined (KerbalX.screenshot_dir, filename);							//location where screenshot is created (as a png)
+			string png_path 	= Paths.joined (KSPUtil.ApplicationRootPath, "KSP_Data", filename);			//location where it will be moved to
+			string jpg_path 	= Paths.joined (KerbalX.screenshot_dir, filename.Replace (".png", ".jpg"));	//and what it will be called once converted (and compressed) to jpg.
+
+			KerbalX.log ("moving file: " + origin_path + " to: " + png_path);
+			if(File.Exists ((origin_path))){File.Move (origin_path,  png_path);}
+				
+
+			Texture2D converter = new Texture2D (2, 2);
+			byte[] png_image = File.ReadAllBytes (png_path);
+			converter.LoadImage (png_image);
+			byte[] jpg_image = converter.EncodeToJPG ();
+
+			FileStream file = File.Open (jpg_path, FileMode.Create);
+			new BinaryWriter (file).Write (jpg_image);
+			file.Close ();
+			File.Delete (png_path);				
 			KerbalX.editor_gui.show (); //re-open the KX windows.
 			this.show ();
 		}
