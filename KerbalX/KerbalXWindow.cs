@@ -54,7 +54,7 @@ namespace KerbalX
 	{
 		public string window_title = "untitled window";
 
-		public Rect window_pos = new Rect((Screen.width/2 - 500f/2), Screen.height/2, 500f, 5);
+		public Rect window_pos = new Rect((Screen.width/2 - 500f/2), 200, 500f, 5);
 		public bool visible = true;
 
 		protected bool footer = true;
@@ -72,6 +72,7 @@ namespace KerbalX
 		protected GUIStyle header_label		= new GUIStyle();
 		protected GUIStyle small			= new GUIStyle();
 		protected GUIStyle alert_style 		= new GUIStyle();
+		protected GUIStyle large_alert 		= new GUIStyle();
 		protected GUIStyle centered 		= new GUIStyle();
 		protected GUIStyle pic_link 	 	= new GUIStyle();
 		protected GUIStyle pic_hover	 	= new GUIStyle();
@@ -286,11 +287,14 @@ namespace KerbalX
 		//it's like we need a sorta sheet of styles, maybe one that can cascade, a cascading style sheet if you will.
 		protected void style_modifiers(){
 			header_label = new GUIStyle (GUI.skin.label);
-			header_label.fontSize = 20;
+			header_label.fontSize = 15;
 			header_label.fontStyle = FontStyle.Bold;
 
 			alert_style = new GUIStyle (GUI.skin.label);
 			alert_style.normal.textColor = Color.red;
+
+			large_alert = new GUIStyle (alert_style);
+			large_alert.fontSize = 15;
 
 			small = new GUIStyle (GUI.skin.label);
 			small.fontSize = 12;
@@ -345,11 +349,35 @@ namespace KerbalX
 				prevent_click_through ("editor");
 			}
 
+			//if a server error has occured display error in dialog, but don't halt drawing of interface. 
+			if(KerbalX.server_error_message != null){
+				string message = KerbalX.server_error_message;
+				KerbalX.server_error_message = null;
+				KerbalXDialog dialog = show_dialog((d) => {
+					v_section (w => {
+						GUILayout.Label ("System Error!:", large_alert);
+						GUILayout.Label (message);
+						section (w, w2 => {
+							if(GUILayout.Button ("OK", height (30), width (w2*0.5f) )){
+								close_dialog ();
+							};
+							if(GUILayout.Button ("Try Again", height (30), width (w2*0.5f) )){
+								RequestHandler.instance.try_again ();
+								close_dialog ();
+							};
+						});
+					});
+				});
+				dialog.window_title = "KerablX - Server Error";
+			}
+
+			//If unable to connect to KerbalX halt drawing interface and replace with "try again" button"
 			if (KerbalX.failed_to_connect) {
 				GUILayout.Label ("Unable to Connect to KerbalX.com!");
 				if (GUILayout.Button ("try again")) {
 					RequestHandler.instance.try_again ();
 				}
+			//If user is not logged in halt drawing interface and show login button"
 			}else if(require_login && KerbalXAPI.logged_out ()){
 				GUILayout.Label ("You are not logged in.");
 				if (GUILayout.Button ("Login")) {

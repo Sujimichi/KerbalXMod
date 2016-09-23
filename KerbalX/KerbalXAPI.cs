@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text;
 
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -21,6 +22,7 @@ namespace KerbalX
 	public class KerbalXAPI
 	{
 		private static string token = null; 
+		private static string kx_username = null; //not used for any authentication, just for being friendly!
 
 		public static bool logged_out(){
 			return token == null;
@@ -28,14 +30,21 @@ namespace KerbalX
 		public static bool logged_in(){
 			return token != null;
 		}
+		public static string logged_in_as(){
+			return kx_username;
+		}
 
-
+		//Check if Token file exists and if so authenticate it with KerbalX. Otherwise instruct login window to display login fields.
 		public static void load_and_authenticate_token(){
-			KerbalX.notify("Reading token from " + KerbalX.token_path);
 			KerbalX.login_gui.enable_login = false;
 			try{
-				string token = System.IO.File.ReadAllText(KerbalX.token_path);
-				KerbalXAPI.authenticate_token (token);
+				if (File.Exists (KerbalX.token_path)){
+					KerbalX.log("Reading token from " + KerbalX.token_path);
+					string token = File.ReadAllText(KerbalX.token_path);
+					KerbalXAPI.authenticate_token (token);
+				}else{
+					KerbalX.login_gui.enable_login = true;
+				}
 			}
 			catch{
 				KerbalX.login_gui.enable_login = true;
@@ -43,7 +52,7 @@ namespace KerbalX
 		}
 
 		private static void save_token(string token){
-			System.IO.File.WriteAllText(KerbalX.token_path, token);
+			File.WriteAllText(KerbalX.token_path, token);
 		}
 
 
@@ -58,13 +67,16 @@ namespace KerbalX
 		}
 
 		//make request to site to authenticate token 
-		public static void authenticate_token(string new_token){
-			KerbalX.notify("Authenticating with KerbalX.com...");
-			NameValueCollection data = new NameValueCollection ();
-			data.Add ("token", new_token);
+		public static void authenticate_token(string current_token){
+			KerbalX.log("Authenticating with KerbalX.com...");
+			NameValueCollection data = new NameValueCollection (){{"token", current_token}};
 			HTTP.post (url_to ("api/authenticate"), data).send ((resp, code) => {
 				if(code==200){
-					token = new_token;
+					var resp_data = JSON.Parse (resp);
+					kx_username = resp_data["username"];
+					token = current_token;
+				}else{
+					KerbalX.login_gui.enable_login = true;
 				}
 				KerbalX.login_gui.autoheight ();
 			});
@@ -74,15 +86,14 @@ namespace KerbalX
 		public static void login(string username, string password){
 			KerbalX.login_gui.enable_login = false; //disable interface while logging in to prevent multiple login clicks
 			KerbalX.login_gui.login_failed = false;
-			KerbalX.notify("loging into KerbalX.com...");
-			NameValueCollection data = new NameValueCollection ();
-			data.Add ("username", username);
-			data.Add ("password", password);
+			KerbalX.log("loging into KerbalX.com...");
+			NameValueCollection data = new NameValueCollection (){{"username", username}, {"password", password}};
 			HTTP.post (url_to ("api/login"), data).send ((resp, code) => {
 				if(code==200){
 					var resp_data = JSON.Parse (resp);
 					token = resp_data["token"];
 					save_token (resp_data["token"]);
+					kx_username = resp_data["username"];
 					KerbalX.login_gui.login_successful = true;
 					KerbalX.login_gui.after_login_action();
 				}else{
@@ -95,6 +106,7 @@ namespace KerbalX
 
 		public static void log_out(){
 			token = null; 
+			kx_username = null;
 			KerbalX.login_gui.enable_login = true;
 			KerbalX.log ("logged out");
 			//TODO delete token file.
@@ -119,8 +131,6 @@ namespace KerbalX
 					}
 					KerbalX.existing_craft = craft_list;
 					callback();
-				}else{
-					KerbalX.alert = "An error occurred while contacting KerbalX, try again later";
 				}
 			});
 		}
@@ -185,7 +195,7 @@ namespace KerbalX
 			last_request.downloadHandler = request.downloadHandler;								//  | upload and download handlers have to be duplicated too
 			last_callback = callback;															// /  and the callback is also stuffed into a var for reuse.
 
-			KerbalX.alert = "";
+			KerbalX.server_error_message = null;
 			KerbalX.failed_to_connect = false;
 			KerbalX.log("sending request to: " + request.url);
 
@@ -194,11 +204,26 @@ namespace KerbalX
 			if (request.isError){
 				KerbalX.failed_to_connect = true;
 				KerbalX.log ("request failed: " + request.error);
-				KerbalX.alert = "request failed: " + request.error;
 			}else{
 				int status_code = (int)request.responseCode;
 				if(status_code == 500){
-					KerbalX.log ("request returned 500 - Server Error!");	
+					string error_message = "";
+					try{
+						var resp_data = JSON.Parse (request.downloadHandler.text);
+						KerbalX.log ("err: '" + resp_data["error"] + "'");
+						if(resp_data["error"] == null || resp_data["error"] == ""){
+							error_message = "An error has occurred on KerbalX (it was probably Jebs fault) - Error 500";
+						}else{
+							error_message = "KerbalX server error:\n" + resp_data["error"];
+						}
+					}
+					catch{
+						error_message = "An error has occurred on KerbalX (it was probably Jebs fault) - Error 500";
+					}
+					KerbalX.log ("request returned 500 - Server Error!");
+					KerbalX.log (error_message);
+					KerbalX.server_error_message = error_message;
+					callback (request.downloadHandler.text, status_code);
 				}else{
 					KerbalX.log ("request returned " + status_code); 
 					callback (request.downloadHandler.text, status_code);

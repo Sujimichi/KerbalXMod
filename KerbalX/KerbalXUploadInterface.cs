@@ -204,9 +204,6 @@ namespace KerbalX
 				}
 
 				v_section (w => {
-					if (KerbalX.alert != "") {	
-						GUILayout.Label (KerbalX.alert, alert_style, width (w) );
-					}
 					if (errors.Count () > 0) {
 						//GUILayout.Label ("Craft Failed to Upload", alert_style);
 						foreach (string error in errors) {
@@ -315,7 +312,6 @@ namespace KerbalX
 		private void upload_craft(){
 			//Array.Clear (upload_errors, 0, upload_errors.Length);	//remove any previous upload errors
 			clear_errors ();
-			KerbalX.alert = "";
 
 			NameValueCollection data = new NameValueCollection ();	//contruct upload data
 			data.Add ("craft_file", craft_file());
@@ -337,7 +333,6 @@ namespace KerbalX
 
 				}else{
 					message = "upload failed - server error";
-					KerbalX.alert = message;
 					KerbalX.log (message);
 				}
 			});

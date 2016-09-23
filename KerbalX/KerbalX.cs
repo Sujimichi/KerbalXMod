@@ -21,9 +21,8 @@ namespace KerbalX
 	{
 		public static string token_path = Paths.joined (KSPUtil.ApplicationRootPath, "KerbalX.key");
 		public static List<string> log_data = new List<string>();
-		public static string notice = "";
-		public static string alert = "";
 		public static bool failed_to_connect = false;
+		public static string server_error_message = null;
 
 
 		public static string site_url = "http://localhost:3000";
@@ -58,15 +57,10 @@ namespace KerbalX
 		public static void show_log(){
 			foreach (string l in log_data) { Debug.Log (l); }
 		}
-		public static void notify(string s){
-			notice = s;
-			log (s);
-		}
-
 
 	}
 
-	public delegate void DialogContent();
+	public delegate void DialogContent(KerbalXWindow dialog);
 	public class KerbalXDialog : KerbalXWindow
 	{
 		public static KerbalXDialog instance;
@@ -78,7 +72,7 @@ namespace KerbalX
 		}
 
 		protected override void WindowContent(int win_id){
-			content ();
+			content (this);
 		}
 	}
 
@@ -125,7 +119,7 @@ namespace KerbalX
 			}
 
 			if (KerbalXAPI.logged_in ()) {
-				GUILayout.Label ("You are logged in");
+				GUILayout.Label ("You are logged in as " + KerbalXAPI.logged_in_as ());
 			}
 
 			if(login_successful){
@@ -133,7 +127,7 @@ namespace KerbalX
 					GUILayout.Label ("KerbalX.key saved in KSP root", width (w-20f));
 					if (GUILayout.Button ("?", width (20f))) {
 
-						KerbalXDialog dialog = show_dialog(() => {
+						KerbalXDialog dialog = show_dialog((d) => {
 							string message = "The KerbalX.key is a token that is used to authenticate you with the site." +
 								"\nIt will also persist your login, so next time you start KSP you won't need to login again." +
 								"\nIf you want to login to KerbalX from multiple instances of KSP copy the KerbalX.key file into each install.";
@@ -152,11 +146,14 @@ namespace KerbalX
 				GUI.enabled = enable_login;
 				if (GUILayout.Button ("Login")) {				
 					KerbalXAPI.login (username, password);
+					password = "";
 				}
 				GUI.enabled = true;
 			}else{
 				if (GUILayout.Button ("Log out")) {
 					KerbalXAPI.log_out ();
+					username = "";
+					password = ""; //should already be empty, but just in case
 				}				
 			}
 			GUI.enabled = true; //just in case
@@ -188,11 +185,11 @@ namespace KerbalX
 		{
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
 
-			GUILayout.Label (KerbalXAPI.temp_view_token());
-
-			if (GUILayout.Button ("count existing craft")) {
-				Debug.Log ("existing craft count: " + KerbalX.existing_craft.Keys.Count);
+			if (GUILayout.Button ("test")) {
+				KerbalXAPI.fetch_existing_craft (() => {});
 			}
+
+
 
 			if(GUILayout.Button ("test 1")){
 				Debug.Log (KerbalX.image_selector.window_pos.width.ToString ());
