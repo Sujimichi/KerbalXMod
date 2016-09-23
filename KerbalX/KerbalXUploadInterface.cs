@@ -32,10 +32,11 @@ namespace KerbalX
 		private string craft_name = null;
 		private string editor_craft_name = "";
 
-		private string[] upload_errors = new string[0];
+		private string[] errors = new string[0];
 		private string mode = "upload";
 		private float win_width = 410f;
 
+		private int max_pics = 3;
 
 		private DropdownData craft_select;
 		private DropdownData style_select;
@@ -155,6 +156,7 @@ namespace KerbalX
 										if(GUILayout.Button ("remove")){
 											pictures.Remove (pic);
 											this.autoheight ();
+											clear_errors ();
 										}
 									}
 								});
@@ -201,16 +203,17 @@ namespace KerbalX
 					}
 				}
 
-
-				if (KerbalX.alert != "") {	
-					GUILayout.Label (KerbalX.alert, alert_style, width (win_width) );
-				}
-				if (upload_errors.Count () > 0) {
-					GUILayout.Label ("Craft Failed to Upload", alert_style);
-					foreach (string error in upload_errors) {
-						GUILayout.Label (error.Trim (), alert_style, width (win_width));
+				v_section (w => {
+					if (KerbalX.alert != "") {	
+						GUILayout.Label (KerbalX.alert, alert_style, width (w) );
 					}
-				}
+					if (errors.Count () > 0) {
+						//GUILayout.Label ("Craft Failed to Upload", alert_style);
+						foreach (string error in errors) {
+							GUILayout.Label (error.Trim (), alert_style, width (w));
+						}
+					}
+				});
 
 				section (w => {
 					if (GUILayout.Button (mode_title + "!", upload_button)) {
@@ -234,6 +237,23 @@ namespace KerbalX
 //				window_pos.width = window_pos.width + 10;
 //			}
 
+		}
+
+		public void add_picture(PicData picture){
+			int pic_count = 0;
+			foreach(PicData pic in pictures){
+				if(pic.file != null){pic_count++;};
+			}
+			if(pic_count < max_pics){
+				pictures.Add (picture);
+			}else{
+				errors = new string[]{ "You can only select 3 pictures for upload, (bandwidth limitations, sorry!)", "You can add as many image urls as you like though." };
+			}
+		}
+
+		public void clear_errors(){
+			errors = new string[0];
+			autoheight ();
 		}
 
 		//check if craft_name matches any of the user's existing craft.  Sets matching_craft_ids to contain KX database ids of any matching craft
@@ -294,7 +314,7 @@ namespace KerbalX
 
 		private void upload_craft(){
 			//Array.Clear (upload_errors, 0, upload_errors.Length);	//remove any previous upload errors
-			upload_errors = new string[0];
+			clear_errors ();
 			KerbalX.alert = "";
 
 			NameValueCollection data = new NameValueCollection ();	//contruct upload data
@@ -313,7 +333,7 @@ namespace KerbalX
 					KerbalX.log ("upload failed");
 					KerbalX.log (resp);
 					string resp_errs = resp_data["errors"];
-					upload_errors = resp_errs.Split (',');
+					errors = resp_errs.Split (',');
 
 				}else{
 					message = "upload failed - server error";

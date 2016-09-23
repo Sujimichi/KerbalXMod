@@ -73,6 +73,11 @@ namespace KerbalX
 			}
 		}
 
+		protected override void on_hide ()
+		{
+			KerbalX.editor_gui.clear_errors ();
+		}
+
 		protected override void WindowContent(int win_id)
 		{
 			pic_hover.normal.background = pic_highlight;
@@ -89,7 +94,7 @@ namespace KerbalX
 						if(GUILayout.Button ("Add url", width (100f))){
 							PicData pic = new PicData();
 							pic.url = pic_url;
-							KerbalX.editor_gui.pictures.Add (pic);
+							KerbalX.editor_gui.add_picture (pic);
 							this.hide ();
 						};	
 					});
@@ -207,10 +212,9 @@ namespace KerbalX
 			autoheight ();
 		}
 
-		//adds pic to list of selected pics on UploadInterface and closes (well, hides) the picture selector.
+		//adds pic to list of selected pics on UploadInterface
 		private void select_pic(PicData pic){
-			KerbalX.editor_gui.pictures.Add (pic);
-			this.hide ();
+			KerbalX.editor_gui.add_picture (pic);
 		}
 
 		//Get file info for all files of defined file_types within the screenshot dir
