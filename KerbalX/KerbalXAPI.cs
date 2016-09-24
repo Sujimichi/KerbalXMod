@@ -70,6 +70,7 @@ namespace KerbalX
 					var resp_data = JSON.Parse (resp);
 					kx_username = resp_data["username"];
 					token = current_token;
+					KerbalX.login_gui.after_login_action();
 				}else{
 					KerbalX.login_gui.enable_login = true;
 				}
@@ -184,58 +185,62 @@ namespace KerbalX
 	public class RequestHandler : MonoBehaviour
 	{
 		public static RequestHandler instance = null;
-		private UnityWebRequest last_request;
-		private RequestCallback last_callback;
+		private UnityWebRequest last_request  = null;
+		private RequestCallback last_callback = null;
 
 		public void send_request(UnityWebRequest request, RequestCallback callback){
 			StartCoroutine (transmit (request, callback));
 		}
 
-		public void try_again(){			
+		public void try_again(){		
 			send_request(last_request, last_callback);
 		}
 
-		public IEnumerator transmit(UnityWebRequest request, RequestCallback callback){
-			last_request = new UnityWebRequest (request.url, request.method);					//  \ create a copy of the request which is about to be sent
-			if(request.method != "GET"){														//  | if the request fails because of inability to connect to site
-				last_request.uploadHandler = new UploadHandlerRaw (request.uploadHandler.data);;// <  then try_again() can be used to fire the copied request
-			}																					//  | and the user can carry on from where they were when connection was lost.
-			last_request.downloadHandler = request.downloadHandler;								//  | upload and download handlers have to be duplicated too
-			last_callback = callback;															// /  and the callback is also stuffed into a var for reuse.
+		public bool can_retry(){
+			return last_request != null;
+		}
 
+		public IEnumerator transmit(UnityWebRequest request, RequestCallback callback){
+
+			last_request  = null;
+			last_callback = null;
 			KerbalX.server_error_message = null;
 			KerbalX.failed_to_connect = false;
 			KerbalX.log("sending request to: " + request.url);
 
 			yield return request.Send ();
 
-			if (request.isError){
+			if (request.isError){															//Request Failed, most likely due to being unable to get a response, therefore no status code
 				KerbalX.failed_to_connect = true;
 				KerbalX.log ("request failed: " + request.error);
+
+				last_request = new UnityWebRequest (request.url, request.method);					//  \ create a copy of the request which is about to be sent
+				if(request.method != "GET"){														//  | if the request fails because of inability to connect to site
+					last_request.uploadHandler = new UploadHandlerRaw (request.uploadHandler.data);;// <  then try_again() can be used to fire the copied request
+				}																					//  | and the user can carry on from where they were when connection was lost.
+				last_request.downloadHandler = request.downloadHandler;								//  | upload and download handlers have to be duplicated too
+				last_callback = callback;															// /  and the callback is also stuffed into a var for reuse.
+				
 			}else{
-				int status_code = (int)request.responseCode;
-				if(status_code == 500){
-					string error_message = "";
-					try{
-						var resp_data = JSON.Parse (request.downloadHandler.text);
-						KerbalX.log ("err: '" + resp_data["error"] + "'");
-						if(resp_data["error"] == null || resp_data["error"] == ""){
-							error_message = "An error has occurred on KerbalX (it was probably Jebs fault) - Error 500";
-						}else{
-							error_message = "KerbalX server error:\n" + resp_data["error"];
-						}
+				int status_code = (int)request.responseCode;								//server responded - get status code
+				if(status_code == 500){														//KerbalX server error
+					string error_message = "An error has occurred on KerbalX " +			//default error message incase server doesn't come back with something more helpful
+						"(it was probably Jebs fault) - Error 500";
+					var resp_data = JSON.Parse (request.downloadHandler.text);				//read response message and assuming there is one change the error_message
+					if(!(resp_data["error"] == null || resp_data["error"] == "")){
+						error_message = "KerbalX server error:\n" + resp_data["error"];
 					}
-					catch{
-						error_message = "An error has occurred on KerbalX (it was probably Jebs fault) - Error 500";
-					}
+
 					KerbalX.log ("request returned 500 - Server Error!");
 					KerbalX.log (error_message);
-					KerbalX.server_error_message = error_message;
-					callback (request.downloadHandler.text, status_code);
+					KerbalX.server_error_message = error_message;							//Set the error_message on KerbalX, any open window will pick this up and render error dialog
+					callback (request.downloadHandler.text, status_code);					//Still call the callback, assumption is all callbacks will test status code for 200 before proceeding, this allows for further handling if needed
 				}else{
-					KerbalX.log ("request returned " + status_code); 
-					callback (request.downloadHandler.text, status_code);
+					KerbalX.log ("request returned " + status_code); 						//All other status codes - will prob add separate handling of 404 when downloads get added TODO
+					callback (request.downloadHandler.text, status_code);					//401s (Unauthorized) will get handled by login/authenticate methods 
+
 				}
+				request.Dispose ();
 			}
 		}
 	}

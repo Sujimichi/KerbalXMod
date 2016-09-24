@@ -355,17 +355,9 @@ namespace KerbalX
 				KerbalX.server_error_message = null;
 				KerbalXDialog dialog = show_dialog((d) => {
 					v_section (w => {
-						GUILayout.Label ("System Error!:", large_alert);
+						GUILayout.Label ("KerbalX Error!:", large_alert);
 						GUILayout.Label (message);
-						section (w, w2 => {
-							if(GUILayout.Button ("OK", height (30), width (w2*0.5f) )){
-								close_dialog ();
-							};
-							if(GUILayout.Button ("Try Again", height (30), width (w2*0.5f) )){
-								RequestHandler.instance.try_again ();
-								close_dialog ();
-							};
-						});
+						if(GUILayout.Button ("OK", height (30))){close_dialog (); }
 					});
 				});
 				dialog.window_title = "KerablX - Server Error";
