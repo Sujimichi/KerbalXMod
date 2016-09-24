@@ -36,6 +36,8 @@ namespace KerbalX
 		private string editor_craft_name = "";
 
 		private string[] errors = new string[0];
+		private string upload_progress = null;
+
 		private string mode = "upload";
 		private float win_width = 410f;
 
@@ -220,6 +222,13 @@ namespace KerbalX
 						upload_craft ();
 					}
 				});
+				if(upload_progress != null){
+					GUILayout.Label (upload_progress);
+				}
+//				if(RequestHandler.instance.active_request != null){
+//					GUILayout.Label ("cur_request " + RequestHandler.instance.active_request.uploadProgress.ToString ());
+//					Debug.Log ("DLprog test1: " + RequestHandler.instance.active_request.uploadProgress.ToString ());
+//				}
 			}
 
 //			if(GUILayout.Button ("test")){
@@ -312,23 +321,34 @@ namespace KerbalX
 			return part_data;
 		}
 
+
+		//Takes a PicData object and reads the image bytes. If the image is already a jpg then it just returns the bytes, 
+		//otherwise it is converted into a jpg first
+		private byte[] read_as_jpg(PicData pic){
+			byte[] original_image = File.ReadAllBytes (pic.file.FullName);
+			if(pic.file.Extension.ToLower () == ".jpg"){
+				return original_image;
+			}else{
+				KerbalX.log ("compressing: " + pic.file.Name);
+				Texture2D converter = new Texture2D (2, 2);
+				converter.LoadImage (original_image);
+				return converter.EncodeToJPG ();
+			}
+		}
+
 		private void upload_craft(){
 			clear_errors ();
 			WWWForm craft_data = new WWWForm();
 			craft_data.AddField ("craft_name", craft_name);
 			craft_data.AddField ("craft_file", craft_file());
 			craft_data.AddField ("part_data", JSONX.toJSON (part_info ()));
-			craft_data.AddField ("foo[1]", "foo_1");
-			craft_data.AddField ("foo[2]", "foo_2");
 
-			int i = 0;
-			foreach(PicData pic in pictures){
-				i++;
-				byte[] pic_data = File.ReadAllBytes (pic.file.FullName);	//read image file
-				craft_data.AddField ("images[image_" + i + "]", Convert.ToBase64String (pic_data));
+			upload_progress = "Compressing Images...";
+			for(int i=0; i < pictures.Count; i++){
+				craft_data.AddField ("images[image_" + (i+1) + "]", Convert.ToBase64String (read_as_jpg (pictures[i])));
 			}
 
-
+			upload_progress = "Uploading....";
 			KerbalXAPI.upload_craft (craft_data, (resp, code) => {
 				if(code == 200){
 					var resp_data = JSON.Parse (resp);
@@ -341,6 +361,8 @@ namespace KerbalX
 					string resp_errs = resp_data["errors"];
 					errors = resp_errs.Split (',');
 				}
+				upload_progress = null;
+				autoheight ();
 			});
 		}
 	}

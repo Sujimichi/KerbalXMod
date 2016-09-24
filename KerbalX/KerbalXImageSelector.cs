@@ -52,7 +52,7 @@ namespace KerbalX
 		private void Start(){
 			window_title = "KerbalX::ScreenShots";
 			float w = 640;
-			window_pos = new Rect((Screen.width/2 - w/2)+100, Screen.height/3, w, 5);
+			window_pos = new Rect((Screen.width/2 - w/2), Screen.height/3, w, 5);
 			visible = false;
 			prevent_editor_click_through = true;
 			KerbalX.image_selector = this;
@@ -176,10 +176,6 @@ namespace KerbalX
 						}
 					});
 				}
-
-
-
-
 			}
 		}
 
@@ -189,35 +185,23 @@ namespace KerbalX
 			KerbalX.log ("grabbing screenshot: " + filename);
 			KerbalX.editor_gui.hide ();
 			this.hide ();
-			StartCoroutine (shutter (filename));		//shutter re-opens the windows. well, it's kinda the exact opposite of what a shutter does, but yeah....whatever
 			Application.CaptureScreenshot (filename);
+			StartCoroutine (shutter (filename));		//shutter re-opens the windows. well, it's kinda the exact opposite of what a shutter does, but yeah....whatever
 		}
 
 		public IEnumerator shutter(string filename){
 			yield return true;							//doesn't seem to matter what this returns
 			Thread.Sleep (100);							//delay before re-opening windows
 			//Application.CaptureScreenshot seems insistant on plonking the picture in KSP_Data, so this next bit relocates the pic to join it's friends in the screenshot folder
-			string origin_path 	= Paths.joined (KerbalX.screenshot_dir, filename);							//location where screenshot is created (as a png)
-			string png_path 	= Paths.joined (KSPUtil.ApplicationRootPath, "KSP_Data", filename);			//location where it will be moved to
-			string jpg_path 	= Paths.joined (KerbalX.screenshot_dir, filename.Replace (".png", ".jpg"));	//and what it will be called once converted (and compressed) to jpg.
-
-			KerbalX.log ("moving file: " + origin_path + " to: " + png_path);
-			if(File.Exists ((origin_path))){File.Move (origin_path,  png_path);}
-				
-
-			Texture2D converter = new Texture2D (2, 2);
-			byte[] png_image = File.ReadAllBytes (png_path);
-			converter.LoadImage (png_image);
-			byte[] jpg_image = converter.EncodeToJPG ();
-
-			FileStream file = File.Open (jpg_path, FileMode.Create);
-			new BinaryWriter (file).Write (jpg_image);
-			file.Close ();
-			File.Delete (png_path);				
-			KerbalX.editor_gui.show (); //re-open the KX windows.
+			string origin_path 	= Paths.joined (KSPUtil.ApplicationRootPath, "KSP_Data", filename);		//location where screenshot is created (as a png)
+			string png_path 	= Paths.joined (KerbalX.screenshot_dir, filename);						//location where it will be moved to
+			if(File.Exists ((origin_path))){
+				KerbalX.log ("moving file: " + origin_path + " to: " + png_path);
+				File.Move (origin_path,  png_path);
+			}
+			KerbalX.editor_gui.show (); 				//re-open the KX windows (after the file has been moved so the ImageSelector will notice it).
 			this.show ();
 		}
-
 
 		private void change_mode(string new_mode){
 			mode = new_mode;
