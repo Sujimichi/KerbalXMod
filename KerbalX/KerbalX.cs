@@ -160,7 +160,7 @@ namespace KerbalX
 
 			if(login_failed){
 				v_section (w => {
-					GUILayout.Label ("Login failed, check your things", alert_style);
+					GUILayout.Label ("Login failed, check your things", "alert");
 					if (GUILayout.Button ("Forgot your password? Go to KerbalX to reset it.")) {
 						Application.OpenURL ("https://kerbalx.com/users/password/new");
 					}

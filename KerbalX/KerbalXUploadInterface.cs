@@ -35,7 +35,7 @@ namespace KerbalX
 		private string craft_name = null;
 		private string editor_craft_name = "";
 
-		private string[] errors = new string[0];
+		private List<string> errors = new List<string>();
 		private string upload_progress = null;
 
 		private string mode = "upload";
@@ -74,17 +74,6 @@ namespace KerbalX
 		}
 
 
-		private void fetch_existing_craft(){
-			KerbalXAPI.fetch_existing_craft (() => {  //Query KX for the user's current craft (which gets stashed on KerablX.existing_craft). lambda gets called once request completes.
-				remote_craft.Clear ();
-				remote_craft.Add (0, "select a craft");	//remote_craft populates the select menu, ID 0 (which can't exist on KX) is used as the placeholder
-				foreach(KeyValuePair<int, Dictionary<string, string>> craft in KerbalX.existing_craft){
-					remote_craft.Add (craft.Key, craft.Value["name"]);
-				}
-				check_for_matching_craft_name ();
-			});
-		}
-
 		//Called after a succsessful login, if the login dialog was opened from this window.
 		protected override void on_login ()
 		{
@@ -106,12 +95,12 @@ namespace KerbalX
 			//Perform checks to see if there is a craft,  its not untitled and a craft file for it exists.
 			string trimmed_lowered_name = editor_craft_name.Trim ().ToLower ().Replace (" ", "");
 			if(part_info ().Count == 0){
-				GUILayout.Label ("No craft loaded. Create or load a craft to continue.", header_label);
+				GUILayout.Label ("No craft loaded. Create or load a craft to continue.", "h1");
 			}else if(trimmed_lowered_name == "untitledspacecraft" || trimmed_lowered_name == EditorLogic.autoShipName){
-				GUILayout.Label (editor_craft_name + "? Really?\nHow about you name the poor thing before uploading!", header_label);
+				GUILayout.Label (editor_craft_name + "? Really?\nHow about you name the poor thing before uploading!", "h1");
 			}else if(!craft_file_exists ()){
 				section (win_width, w => {
-					GUILayout.Label ("This craft hasn't been saved yet\nNo craft file found for " + editor_craft_name, header_label, width(w*0.7f));
+					GUILayout.Label ("This craft hasn't been saved yet\nNo craft file found for " + editor_craft_name, "h1", width(w*0.7f));
 					if(GUILayout.Button ("Save it now", width(w*0.3f), height (40))){
 						EditorLogic.fetch.saveBtn.onClick.Invoke ();
 					}
@@ -120,18 +109,19 @@ namespace KerbalX
 				//if checks pass continue with drawing rest of interface (TODO check for unsaved changes).
 
 				string mode_title = new CultureInfo ("en-US", false).TextInfo.ToTitleCase (mode);
-				GUILayout.Label (mode_title + " '" + craft_name + "' " + (mode == "update" ? "on" : "to") + " KerbalX", header_label);
+				GUILayout.Label (mode_title + " '" + craft_name + "' " + (mode == "update" ? "on" : "to") + " KerbalX", "h1");
 
 				if(mode == "upload"){
 					section (w => {
 						GUILayout.Label ("Enter details about your craft", width(w*0.45f));
-						GUILayout.Label ("OR", centered, width(w*0.1f));
+						GUILayout.Label ("OR", "centered", width(w*0.1f));
 						if (GUILayout.Button ("Update An Existing Craft", width(w*0.45f))) {
 							change_mode("update");
 							if (matching_craft_ids.Count != 1) { craft_select.id = 0;};
 						}
 					});
 
+					//textfield for craft name, if value is changed it is checked against existing craft (and if match, mode is switched to update).
 					section (w => {
 						string current_craft_name = craft_name; //used to detect if user changes craft_name field (GUI.changed gets triggered by above button)
 						GUILayout.Label ("Craft name:", width(80f));
@@ -139,11 +129,13 @@ namespace KerbalX
 						if(craft_name != current_craft_name){check_for_matching_craft_name (); } //check for matching existing craft
 					});
 
+					//drop down select for craft type
 					section (w => {
 						GUILayout.Label ("Select craft type:", width(100f));
 						style_select = dropdown (craft_styles, style_select, 100f, 100f);
 					});
 
+					//buttons for setting action groups and adding pictures.
 					section (w => {
 						if (GUILayout.Button ("Edit Action Group info", width(w*0.5f), height(30)) ) {
 						}					
@@ -152,29 +144,23 @@ namespace KerbalX
 						}					
 					});
 
+					//Display of selected pictures (or image urls)
 					v_section (w => {
 						section (w2 => {
-							foreach(PicData pic in pictures){
+							foreach(PicData pic in pictures){	//display selected pictures
 								v_section (80f, w3 => {
 									if(pic.file != null){
 										GUILayout.Label (pic.texture, width (w3), height (w3*0.75f));
-										if(GUILayout.Button ("remove")){
-											pictures.Remove (pic);
-											this.autoheight ();
-											clear_errors ();
-										}
+										if(GUILayout.Button ("remove")){ remove_picture (pic); }
 									}
 								});
 							}
 						});
-						foreach(PicData pic in pictures){
+						foreach(PicData pic in pictures){		//display entered image urls.
 							section(w2 => {
 								if(pic.url != null){
 									GUILayout.Label (pic.url, width (w2-80f));
-									if(GUILayout.Button ("remove", width (80f))){
-										pictures.Remove (pic);
-										this.autoheight ();
-									}
+									if(GUILayout.Button ("remove", width (80f))){ remove_picture (pic); }
 								}
 							});
 						}
@@ -196,7 +182,7 @@ namespace KerbalX
 						});
 						v_section (w*0.3f, inner_w => {
 							section (inner_w, inner_w2 => {
-								if (GUILayout.Button ("OR upload this as a new craft", wrapped_button, height (50) )) {
+								if (GUILayout.Button ("OR upload this as a new craft", "button.wrapped", height (50) )) {
 									change_mode("upload");
 								}
 							});
@@ -204,24 +190,43 @@ namespace KerbalX
 					});
 
 					if (craft_select.id > 0) {
-						GUILayout.Label ("id:" + craft_select.id + ", name:" + KerbalX.existing_craft [craft_select.id] ["name"] + " - " + KerbalX.existing_craft [craft_select.id] ["url"]);
+						style_override = GUI.skin.GetStyle ("background.dark.margin");
+						v_section (w => {
+							GUILayout.Label ("Pressing Update will update the following craft on KerbalX:", "alert");
+							GUILayout.Label (KerbalX.existing_craft [craft_select.id] ["name"] + " (id: " + craft_select.id + ")" );
+
+							string craft_url = KerbalXAPI.url_to (KerbalX.existing_craft [craft_select.id] ["url"]);
+							if(GUILayout.Button (craft_url, "hyperlink")){
+								Application.OpenURL (craft_url);
+							}
+							GUILayout.Label ("Make sure this is the craft you want update!", "small");
+						});
 					}
+
 				}
 
-				v_section (w => {
-					if (errors.Count () > 0) {
-						//GUILayout.Label ("Craft Failed to Upload", alert_style);
+
+				if (errors.Count () > 0) {
+					style_override = GUI.skin.GetStyle ("background.dark.margin");
+					v_section (w => {
 						foreach (string error in errors) {
-							GUILayout.Label (error.Trim (), alert_style, width (w));
+							GUILayout.Label (error.Trim (), "alert", width (w));
+						}
+					});
+				}
+
+
+				section (w => {
+					if (GUILayout.Button (mode_title + "!", "button.upload")) {
+						if(mode == "update"){
+							update_craft ();
+						}else{
+							upload_craft ();
 						}
 					}
 				});
 
-				section (w => {
-					if (GUILayout.Button (mode_title + "!", upload_button)) {
-						upload_craft ();
-					}
-				});
+
 				if(upload_progress != null){
 					GUILayout.Label (upload_progress);
 				}
@@ -231,37 +236,104 @@ namespace KerbalX
 //				}
 			}
 
-//			if(GUILayout.Button ("test")){
-//				//				EditorLogic.fetch.newBtn.onClick.AddListener (() => {
-//				//					Debug.Log ("NEW CLICKED");
-//				//				});
-//				//EditorLogic.fetch.newBtn.Select ();
-//				//EditorLogic.fetch.newBtn.onClick.Invoke ();
-//				//EditorLogic.fetch.saveBtn.onClick.Invoke ();
-//
-//				//				this.visible = false;
-//				//				Application.CaptureScreenshot ("fibble");
-//				//				this.visible = true;
-//
-//				window_pos.width = window_pos.width + 10;
-//			}
-
 		}
 
+		private bool can_upload(){
+			bool go_no_go = true;
+			if(pictures.Count == 0){ 
+				errors.Add ("You need to add at least 1 picture.");
+				go_no_go = false;
+			}
+			return go_no_go;
+		}
+
+		private void upload_craft(){
+			clear_errors ();
+			if(can_upload ()){
+				WWWForm craft_data = new WWWForm();
+				craft_data.AddField ("craft_name", craft_name);
+				craft_data.AddField ("craft_style", craft_styles [style_select.id]);
+				craft_data.AddField ("craft_file", craft_file());
+				craft_data.AddField ("part_data", JSONX.toJSON (part_info ()));
+				
+				upload_progress = "Compressing Images...";
+				int pic_count = 0; int url_count = 0;
+				foreach(PicData pic in pictures){
+					if(pic.file != null){
+						craft_data.AddField ("images[image_" + pic_count++ + "]", Convert.ToBase64String (read_as_jpg (pic)));
+					}else{
+						craft_data.AddField ("image_urls[url_" + url_count++ + "]", pic.url);
+					}
+				}
+				
+				upload_progress = "Uploading....";
+				KerbalXAPI.upload_craft (craft_data, (resp, code) => {
+					if(code == 200){
+						var resp_data = JSON.Parse (resp);
+						KerbalX.log ("holy fuck! it uploaded");
+						KerbalX.log (resp_data.ToString ());
+						fetch_existing_craft();
+					}else if(code == 422){
+						var resp_data = JSON.Parse (resp);
+						KerbalX.log ("upload failed");
+						KerbalX.log (resp);
+						string resp_errs = resp_data["errors"];
+						errors = resp_errs.Split (',').ToList ();
+					}
+					upload_progress = null;
+					autoheight ();
+				});
+			}
+		}
+
+		private void update_craft(){
+			errors.Add ("dis shit not built yet!");
+		}
+
+		//Makes a GET to KerbalX to return info about the users uploaded craft.  Full craft data is stored on KerbalX.existing_craft
+		//minimal info (craft id and name) is stached on remote_craft which is used to populate the select menu and check for matching craft.
+		private void fetch_existing_craft(){
+			KerbalXAPI.fetch_existing_craft (() => {  //Query KX for the user's current craft (which gets stashed on KerablX.existing_craft). lambda gets called once request completes.
+				remote_craft.Clear ();
+				remote_craft.Add (0, "select a craft");	//remote_craft populates the select menu, ID 0 (which can't exist on KX) is used as the placeholder
+				foreach(KeyValuePair<int, Dictionary<string, string>> craft in KerbalX.existing_craft){
+					remote_craft.Add (craft.Key, craft.Value["name"]);
+				}
+				check_for_matching_craft_name ();
+			});
+		}
+
+		//Called from the ImageSelector to add a picture (as PicData) to the list of pictures to upload.
 		public void add_picture(PicData picture){
+			errors.Clear ();
 			int pic_count = 0;
-			foreach(PicData pic in pictures){
+			foreach(PicData pic in pictures){					//count up how many pictures with file data have been added
 				if(pic.file != null){pic_count++;};
 			}
-			if(pic_count < max_pics){
+			if(pic_count < max_pics || picture.file == null){ 	//if the count is under max_pics or the pic doesn't have a file (ie it's url) then add it.
 				pictures.Add (picture);
 			}else{
-				errors = new string[]{ "You can only select 3 pictures for upload, (bandwidth limitations, sorry!)", "You can add as many image urls as you like though." };
+				errors = new List<string> (){ 					//Otherwise show error message.
+					"You can only add " + max_pics + " pictures for upload, (bandwidth limitations, sorry!)", 
+					"You can add as many image urls as you like though." 
+				};
 			}
 		}
 
+		public void remove_picture(PicData picture){
+			List<PicData> new_list = new List<PicData> ();
+			foreach(PicData pic in pictures){
+				if(!pic.Equals (picture)){ 
+					new_list.Add (pic);
+				}
+			}
+			pictures = new_list;
+			clear_errors ();
+		}
+
+		//reset any error
 		public void clear_errors(){
-			errors = new string[0];
+			errors.Clear ();
 			autoheight ();
 		}
 
@@ -283,6 +355,7 @@ namespace KerbalX
 			}			
 		}
 
+		//switch interface mode ( "upload" || "update" ) 
 		private void change_mode(string new_mode){
 			mode = new_mode;
 			autoheight ();
@@ -290,20 +363,19 @@ namespace KerbalX
 
 		//returns the craft file
 		private string craft_file(){
-			//return EditorLogic.fetch.ship.SaveShip ().ToString ();
 			return System.IO.File.ReadAllText(craft_path ());
-		}
-
-		private bool craft_file_exists(){
-			return System.IO.File.Exists (craft_path ());
 		}
 
 		//returns the path of the craft file
 		private string craft_path(){
 			return ShipConstruction.GetSavePath (editor_craft_name);
-			//string path = Paths.joined (KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, "Ships", current_editor, editor_craft_name);
-			//return path + ".craft";
 		}
+
+		//Check if craft file exists
+		private bool craft_file_exists(){
+			return System.IO.File.Exists (craft_path ());
+		}
+
 
 		//returns a unique set of the craft's parts and data about each part;
 		//{"partname1" => {"mod" => "mod_name"}, "partname2" => {"mod" => "mod_name"}, ....} #yeah, explained in Ruby hash notation, cos...it's terse. 
@@ -322,8 +394,8 @@ namespace KerbalX
 		}
 
 
-		//Takes a PicData object and reads the image bytes. If the image is already a jpg then it just returns the bytes, 
-		//otherwise it is converted into a jpg first
+		//Takes a PicData object and reads the image bytes. 
+		//If the image is already a jpg then it just returns the bytes, otherwise it is converted into a jpg first
 		private byte[] read_as_jpg(PicData pic){
 			byte[] original_image = File.ReadAllBytes (pic.file.FullName);
 			if(pic.file.Extension.ToLower () == ".jpg"){
@@ -336,35 +408,7 @@ namespace KerbalX
 			}
 		}
 
-		private void upload_craft(){
-			clear_errors ();
-			WWWForm craft_data = new WWWForm();
-			craft_data.AddField ("craft_name", craft_name);
-			craft_data.AddField ("craft_file", craft_file());
-			craft_data.AddField ("part_data", JSONX.toJSON (part_info ()));
 
-			upload_progress = "Compressing Images...";
-			for(int i=0; i < pictures.Count; i++){
-				craft_data.AddField ("images[image_" + (i+1) + "]", Convert.ToBase64String (read_as_jpg (pictures[i])));
-			}
-
-			upload_progress = "Uploading....";
-			KerbalXAPI.upload_craft (craft_data, (resp, code) => {
-				if(code == 200){
-					var resp_data = JSON.Parse (resp);
-					KerbalX.log ("holy fuck! it uploaded");
-					KerbalX.log (resp_data.ToString ());
-				}else if(code == 422){
-					var resp_data = JSON.Parse (resp);
-					KerbalX.log ("upload failed");
-					KerbalX.log (resp);
-					string resp_errs = resp_data["errors"];
-					errors = resp_errs.Split (',');
-				}
-				upload_progress = null;
-				autoheight ();
-			});
-		}
 	}
 }
 

@@ -137,6 +137,14 @@ namespace KerbalX
 			http.request.SetRequestHeader ("Content-Type", "multipart/form-data");
 			http.send (callback);
 		}
+
+		public static void update_craft(int id, WWWForm craft_data, RequestCallback callback){
+			HTTP http = HTTP.post (url_to ("api/craft/" + id), craft_data);
+			http.request.method = "PUT"; //because unity's PUT method doesn't take a form, so we create a POST and then change the verb.
+			http.set_header ("token", KerbalXAPI.token);
+			http.request.SetRequestHeader ("Content-Type", "multipart/form-data");
+			http.send (callback);
+		}
 	}
 
 

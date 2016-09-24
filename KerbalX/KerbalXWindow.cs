@@ -53,38 +53,22 @@ namespace KerbalX
 	public class KerbalXWindow : MonoBehaviour
 	{
 		public string window_title = "untitled window";
-
 		public Rect window_pos = new Rect((Screen.width/2 - 500f/2), 200, 500f, 5);
-		public bool visible = true;
 
-		protected bool footer = true;
-		protected bool draggable = true;
-		protected bool require_login = false;
+		public bool visible 						= true;
+		protected bool footer 						= true;
+		protected bool draggable 					= true;
+		protected bool require_login 				= false;
 		protected bool prevent_editor_click_through = false;
 
-		protected int window_id = 0;
+		protected int window_id   = 0;
 		static int last_window_id = 0;
 
+		public static GUISkin KXskin = null;
 		protected GUIStyle style_override = null;
 		protected GUIStyle section_style = new GUIStyle();
 
-
-		protected GUIStyle header_label		= new GUIStyle();
-		protected GUIStyle small			= new GUIStyle();
-		protected GUIStyle alert_style 		= new GUIStyle();
-		protected GUIStyle large_alert 		= new GUIStyle();
-		protected GUIStyle centered 		= new GUIStyle();
-		protected GUIStyle pic_link 	 	= new GUIStyle();
-		protected GUIStyle pic_hover	 	= new GUIStyle();
-		protected GUIStyle upload_button  	= new GUIStyle();
-		protected GUIStyle screenshot_button= new GUIStyle();
-		protected GUIStyle wrapped_button 	= new GUIStyle();
-
-		protected bool first_run = true;
-
-		private Texture2D kx_logo_small = new Texture2D(166,30, TextureFormat.ARGB32, false);
-
-
+		protected bool first_pass = true;
 
 		//shorthand for GUILayout.width()
 		protected GUILayoutOption width(float w){
@@ -208,6 +192,11 @@ namespace KerbalX
 		}
 
 
+		//opens a dialog window which is populated by the lambda statement passed to show_dialog ie:
+		//show_dialog((d) => {
+		//	GUILayout.Label("hello I'm a dialog");
+		//})
+		//The dialog instance is returned by show_dialog, and it's also passed into the lambda (although I'm not quite sure why I did that).
 		protected KerbalXDialog show_dialog(DialogContent content){
 			KerbalXDialog dialog = gameObject.AddOrGetComponent<KerbalXDialog> ();
 			dialog.content = content;
@@ -280,66 +269,24 @@ namespace KerbalX
 
 		//MonoBehaviour methods
 
-		protected void Awake(){
-			kx_logo_small = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo_small"), false);
-		}
-
-		//it's like we need a sorta sheet of styles, maybe one that can cascade, a cascading style sheet if you will.
-		protected void style_modifiers(){
-			header_label = new GUIStyle (GUI.skin.label);
-			header_label.fontSize = 15;
-			header_label.fontStyle = FontStyle.Bold;
-
-			alert_style = new GUIStyle (GUI.skin.label);
-			alert_style.normal.textColor = Color.red;
-
-			large_alert = new GUIStyle (alert_style);
-			large_alert.fontSize = 15;
-
-			small = new GUIStyle (GUI.skin.label);
-			small.fontSize = 12;
-
-			centered = new GUIStyle (GUI.skin.label);
-			centered.alignment = TextAnchor.UpperCenter;
-
-			pic_link = new GUIStyle (GUI.skin.label);
-			pic_link.padding = new RectOffset (5, 5, 5, 5);
-			pic_link.margin = new RectOffset (0, 0, 0, 0);
-			
-			pic_hover = new GUIStyle (pic_link);
-			pic_hover.normal.textColor = Color.black;
-			
-			upload_button = new GUIStyle (GUI.skin.button);
-			upload_button.fontSize = 20;
-			upload_button.fontStyle = FontStyle.Bold;
-			upload_button.padding = new RectOffset (3, 3, 10, 10);
-			upload_button.margin = new RectOffset (20, 20, 20, 5);
-
-			screenshot_button = new GUIStyle (GUI.skin.button);
-			screenshot_button.fontSize = 15;
-			screenshot_button.padding = new RectOffset (3, 3, 10, 10);
-
-			wrapped_button = new GUIStyle (GUI.skin.button);
-			wrapped_button.wordWrap = true;
-		}
-
 		//called on each frame, handles drawing the window and will assign the next window id if it's not set
 		protected void OnGUI()
 		{
-			if(first_run){
-				first_run = false;
-				style_modifiers ();
-				//css = new StyleSheet ();
+			if(first_pass){
+				first_pass = false;
+				StyleSheet.prepare (); //defines KXskin as a copy of the default GUI.skin and adds a bunch of custom styles to it.  
+				//This needs to be called in OnGUI and all windows will call this, but it will only initiate the skin once (by which ever window gets to it first).
 			}
-
 			if(window_id == 0){
 				window_id = last_window_id + 1;
 				last_window_id = last_window_id + 1;
 			}
 
+			GUI.skin = KXskin;
 			if(visible){
 				window_pos = GUILayout.Window (window_id, window_pos, DrawWindow, window_title, GUILayout.Width( window_pos.width ), GUILayout.MaxWidth( window_pos.width ), GUILayout.ExpandHeight (true));
 			}
+			GUI.skin = null;
 		}
 
 		//Callback methods which is passed to GUILayout.Window in OnGUI.  Calls WindowContent and performs common window actions
@@ -355,7 +302,7 @@ namespace KerbalX
 				KerbalX.server_error_message = null;
 				KerbalXDialog dialog = show_dialog((d) => {
 					v_section (w => {
-						GUILayout.Label ("KerbalX Error!:", large_alert);
+						GUILayout.Label ("KerbalX Error!:", "h1.alert");
 						GUILayout.Label (message);
 						if(GUILayout.Button ("OK", height (30))){close_dialog (); }
 					});
@@ -393,6 +340,8 @@ namespace KerbalX
 			}
 		}
 
+		//called after successful login IF the login was initiated from a KerbalXWindow. Windows which inherit from KerbalXWindow can override this 
+		//method to have specific actions performed after login (ie: UploadInterface will request a fetch of existing craft).
 		protected virtual void on_login(){
 			Debug.Log ("called after login");
 		}
@@ -405,15 +354,12 @@ namespace KerbalX
 
 		//Default Footer for all windows, can be overridden only called if footer==true
 		protected virtual void FooterContent(int window_id){
-			GUIStyle link_label_style = new GUIStyle (GUI.skin.label);
-			link_label_style.normal.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
-
 			section (w => {
-				if(GUILayout.Button ("KerbalX.com", link_label_style, width (75f), height (30f))){
+				if(GUILayout.Button ("KerbalX.com", "hyperlink", width (75f), height (30f))){
 					Application.OpenURL (KerbalX.site_url);
 				}
 				GUILayout.FlexibleSpace ();
-				GUILayout.Label (kx_logo_small);
+				GUILayout.Label (StyleSheet.assets["logo_small"]);
 			});
 			//GUILayout.Label ("window id: " + window_id);			
 		}

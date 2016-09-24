@@ -42,9 +42,6 @@ namespace KerbalX
 		private Vector2 scroll_pos;
 		private int file_count = 0;
 
-		Texture2D pic_highlight 	= new Texture2D(1, 1, TextureFormat.RGBA32, false);
-		Texture2D scroll_background = new Texture2D(1, 1, TextureFormat.RGBA32, false);
-
 
 		private string pic_url = "";
 		private string hover_ele = "";
@@ -57,11 +54,6 @@ namespace KerbalX
 			prevent_editor_click_through = true;
 			KerbalX.image_selector = this;
 
-			pic_highlight.SetPixel(0, 0, new Color (0.4f,0.5f,0.9f,1));
-			pic_highlight.Apply ();
-
-			scroll_background.SetPixel(0, 0, new Color (0.12f,0.12f,0.12f,0.7f));
-			scroll_background.Apply ();
 		}
 
 		protected override void on_show(){
@@ -80,12 +72,11 @@ namespace KerbalX
 
 		protected override void WindowContent(int win_id)
 		{
-			pic_hover.normal.background = pic_highlight;
 
 			if(mode == "url_entry"){
 				v_section (w => {
 					section (w2 => {
-						GUILayout.Label ("Enter the URL to your image", header_label, width (w2-100f));
+						GUILayout.Label ("Enter the URL to your image", "h1", width (w2-100f));
 						if(GUILayout.Button ("close", width (100f), height (30) )){ this.hide (); }
 					});
 					GUILayout.Label ("note: one of 'em urls what end with an extension ie .jpg");
@@ -107,7 +98,7 @@ namespace KerbalX
 
 				section (w => {
 					v_section (w-100f, w2 => {
-						GUILayout.Label ("Select a picture for your craft", header_label, width (w2));
+						GUILayout.Label ("Select a picture for your craft", "h1", width (w2));
 						GUILayout.Label ("Click on pics below to add them", width (w2));
 					});
 					v_section (100f, w2 => {
@@ -117,10 +108,10 @@ namespace KerbalX
 				});
 
 
-				if (GUILayout.Button ("Take Screenshot now", screenshot_button)) {
+				if (GUILayout.Button ("Take Screenshot now", "button.screenshot")) {
 					grab_screenshot ();
 				}
-				GUILayout.Label ("Grabs a screen shot of the current view (KX windows will hide while taking the pic).", small);
+				GUILayout.Label ("Grabs a screen shot of the current view (KX windows will hide while taking the pic).", "small");
 
 				//Display picture selector - scrolling container of selectable pictures.
 				//picture files will have already been selected and sorted (by prepare_pics()) and then grouped into rows of 4 pics per row (by group_pics())
@@ -154,12 +145,11 @@ namespace KerbalX
 							row_n++;//increment row count
 
 							//Draw each row, regardless of wheter picture textures have been loaded (will prob add a 'not yet loaded' texture in at some point TODO)
-							style_override = new GUIStyle ();
-							style_override.normal.background = scroll_background;
+							style_override = GUI.skin.GetStyle ("background.dark");
 							section (600f, sw => {	//horizontal section....sorry, BeginHorizontal container for the row (slightly narrower than outter container to account for scroll bar)
 								foreach(PicData pic in row){
 									v_section (150f, w2 => {  //vertical section, ahem, BeginVertical container for each pic.  Contains to restyled buttons, each will call select_pic.
-										var style =  (hover_ele==pic.file.FullName ? pic_hover : pic_link); //flip-flop style depending on hover_ele, being == to file name (because I can't figure out how to make style.hover work yet)
+										var style =  (hover_ele==pic.file.FullName ? "pic.hover" : "pic.link"); //flip-flop style depending on hover_ele, being == to file name (because I can't figure out how to make style.hover work yet)
 
 										if(GUILayout.Button (pic.texture, style, width (w2), height (w2*0.75f))){
 											select_pic (pic);
