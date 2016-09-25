@@ -22,6 +22,8 @@ namespace KerbalX
 
 		private List<string> errors = new List<string>();
 		private string upload_progress = null;
+		private int upload_ticker_pos = 0;
+		private int frame_count = 0;
 
 		private string mode = "upload";
 		private float win_width = 410f;
@@ -76,7 +78,9 @@ namespace KerbalX
 			fetch_existing_craft ();
 		}
 
-		private void OnDestroy(){
+		protected override void OnDestroy ()
+		{
+			base.OnDestroy ();
 			GameEvents.onEditorLoad.Remove 	  (this.on_craft_load);
 			GameEvents.onEditorRestart.Remove (this.on_new_craft);
 			if(KerbalX.image_selector != null){
@@ -103,7 +107,7 @@ namespace KerbalX
 			}else if(trimmed_lowered_name == "untitledspacecraft" || trimmed_lowered_name == EditorLogic.autoShipName){
 				GUILayout.Label (editor_craft_name + "? Really?\nHow about you name the poor thing before uploading!", "h3");
 			}else if(!craft_file_exists ()){
-				section (win_width, w => {
+				section (w => {
 					GUILayout.Label ("This craft hasn't been saved yet\nNo craft file found for " + editor_craft_name, "h3", width(w*0.7f));
 					if(GUILayout.Button ("Save it now", width(w*0.3f), height (40))){
 						EditorLogic.fetch.saveBtn.onClick.Invoke ();
@@ -152,7 +156,7 @@ namespace KerbalX
 						}					
 					});
 
-					//Display of selected pictures (or image urls)
+					//Display of selected pictures (and/or image urls)
 					v_section (w => {
 						section (w2 => {
 							foreach(PicData pic in pictures){	//display selected pictures
@@ -173,6 +177,7 @@ namespace KerbalX
 							});
 						}
 					});
+
 
 				}else if(mode == "update"){
 
@@ -225,9 +230,7 @@ namespace KerbalX
 								GUILayout.Label ("Make sure this is the craft you want update!");
 							});
 						}
-						
 					}
-
 				}
 
 
@@ -256,14 +259,12 @@ namespace KerbalX
 
 
 				if(upload_progress != null){
-					GUILayout.Label (upload_progress);
+					v_section (w => {
+						GUILayout.Label (upload_progress, "h2");
+						progress_spinner (w, 5, 80);
+					});
 				}
-//				if(RequestHandler.instance.active_request != null){
-//					GUILayout.Label ("cur_request " + RequestHandler.instance.active_request.uploadProgress.ToString ());
-//					Debug.Log ("DLprog test1: " + RequestHandler.instance.active_request.uploadProgress.ToString ());
-//				}
 			}
-
 		}
 
 		private bool can_upload(){
@@ -272,7 +273,7 @@ namespace KerbalX
 				errors.Add ("You need to add at least 1 picture.");
 				go_no_go = false;
 			}
-			//return true;
+//			go_no_go = true;
 			return go_no_go;
 		}
 
@@ -285,11 +286,23 @@ namespace KerbalX
 			return go_no_go;
 		}
 
+		private void before_upload(string message){
+			upload_progress = message;
+			enable_upload_bttn = false;
+			if(KerbalX.image_selector != null){KerbalX.image_selector.hide ();}
+			frame_count = 0;
+		}
+
+		private void after_upload(){
+			enable_upload_bttn = true;
+			upload_progress = null;
+			autoheight ();
+		}
+
 		private void upload_craft(){
 			clear_errors ();
 			if(can_upload ()){
-				enable_upload_bttn = false;
-				if(KerbalX.image_selector != null){KerbalX.image_selector.hide ();}
+				before_upload ("Uploading....");
 
 				WWWForm craft_data = new WWWForm();
 				craft_data.AddField ("craft_name", craft_name);
@@ -297,7 +310,6 @@ namespace KerbalX
 				craft_data.AddField ("craft_file", craft_file());
 				craft_data.AddField ("part_data", JSONX.toJSON (part_info ()));
 				
-				upload_progress = "Compressing Images...";
 				int pic_count = 0; int url_count = 0;
 				foreach(PicData pic in pictures){
 					if(pic.file != null){
@@ -307,23 +319,20 @@ namespace KerbalX
 					}
 				}
 
-				upload_progress = "Uploading....";
 				KerbalXAPI.upload_craft (craft_data, (resp, code) => {
 					var resp_data = JSON.Parse (resp);
 					if(code == 200){
-						KerbalX.log (resp_data.ToString ());
+						KerbalX.log ("craft uploaded OK");
 						show_upload_compelte_dialog (resp_data["url"]);
 						reset ();
 						fetch_existing_craft();
 					}else if(code == 422){
-						KerbalX.log ("upload failed");
+						KerbalX.log ("craft upload failed!");
 						KerbalX.log (resp);
 						string resp_errs = resp_data["errors"];
 						errors = resp_errs.Split (',').ToList ();
 					}
-					enable_upload_bttn = true;
-					upload_progress = null;
-					autoheight ();
+					after_upload ();
 				});
 			}
 		}
@@ -331,33 +340,30 @@ namespace KerbalX
 		private void update_craft(){
 			clear_errors ();
 			if(can_update ()){
-				enable_upload_bttn = false;
-				if(KerbalX.image_selector != null){KerbalX.image_selector.hide ();}
+				before_upload ("Updating....");
 
 				WWWForm craft_data = new WWWForm();
 				craft_data.AddField ("craft_name", craft_name);
 				craft_data.AddField ("craft_file", craft_file());
 				craft_data.AddField ("part_data", JSONX.toJSON (part_info ()));
 
-				upload_progress = "Updating....";
 				int craft_id = craft_select.id;
 				KerbalXAPI.update_craft (craft_id, craft_data, (resp, code) => {
 					var resp_data = JSON.Parse (resp);
 					if (code == 200) {
-						KerbalX.log ("it updated!");
+						KerbalX.log ("craft update OK");
 					} else if (code == 422) {
-						KerbalX.log ("craft update failed");
+						KerbalX.log ("craft update failed!");
+						KerbalX.log (resp);
 						string resp_errs = resp_data["errors"];
 						errors = resp_errs.Split (',').ToList ();
 					}
-					enable_upload_bttn = true;
-					upload_progress = null;
-					autoheight ();
+					after_upload ();
 				});
 			}
 		}
 
-		private void show_upload_compelte_dialog(string craft_path){
+		public void show_upload_compelte_dialog(string craft_path){  //TODO re-privatise
 			KerbalXDialog dialog = show_dialog ((d) => {
 				v_section (w => {
 					GUILayout.Label ("Your craft has uploaded!", "h1");
@@ -369,8 +375,8 @@ namespace KerbalX
 					if(GUILayout.Button (StyleSheet.assets["logo_large"], "no_style", width (500f), height (90.36f))){
 						Application.OpenURL (craft_url);
 					}
-					GUILayout.Label ("Click the link (or logo) to view your craft.");
-					GUILayout.Label ("If you want to the page layout click the \"Edit Craft\" link at the top of the page.", "small");
+					GUILayout.Label ("Click the link (or logo) to view your craft.\nIf you want to the page layout click the \"Edit Craft\" link at the top of the page.", "small");
+//					GUILayout.Label (d.window_pos.ToString ());
 					section (w2 => {
 						GUILayout.FlexibleSpace ();
 						if(GUILayout.Button ("close", width (50f))){
@@ -381,6 +387,8 @@ namespace KerbalX
 				});
 			});
 			dialog.prevent_editor_click_through = true;
+			dialog.window_title = "";
+			dialog.window_pos = new Rect((Screen.width/2 - 528f/2), Screen.height/4, 528f, 5);
 		}
 
 		//Makes a GET to KerbalX to return info about the users uploaded craft.  Full craft data is stored on KerbalX.existing_craft
@@ -450,9 +458,13 @@ namespace KerbalX
 			return System.IO.File.ReadAllText(craft_path ());
 		}
 
-		//returns the path of the craft file
+		//returns the full path of the craft file
 		private string craft_path(){
 			return ShipConstruction.GetSavePath (editor_craft_name);
+		}
+
+		private string short_path(){
+			return craft_path ().Replace (Paths.joined (KSPUtil.ApplicationRootPath, "saves"), "");
 		}
 
 		//Check if craft file exists
@@ -510,7 +522,30 @@ namespace KerbalX
 			}
 		}
 
-
+		//Derpy little upload waiting thing.
+		//takes a container width, number of boxes to draw and how fast to cycle (lower is faster)
+		private void progress_spinner(float w, int box_count, int speed){
+			GUIStyle centered_container = new GUIStyle();
+			float box_size = 15f;
+			float space_size = 20;
+			int p = (int)(w-((box_count-1)*space_size + box_count*box_size))/2;
+			centered_container.padding = new RectOffset(p,p,0,0);
+			style_override = centered_container;
+			section (w2 => {
+				frame_count++;
+				if(frame_count > speed){
+					upload_ticker_pos++;
+					if(upload_ticker_pos > box_count){upload_ticker_pos=0;}
+					frame_count = 0;
+				}
+				for(int i=0; i < box_count; i++){
+					GUILayout.Label ("", (upload_ticker_pos == i ? "box.blue" : "box"), width (box_size), height (box_size));
+					if(i != box_count-1){
+						GUILayout.Space (20f);
+					}
+				}
+			});
+		}
 	}
 }
 

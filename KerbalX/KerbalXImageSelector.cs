@@ -227,7 +227,7 @@ namespace KerbalX
 			scroll_pos.y = 0;
 			int i = 0;
 			foreach(FileInfo file in sorted_files){
-				Texture2D tex = new Texture2D (2, 2); //prepare the texture for the image
+				Texture2D tex = new Texture2D (2, 2); //prepare the texture for the image //TODO try this without creating a new texture each time
 				//add a PicData struct for each picture into pictures (struct defines name, file, texture and id) 
 				//id is used as index in loaded_pics, used for tracking which have had textures loaded 
 				PicData data = new PicData ();

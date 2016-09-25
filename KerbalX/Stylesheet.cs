@@ -16,7 +16,7 @@ namespace KerbalX
 			if(KerbalXWindow.KXskin == null){
 
 				//Texture2D kx_logo_small = new Texture2D(166,30, TextureFormat.ARGB32, false);
-				Texture2D kx_logo_small = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo_small"), false);
+				Texture2D kx_logo_small = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo_small"), false); //166x30
 				Texture2D kx_logo_large = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo"), false); //664x120
 				assets.Add ("logo_small", kx_logo_small);
 				assets.Add ("logo_large", kx_logo_large);
@@ -37,7 +37,7 @@ namespace KerbalX
 				h3.name = "h3";
 
 				GUIStyle hyperlink = new GUIStyle (GUI.skin.label);
-				hyperlink.normal.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
+				hyperlink.normal.textColor = new Color (0.4f,0.5f,0.9f,1); //roughly KerbalX Blue - #6E91EB
 				hyperlink.hover.textColor = Color.red; //can't seem to make this work
 				hyperlink.name = "hyperlink";
 
@@ -109,7 +109,17 @@ namespace KerbalX
 				GUIStyle wrapped_button = new GUIStyle (GUI.skin.button);
 				wrapped_button.name = "button.wrapped";
 				wrapped_button.wordWrap = true;
-				
+
+
+				Texture2D blue_background = new Texture2D(1, 1,   TextureFormat.RGBA32, false);
+				blue_background.SetPixel(0, 0, new Color (0.4f,0.5f,0.9f,1));
+				blue_background.wrapMode = TextureWrapMode.Repeat;
+				blue_background.Apply ();
+				GUIStyle blue_box = new GUIStyle (GUI.skin.box);
+				blue_box.normal.background = blue_background;
+				blue_box.border = new RectOffset (3, 3, 3, 3);
+				blue_box.name = "box.blue";
+
 
 				Texture2D dark_background = new Texture2D(1, 1,   TextureFormat.RGBA32, false);
 				dark_background.SetPixel(0, 0, new Color (0.12f,0.12f,0.12f,0.7f));
@@ -127,7 +137,7 @@ namespace KerbalX
 				KerbalXWindow.KXskin = Instantiate (GUI.skin);
 				KerbalXWindow.KXskin.customStyles = new GUIStyle[]{ 
 					h1, h2, h3, hyperlink, hyperlink_h2, hyperlink_h3, alert, alert_h2, small, centered, 
-					pic_link, pic_hover, dark_back, dark_back_offset, no_style,
+					pic_link, pic_hover, dark_back, dark_back_offset, blue_box, no_style,
 					login_button, upload_button, screenshot_button, wrapped_button
 				};
 			}

@@ -370,6 +370,10 @@ namespace KerbalX
 			});
 			//GUILayout.Label ("window id: " + window_id);			
 		}
+
+		protected virtual void OnDestroy(){
+			EditorLogic.fetch.Unlock (window_id.ToString ());
+		}
 	}
 }
 
