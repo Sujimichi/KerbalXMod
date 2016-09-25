@@ -57,9 +57,6 @@ namespace KerbalX
 		public List<PicData> pictures = new List<PicData> ();
 
 
-		//private Texture2D kx_logo = new Texture2D(56, 56, TextureFormat.ARGB32, false);
-		//kx_logo = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo"), false);
-
 
 		private void Start()
 		{
@@ -71,8 +68,19 @@ namespace KerbalX
 			prevent_editor_click_through = true;
 			enable_request_handler ();
 			fetch_existing_craft ();
+
+			GameEvents.onEditorLoad.Add 	(this.on_craft_load);
+			GameEvents.onEditorRestart.Add 	(this.on_new_craft );
+
 		}
 
+		public void on_craft_load(ShipConstruct a, KSP.UI.Screens.CraftBrowserDialog.LoadType b){
+			KerbalX.editor_gui.reset ();
+		}
+
+		public void on_new_craft(){
+			KerbalX.editor_gui.reset ();
+		}
 
 		//Called after a succsessful login, if the login dialog was opened from this window.
 		protected override void on_login ()
@@ -81,8 +89,17 @@ namespace KerbalX
 			fetch_existing_craft ();
 		}
 
+		private void OnDestroy(){
+			GameEvents.onEditorLoad.Remove 	  (this.on_craft_load);
+			GameEvents.onEditorRestart.Remove (this.on_new_craft);
+			if(KerbalX.image_selector != null){
+				GameObject.Destroy (KerbalX.image_selector);
+			}
+		}
+
 		protected override void WindowContent(int win_id)
 		{
+
 
 			//get the craft name from the editor field, but allow the user to set a alternative name to upload as without changing the editor field
 			//but if the user changes the editor field then reset the craft_name to that. make sense? good, shutup. 
@@ -271,28 +288,8 @@ namespace KerbalX
 					if(code == 200){
 						var resp_data = JSON.Parse (resp);
 						KerbalX.log (resp_data.ToString ());
-						show_dialog ((d) => {
-							v_section (w => {
-								GUILayout.Label (craft_name + " has uploaded!", "h1");
-								string craft_url = KerbalXAPI.url_to (resp_data["url"]);
-								GUILayout.Space (10f);
-								if(GUILayout.Button (craft_url, "hyperlink.h2", width (500f))){
-									Application.OpenURL (craft_url);
-								}
-								if(GUILayout.Button (StyleSheet.assets["logo_large"], "no_style", width (500f), height (90.36f))){
-									Application.OpenURL (craft_url);
-								}
-
-								section (w2 => {
-									GUILayout.FlexibleSpace ();
-									if(GUILayout.Button ("close", width (50f))){
-										close_dialog ();
-									}
-								});
-								
-							});
-						});
-
+						show_upload_compelte_dialog (resp_data["url"]);
+						reset ();
 						fetch_existing_craft();
 					}else if(code == 422){
 						var resp_data = JSON.Parse (resp);
@@ -309,6 +306,30 @@ namespace KerbalX
 
 		private void update_craft(){
 			errors.Add ("dis shit not built yet!");
+		}
+
+		private void show_upload_compelte_dialog(string craft_path){
+			show_dialog ((d) => {
+				v_section (w => {
+					GUILayout.Label ("Your craft has uploaded!", "h1");
+					string craft_url = KerbalXAPI.url_to (craft_path);
+					GUILayout.Space (10f);
+					if(GUILayout.Button (craft_url, "hyperlink.h2", width (500f))){
+						Application.OpenURL (craft_url);
+					}
+					if(GUILayout.Button (StyleSheet.assets["logo_large"], "no_style", width (500f), height (90.36f))){
+						Application.OpenURL (craft_url);
+					}
+					GUILayout.Label ("Click the link (or logo) to view your craft. If you want to adjust how the page looks click the \"Edit Craft\" link at the top of the page.", "small");
+					section (w2 => {
+						GUILayout.FlexibleSpace ();
+						if(GUILayout.Button ("close", width (50f))){
+							close_dialog ();
+						}
+					});
+
+				});
+			});
 		}
 
 		//Makes a GET to KerbalX to return info about the users uploaded craft.  Full craft data is stored on KerbalX.existing_craft
@@ -341,6 +362,7 @@ namespace KerbalX
 			}
 		}
 
+
 		public void remove_picture(PicData picture){
 			List<PicData> new_list = new List<PicData> ();
 			foreach(PicData pic in pictures){
@@ -357,6 +379,36 @@ namespace KerbalX
 			errors.Clear ();
 			autoheight ();
 		}
+
+		public void reset(){
+			KerbalX.log ("Resetting UploadInterface");
+			clear_errors ();
+			pictures.Clear ();
+			style_select.id = 0;
+			craft_select.id = 0;
+		}
+
+		//switch interface mode ( "upload" || "update" ) 
+		private void change_mode(string new_mode){
+			mode = new_mode;
+			clear_errors ();
+		}
+		
+		//returns the craft file
+		private string craft_file(){
+			return System.IO.File.ReadAllText(craft_path ());
+		}
+
+		//returns the path of the craft file
+		private string craft_path(){
+			return ShipConstruction.GetSavePath (editor_craft_name);
+		}
+
+		//Check if craft file exists
+		private bool craft_file_exists(){
+			return System.IO.File.Exists (craft_path ());
+		}
+
 
 		//check if craft_name matches any of the user's existing craft.  Sets matching_craft_ids to contain KX database ids of any matching craft
 		//if only one match is found then craft_select.id is also set to the matched id (which them selects the craft in the select menu)
@@ -375,28 +427,6 @@ namespace KerbalX
 				craft_select.id = matching_craft_ids.First ();
 			}			
 		}
-
-		//switch interface mode ( "upload" || "update" ) 
-		private void change_mode(string new_mode){
-			mode = new_mode;
-			autoheight ();
-		}
-
-		//returns the craft file
-		private string craft_file(){
-			return System.IO.File.ReadAllText(craft_path ());
-		}
-
-		//returns the path of the craft file
-		private string craft_path(){
-			return ShipConstruction.GetSavePath (editor_craft_name);
-		}
-
-		//Check if craft file exists
-		private bool craft_file_exists(){
-			return System.IO.File.Exists (craft_path ());
-		}
-
 
 		//returns a unique set of the craft's parts and data about each part;
 		//{"partname1" => {"mod" => "mod_name"}, "partname2" => {"mod" => "mod_name"}, ....} #yeah, explained in Ruby hash notation, cos...it's terse. 

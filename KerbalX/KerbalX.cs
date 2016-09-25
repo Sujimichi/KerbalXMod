@@ -186,17 +186,19 @@ namespace KerbalX
 		{
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
 
-			if (GUILayout.Button ("test")) {
+			if (GUILayout.Button ("update existing craft")) {
 				KerbalXAPI.fetch_existing_craft (() => {});
 			}
 
-
-
-			if(GUILayout.Button ("test 1")){
-				Debug.Log (KerbalX.image_selector.window_pos.width.ToString ());
+			if(GUILayout.Button ("open interface")){
+				gameObject.AddOrGetComponent<KerbalXUploadInterface> ();
 			}
 
-			if (GUILayout.Button ("Login")) {
+			if(GUILayout.Button ("close interface")){
+				GameObject.Destroy (KerbalX.editor_gui);
+			}
+
+			if (GUILayout.Button ("show Login")) {
 				KerbalXLoginWindow login_window = gameObject.AddOrGetComponent<KerbalXLoginWindow> ();
 				login_window.after_login_action = () => {
 					on_login ();

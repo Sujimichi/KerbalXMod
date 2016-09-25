@@ -121,7 +121,7 @@ namespace KerbalX
 				KerbalXWindow.KXskin = Instantiate (GUI.skin);
 				KerbalXWindow.KXskin.customStyles = new GUIStyle[]{ 
 					h1, h2, h3, hyperlink, hyperlink_h2, hyperlink_h3, alert, h2_alert, small, centered, 
-					pic_link, pic_hover, dark_back, dark_back_offset,
+					pic_link, pic_hover, dark_back, dark_back_offset, no_style,
 					upload_button, screenshot_button, wrapped_button
 				};
 			}
