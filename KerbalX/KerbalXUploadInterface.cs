@@ -14,21 +14,6 @@ namespace KerbalX
 {
 
 	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
-	public class EditorActions : MonoBehaviour
-	{
-		private bool set_state = true;
-		public string editor = null;
-
-		private void Update(){
-			if(set_state){
-				set_state = false;
-				KerbalX.console.window_pos = new Rect(250, 10, 310, 5);
-				//KerbalX.editor_gui.current_editor = EditorLogic.fetch.ship.shipFacility.ToString ();
-			}
-		}
-	}
-
-	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
 	public class KerbalXUploadInterface : KerbalXWindow
 	{
 		//private string current_editor = null;
@@ -40,6 +25,8 @@ namespace KerbalX
 
 		private string mode = "upload";
 		private float win_width = 410f;
+		private bool show_upload_bttn = true;
+		private bool enable_upload_bttn = true;
 
 		private int max_pics = 3;
 
@@ -100,7 +87,7 @@ namespace KerbalX
 		protected override void WindowContent(int win_id)
 		{
 
-
+			show_upload_bttn = true;
 			//get the craft name from the editor field, but allow the user to set a alternative name to upload as without changing the editor field
 			//but if the user changes the editor field then reset the craft_name to that. make sense? good, shutup. 
 			if(editor_craft_name != EditorLogic.fetch.ship.shipName){
@@ -157,7 +144,11 @@ namespace KerbalX
 						if (GUILayout.Button ("Edit Action Group info", width(w*0.5f), height(30)) ) {
 						}					
 						if (GUILayout.Button ("Add Pictures", width(w*0.5f), height (30)) ) {
-							KerbalX.image_selector.toggle ();
+							if(KerbalX.image_selector == null){
+								launch ("ImageSelector", true);
+							}else{
+								KerbalX.image_selector.toggle ();
+							}
 						}					
 					});
 
@@ -184,39 +175,57 @@ namespace KerbalX
 					});
 
 				}else if(mode == "update"){
-					if (matching_craft_ids.Count > 0) {
-						string label_text = "This craft's name matches the name of " + (matching_craft_ids.Count == 1 ? "a" : "several") + " craft you've already uploaded.";
-						if (matching_craft_ids.Count > 1) {
-							label_text = label_text + " Select which one you want to update";
-						}
-						GUILayout.Label (label_text);
-					}
 
-					section (w => {
-						v_section (w*0.7f, inner_w => {
-							section (inner_w, inner_w2 => { GUILayout.Label ("Select Craft on KerbalX to update:"); });
-							craft_select = dropdown (remote_craft, craft_select, inner_w, 100f);
+					if(KerbalX.existing_craft.Count == 0){
+						show_upload_bttn = false;
+						GUILayout.Label ("You haven't uploaded any craft yet", "h2");
+						GUILayout.Label ("Once you've uploaded craft they will appear here and you'll be able to select them to update");
+						section (w => {
+							GUILayout.FlexibleSpace ();
+							if(GUILayout.Button ("refresh", width (60f))){
+								fetch_existing_craft ();
+							}
 						});
-						v_section (w*0.3f, inner_w => {
-							section (inner_w, inner_w2 => {
-								if (GUILayout.Button ("OR upload this as a new craft", "button.wrapped", height (50) )) {
-									change_mode("upload");
-								}
+						if(GUILayout.Button ("Upload a Craft", height (30f))){
+							change_mode ("upload");
+						}
+					}else{
+						
+						if (matching_craft_ids.Count > 0) {
+							string label_text = "This craft's name matches the name of " + (matching_craft_ids.Count == 1 ? "a" : "several") + " craft you've already uploaded.";
+							if (matching_craft_ids.Count > 1) {
+								label_text = label_text + " Select which one you want to update";
+							}
+							GUILayout.Label (label_text);
+						}
+						
+						section (w => {
+							v_section (w*0.7f, inner_w => {
+								section (inner_w, inner_w2 => { GUILayout.Label ("Select Craft on KerbalX to update:"); });
+								craft_select = dropdown (remote_craft, craft_select, inner_w, 100f);
+							});
+							v_section (w*0.3f, inner_w => {
+								section (inner_w, inner_w2 => {
+									if (GUILayout.Button ("OR upload this as a new craft", "button.wrapped", height (50) )) {
+										change_mode("upload");
+									}
+								});
 							});
 						});
-					});
-
-					if (craft_select.id > 0) {
-						style_override = GUI.skin.GetStyle ("background.dark.margin");
-						v_section (w => {
-							GUILayout.Label ("Pressing Update will update the this craft on KerbalX:", "h3");
-							GUILayout.Label (KerbalX.existing_craft [craft_select.id] ["name"] + " (id: " + craft_select.id + ")", "h3");
-							string craft_url = KerbalXAPI.url_to (KerbalX.existing_craft [craft_select.id] ["url"]);
-							if(GUILayout.Button (craft_url, "hyperlink.h3")){
-								Application.OpenURL (craft_url);
-							}
-							GUILayout.Label ("Make sure this is the craft you want update!");
-						});
+						
+						if (craft_select.id > 0) {
+							style_override = GUI.skin.GetStyle ("background.dark.margin");
+							v_section (w => {
+								GUILayout.Label ("Pressing Update will update the this craft on KerbalX:", "h3");
+								GUILayout.Label (KerbalX.existing_craft [craft_select.id] ["name"] + " (id: " + craft_select.id + ")", "h3");
+								string craft_url = KerbalXAPI.url_to (KerbalX.existing_craft [craft_select.id] ["url"]);
+								if(GUILayout.Button (craft_url, "hyperlink.h3")){
+									Application.OpenURL (craft_url);
+								}
+								GUILayout.Label ("Make sure this is the craft you want update!");
+							});
+						}
+						
 					}
 
 				}
@@ -231,16 +240,19 @@ namespace KerbalX
 					});
 				}
 
-
-				section (w => {
-					if (GUILayout.Button (mode_title + "!", "button.upload")) {
-						if(mode == "update"){
-							update_craft ();
-						}else{
-							upload_craft ();
+				if (show_upload_bttn) {
+					GUI.enabled = enable_upload_bttn;
+					section (w => {
+						if (GUILayout.Button (mode_title + "!", "button.upload")) {
+							if (mode == "update") {
+								update_craft ();
+							} else {
+								upload_craft ();
+							}
 						}
-					}
-				});
+					});
+					GUI.enabled = true;
+				}
 
 
 				if(upload_progress != null){
@@ -260,13 +272,25 @@ namespace KerbalX
 				errors.Add ("You need to add at least 1 picture.");
 				go_no_go = false;
 			}
-			return true;
-//			return go_no_go;
+			//return true;
+			return go_no_go;
+		}
+
+		private bool can_update(){
+			bool go_no_go = true;
+			if(craft_select.id == 0){
+				errors.Add ("You need to select a craft to update");
+				go_no_go = false;
+			}
+			return go_no_go;
 		}
 
 		private void upload_craft(){
 			clear_errors ();
 			if(can_upload ()){
+				enable_upload_bttn = false;
+				if(KerbalX.image_selector != null){KerbalX.image_selector.hide ();}
+
 				WWWForm craft_data = new WWWForm();
 				craft_data.AddField ("craft_name", craft_name);
 				craft_data.AddField ("craft_style", craft_styles [style_select.id]);
@@ -282,22 +306,22 @@ namespace KerbalX
 						craft_data.AddField ("image_urls[url_" + url_count++ + "]", pic.url);
 					}
 				}
-				
+
 				upload_progress = "Uploading....";
 				KerbalXAPI.upload_craft (craft_data, (resp, code) => {
+					var resp_data = JSON.Parse (resp);
 					if(code == 200){
-						var resp_data = JSON.Parse (resp);
 						KerbalX.log (resp_data.ToString ());
 						show_upload_compelte_dialog (resp_data["url"]);
 						reset ();
 						fetch_existing_craft();
 					}else if(code == 422){
-						var resp_data = JSON.Parse (resp);
 						KerbalX.log ("upload failed");
 						KerbalX.log (resp);
 						string resp_errs = resp_data["errors"];
 						errors = resp_errs.Split (',').ToList ();
 					}
+					enable_upload_bttn = true;
 					upload_progress = null;
 					autoheight ();
 				});
@@ -305,11 +329,36 @@ namespace KerbalX
 		}
 
 		private void update_craft(){
-			errors.Add ("dis shit not built yet!");
+			clear_errors ();
+			if(can_update ()){
+				enable_upload_bttn = false;
+				if(KerbalX.image_selector != null){KerbalX.image_selector.hide ();}
+
+				WWWForm craft_data = new WWWForm();
+				craft_data.AddField ("craft_name", craft_name);
+				craft_data.AddField ("craft_file", craft_file());
+				craft_data.AddField ("part_data", JSONX.toJSON (part_info ()));
+
+				upload_progress = "Updating....";
+				int craft_id = craft_select.id;
+				KerbalXAPI.update_craft (craft_id, craft_data, (resp, code) => {
+					var resp_data = JSON.Parse (resp);
+					if (code == 200) {
+						KerbalX.log ("it updated!");
+					} else if (code == 422) {
+						KerbalX.log ("craft update failed");
+						string resp_errs = resp_data["errors"];
+						errors = resp_errs.Split (',').ToList ();
+					}
+					enable_upload_bttn = true;
+					upload_progress = null;
+					autoheight ();
+				});
+			}
 		}
 
 		private void show_upload_compelte_dialog(string craft_path){
-			show_dialog ((d) => {
+			KerbalXDialog dialog = show_dialog ((d) => {
 				v_section (w => {
 					GUILayout.Label ("Your craft has uploaded!", "h1");
 					string craft_url = KerbalXAPI.url_to (craft_path);
@@ -320,7 +369,8 @@ namespace KerbalX
 					if(GUILayout.Button (StyleSheet.assets["logo_large"], "no_style", width (500f), height (90.36f))){
 						Application.OpenURL (craft_url);
 					}
-					GUILayout.Label ("Click the link (or logo) to view your craft. If you want to adjust how the page looks click the \"Edit Craft\" link at the top of the page.", "small");
+					GUILayout.Label ("Click the link (or logo) to view your craft.");
+					GUILayout.Label ("If you want to the page layout click the \"Edit Craft\" link at the top of the page.", "small");
 					section (w2 => {
 						GUILayout.FlexibleSpace ();
 						if(GUILayout.Button ("close", width (50f))){
@@ -330,6 +380,7 @@ namespace KerbalX
 
 				});
 			});
+			dialog.prevent_editor_click_through = true;
 		}
 
 		//Makes a GET to KerbalX to return info about the users uploaded craft.  Full craft data is stored on KerbalX.existing_craft

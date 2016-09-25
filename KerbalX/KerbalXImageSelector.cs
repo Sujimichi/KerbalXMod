@@ -28,20 +28,19 @@ namespace KerbalX
 		}
 	}
 
-	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
+	//[KSPAddon(KSPAddon.Startup.EditorAny, false)]
 	public class KerbalXImageSelector : KerbalXWindow
 	{
 		private List<PicData> pictures = new List<PicData>();				//populated by load_pics, contains PicData objects for each pic 
 		private List<List<PicData>> groups = new List<List<PicData>> ();	//nested list of lists - rows of pictures for display in the interface
-		//private List<string> loaded_filenames = new List<string> ();
-		private bool[] loaded_pics;
+		private bool[] loaded_pics;											//array of bools used to track which pictures have had their textures loaded.
 
 		private string mode = "pic_selector";
 		private int pics_per_row = 4;
 		private string[] file_types = new string[]{"jpg", "png"};
+
 		private Vector2 scroll_pos;
 		private int file_count = 0;
-
 
 		private string pic_url = "";
 		private string hover_ele = "";
@@ -50,7 +49,7 @@ namespace KerbalX
 			window_title = "KerbalX::ScreenShots";
 			float w = 640;
 			window_pos = new Rect((Screen.width/2 - w/2), Screen.height/3, w, 5);
-			visible = false;
+			//visible = false;
 			prevent_editor_click_through = true;
 			KerbalX.image_selector = this;
 
@@ -65,13 +64,11 @@ namespace KerbalX
 			}
 		}
 
-		protected override void on_hide ()
-		{
+		protected override void on_hide (){
 			KerbalX.editor_gui.clear_errors ();
 		}
 
-		protected override void WindowContent(int win_id)
-		{
+		protected override void WindowContent(int win_id){
 
 			if(mode == "url_entry"){
 				v_section (w => {
@@ -80,6 +77,7 @@ namespace KerbalX
 						if(GUILayout.Button ("close", width (100f), height (30) )){ this.hide (); }
 					});
 					GUILayout.Label ("note: one of 'em urls what end with an extension ie .jpg");
+
 					section(w2 => {
 						pic_url = GUILayout.TextField (pic_url, width (w2-100f));
 						if(GUILayout.Button ("Add url", width (100f))){
@@ -146,7 +144,7 @@ namespace KerbalX
 							style_override = GUI.skin.GetStyle ("background.dark");
 							section (600f, sw => {	//horizontal section....sorry, BeginHorizontal container for the row (slightly narrower than outter container to account for scroll bar)
 								foreach(PicData pic in row){
-									v_section (150f, w2 => {  //vertical section, ahem, BeginVertical container for each pic.  Contains to restyled buttons, each will call select_pic.
+									v_section (150f, w2 => {  //vertical section, ahem, BeginVertical container for each pic.  Contains two restyled buttons, each will call select_pic.
 										var style =  (hover_ele==pic.file.FullName ? "pic.hover" : "pic.link"); //flip-flop style depending on hover_ele, being == to file name (because I can't figure out how to make style.hover work yet)
 
 										if(GUILayout.Button (pic.texture, style, width (w2), height (w2*0.75f))){

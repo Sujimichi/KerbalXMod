@@ -89,8 +89,6 @@ namespace KerbalX
 		public AfterLoginAction after_login_action = () => {};
 
 
-
-
 		private void Start(){
 			window_title = "KerbalX::Login";
 			window_pos = new Rect((Screen.width/2 - 400/2),100, 400, 5);
@@ -103,8 +101,7 @@ namespace KerbalX
 			}
 		}
 
-		protected override void WindowContent(int win_id)
-		{
+		protected override void WindowContent(int win_id){
 			if(KerbalXAPI.logged_out ()){					
 				GUI.enabled = enable_login;
 				GUILayout.Label ("Enter your KerbalX username and password");
@@ -145,13 +142,13 @@ namespace KerbalX
 
 			if (KerbalXAPI.logged_out ()) {
 				GUI.enabled = enable_login;
-				if (GUILayout.Button ("Login")) {				
+				if (GUILayout.Button ("Login", "button.login")) {				
 					KerbalXAPI.login (username, password);
 					password = "";
 				}
 				GUI.enabled = true;
 			}else{
-				if (GUILayout.Button ("Log out")) {
+				if (GUILayout.Button ("Log out", "button.login")) {
 					KerbalXAPI.log_out ();
 					username = "";
 					password = ""; //should already be empty, but just in case
@@ -170,20 +167,30 @@ namespace KerbalX
 		}
 	}
 
+	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
+	public class KerbalXConsoleReposition : MonoBehaviour
+	{
+		private bool set_state = true;
+
+		private void Update(){
+			if(set_state){
+				set_state = false;
+				KerbalX.console.window_pos = new Rect(250, 10, 310, 5);
+			}
+		}
+	}
 
 	[KSPAddon(KSPAddon.Startup.AllGameScenes, false)]
 	public class KerbalXConsole : KerbalXWindow
 	{
-		private void Start()
-		{
+		private void Start(){
 			window_title = "KX::Konsole";
 			window_pos = new Rect(0, 0, 310, 5);
 			KerbalX.console = this;
 			enable_request_handler ();
 		}
 
-		protected override void WindowContent(int win_id)
-		{
+		protected override void WindowContent(int win_id){
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
 
 			if (GUILayout.Button ("update existing craft")) {
@@ -208,8 +215,7 @@ namespace KerbalX
 			if (GUILayout.Button ("print log to console")) { KerbalX.show_log (); }
 		}
 
-		protected override void on_login ()
-		{
+		protected override void on_login (){
 			base.on_login ();
 			Debug.Log ("dis shit called from conosle");
 		}
@@ -223,8 +229,8 @@ namespace KerbalX
 		public static string save_name = "default";
 		public static string craft_name = "testy";
 
-		public void Start()
-		{
+		public void Start(){
+			
 			if(autostart){
 				HighLogic.SaveFolder = save_name;
 				DebugToolbar.toolbarShown = true;

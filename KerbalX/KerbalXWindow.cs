@@ -1,8 +1,9 @@
 ﻿using System;
-using UnityEngine;
+using System.Threading;
+using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
+using UnityEngine;
 
 namespace KerbalX
 {
@@ -59,7 +60,7 @@ namespace KerbalX
 		protected bool footer 						= true;
 		protected bool draggable 					= true;
 		protected bool require_login 				= false;
-		protected bool prevent_editor_click_through = false;
+		public bool prevent_editor_click_through 	= false;
 
 		protected int window_id   = 0;
 		static int last_window_id = 0;
@@ -206,6 +207,12 @@ namespace KerbalX
 			GameObject.Destroy (KerbalXDialog.instance);
 		}
 
+		protected void launch(string type, bool show){
+			if(type == "ImageSelector"){
+				KerbalXImageSelector window = gameObject.AddOrGetComponent<KerbalXImageSelector> ();
+				window.show ();
+			}
+		}
 
 		//prevents mouse actions on the GUI window from affecting things behind it.  Only works in the editors at present.
 		protected void prevent_click_through(string mode){

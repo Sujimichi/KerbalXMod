@@ -104,6 +104,7 @@ namespace KerbalX
 			token = null; 
 			kx_username = null;
 			KerbalX.login_gui.enable_login = true;
+			KerbalX.login_gui.login_successful = false;
 			KerbalX.log ("logged out");
 			//TODO delete token file.
 		}

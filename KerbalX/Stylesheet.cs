@@ -56,9 +56,9 @@ namespace KerbalX
 				alert.normal.textColor = Color.red;
 				alert.name = "alert";
 				
-				GUIStyle h2_alert = new GUIStyle (alert);
-				h2_alert.name = "h2.alert";
-				h2_alert.fontSize = 20;
+				GUIStyle alert_h2 = new GUIStyle (alert);
+				alert_h2.name = "alert.h2";
+				alert_h2.fontSize = 20;
 				
 				GUIStyle small = new GUIStyle (GUI.skin.label);
 				small.name = "small";
@@ -87,7 +87,13 @@ namespace KerbalX
 				pic_highlight.SetPixel(0, 0, new Color (0.4f,0.5f,0.9f,1));
 				pic_highlight.Apply ();
 				pic_hover.normal.background = pic_highlight;
-				
+
+				GUIStyle login_button = new GUIStyle (GUI.skin.button);
+				login_button.name = "button.login";
+				login_button.fontSize = 15;
+				login_button.fontStyle = FontStyle.Bold;
+				login_button.padding = new RectOffset (0, 0, 3, 3);
+
 				GUIStyle upload_button = new GUIStyle (GUI.skin.button);
 				upload_button.name = "button.upload";
 				upload_button.fontSize = 20;
@@ -120,9 +126,9 @@ namespace KerbalX
 
 				KerbalXWindow.KXskin = Instantiate (GUI.skin);
 				KerbalXWindow.KXskin.customStyles = new GUIStyle[]{ 
-					h1, h2, h3, hyperlink, hyperlink_h2, hyperlink_h3, alert, h2_alert, small, centered, 
+					h1, h2, h3, hyperlink, hyperlink_h2, hyperlink_h3, alert, alert_h2, small, centered, 
 					pic_link, pic_hover, dark_back, dark_back_offset, no_style,
-					upload_button, screenshot_button, wrapped_button
+					login_button, upload_button, screenshot_button, wrapped_button
 				};
 			}
 
