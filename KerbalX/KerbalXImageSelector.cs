@@ -76,7 +76,7 @@ namespace KerbalX
 			if(mode == "url_entry"){
 				v_section (w => {
 					section (w2 => {
-						GUILayout.Label ("Enter the URL to your image", "h1", width (w2-100f));
+						GUILayout.Label ("Enter the URL to your image", "h2", width (w2-100f));
 						if(GUILayout.Button ("close", width (100f), height (30) )){ this.hide (); }
 					});
 					GUILayout.Label ("note: one of 'em urls what end with an extension ie .jpg");
@@ -95,10 +95,9 @@ namespace KerbalX
 				});
 
 			}else{
-
 				section (w => {
 					v_section (w-100f, w2 => {
-						GUILayout.Label ("Select a picture for your craft", "h1", width (w2));
+						GUILayout.Label ("Select a picture for your craft", "h2", width (w2));
 						GUILayout.Label ("Click on pics below to add them", width (w2));
 					});
 					v_section (100f, w2 => {
@@ -106,7 +105,6 @@ namespace KerbalX
 						if(GUILayout.Button ("close", width (w2), height (30) )){ this.hide (); }
 					});
 				});
-
 
 				if (GUILayout.Button ("Take Screenshot now", "button.screenshot")) {
 					grab_screenshot ();
@@ -265,9 +263,5 @@ namespace KerbalX
 			}
 		}
 	}
-
-
-
-
 }
 

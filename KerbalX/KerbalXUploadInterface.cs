@@ -95,12 +95,12 @@ namespace KerbalX
 			//Perform checks to see if there is a craft,  its not untitled and a craft file for it exists.
 			string trimmed_lowered_name = editor_craft_name.Trim ().ToLower ().Replace (" ", "");
 			if(part_info ().Count == 0){
-				GUILayout.Label ("No craft loaded. Create or load a craft to continue.", "h1");
+				GUILayout.Label ("No craft loaded. Create or load a craft to continue.", "h3");
 			}else if(trimmed_lowered_name == "untitledspacecraft" || trimmed_lowered_name == EditorLogic.autoShipName){
-				GUILayout.Label (editor_craft_name + "? Really?\nHow about you name the poor thing before uploading!", "h1");
+				GUILayout.Label (editor_craft_name + "? Really?\nHow about you name the poor thing before uploading!", "h3");
 			}else if(!craft_file_exists ()){
 				section (win_width, w => {
-					GUILayout.Label ("This craft hasn't been saved yet\nNo craft file found for " + editor_craft_name, "h1", width(w*0.7f));
+					GUILayout.Label ("This craft hasn't been saved yet\nNo craft file found for " + editor_craft_name, "h3", width(w*0.7f));
 					if(GUILayout.Button ("Save it now", width(w*0.3f), height (40))){
 						EditorLogic.fetch.saveBtn.onClick.Invoke ();
 					}
@@ -109,7 +109,7 @@ namespace KerbalX
 				//if checks pass continue with drawing rest of interface (TODO check for unsaved changes).
 
 				string mode_title = new CultureInfo ("en-US", false).TextInfo.ToTitleCase (mode);
-				GUILayout.Label (mode_title + " '" + craft_name + "' " + (mode == "update" ? "on" : "to") + " KerbalX", "h1");
+				GUILayout.Label (mode_title + " '" + craft_name + "' " + (mode == "update" ? "on" : "to") + " KerbalX", "h3");
 
 				if(mode == "upload"){
 					section (w => {
@@ -192,14 +192,13 @@ namespace KerbalX
 					if (craft_select.id > 0) {
 						style_override = GUI.skin.GetStyle ("background.dark.margin");
 						v_section (w => {
-							GUILayout.Label ("Pressing Update will update the following craft on KerbalX:", "alert");
-							GUILayout.Label (KerbalX.existing_craft [craft_select.id] ["name"] + " (id: " + craft_select.id + ")" );
-
+							GUILayout.Label ("Pressing Update will update the this craft on KerbalX:", "h3");
+							GUILayout.Label (KerbalX.existing_craft [craft_select.id] ["name"] + " (id: " + craft_select.id + ")", "h3");
 							string craft_url = KerbalXAPI.url_to (KerbalX.existing_craft [craft_select.id] ["url"]);
-							if(GUILayout.Button (craft_url, "hyperlink")){
+							if(GUILayout.Button (craft_url, "hyperlink.h3")){
 								Application.OpenURL (craft_url);
 							}
-							GUILayout.Label ("Make sure this is the craft you want update!", "small");
+							GUILayout.Label ("Make sure this is the craft you want update!");
 						});
 					}
 
@@ -244,7 +243,8 @@ namespace KerbalX
 				errors.Add ("You need to add at least 1 picture.");
 				go_no_go = false;
 			}
-			return go_no_go;
+			return true;
+//			return go_no_go;
 		}
 
 		private void upload_craft(){
@@ -270,8 +270,29 @@ namespace KerbalX
 				KerbalXAPI.upload_craft (craft_data, (resp, code) => {
 					if(code == 200){
 						var resp_data = JSON.Parse (resp);
-						KerbalX.log ("holy fuck! it uploaded");
 						KerbalX.log (resp_data.ToString ());
+						show_dialog ((d) => {
+							v_section (w => {
+								GUILayout.Label (craft_name + " has uploaded!", "h1");
+								string craft_url = KerbalXAPI.url_to (resp_data["url"]);
+								GUILayout.Space (10f);
+								if(GUILayout.Button (craft_url, "hyperlink.h2", width (500f))){
+									Application.OpenURL (craft_url);
+								}
+								if(GUILayout.Button (StyleSheet.assets["logo_large"], "no_style", width (500f), height (90.36f))){
+									Application.OpenURL (craft_url);
+								}
+
+								section (w2 => {
+									GUILayout.FlexibleSpace ();
+									if(GUILayout.Button ("close", width (50f))){
+										close_dialog ();
+									}
+								});
+								
+							});
+						});
+
 						fetch_existing_craft();
 					}else if(code == 422){
 						var resp_data = JSON.Parse (resp);

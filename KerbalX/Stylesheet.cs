@@ -14,23 +14,51 @@ namespace KerbalX
 		public static void prepare(){
 
 			if(KerbalXWindow.KXskin == null){
-				
+
+				//Texture2D kx_logo_small = new Texture2D(166,30, TextureFormat.ARGB32, false);
+				Texture2D kx_logo_small = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo_small"), false);
+				Texture2D kx_logo_large = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo"), false); //664x120
+				assets.Add ("logo_small", kx_logo_small);
+				assets.Add ("logo_large", kx_logo_large);
+
+
+
 				GUIStyle h1 = new GUIStyle (GUI.skin.label);
-				h1.name = "h1";
-				h1.fontSize = 15;
 				h1.fontStyle = FontStyle.Bold;
+				h1.fontSize = 30;
+				h1.name = "h1";
 				
+				GUIStyle h2 = new GUIStyle (h1);
+				h2.fontSize = 20;
+				h2.name = "h2";
+
+				GUIStyle h3 = new GUIStyle (h1);
+				h3.fontSize = 15;
+				h3.name = "h3";
+
+				GUIStyle hyperlink = new GUIStyle (GUI.skin.label);
+				hyperlink.normal.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
+				hyperlink.hover.textColor = Color.red; //can't seem to make this work
+				hyperlink.name = "hyperlink";
+
+				GUIStyle hyperlink_h2 = new GUIStyle (hyperlink);
+				hyperlink_h2.fontSize = 20;
+				hyperlink_h2.fontStyle = FontStyle.Bold;
+				hyperlink_h2.alignment = TextAnchor.UpperCenter;
+				hyperlink_h2.name = "hyperlink.h2";
+
+				GUIStyle hyperlink_h3 = new GUIStyle (hyperlink);
+				hyperlink_h3.fontSize = 15;
+				hyperlink_h3.name = "hyperlink.h3";
+
+
 				GUIStyle alert = new GUIStyle (GUI.skin.label);
 				alert.normal.textColor = Color.red;
 				alert.name = "alert";
 				
-				GUIStyle hyperlink = new GUIStyle (GUI.skin.label);
-				hyperlink.normal.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
-				hyperlink.name = "hyperlink";
-				
-				GUIStyle h1_alert = new GUIStyle (alert);
-				h1_alert.name = "h1.alert";
-				h1_alert.fontSize = 15;
+				GUIStyle h2_alert = new GUIStyle (alert);
+				h2_alert.name = "h2.alert";
+				h2_alert.fontSize = 20;
 				
 				GUIStyle small = new GUIStyle (GUI.skin.label);
 				small.name = "small";
@@ -40,7 +68,11 @@ namespace KerbalX
 				centered.name = "centered";
 				centered.alignment = TextAnchor.UpperCenter;
 				
-				
+
+				GUIStyle no_style = new GUIStyle (GUI.skin.label);
+				no_style.name = "no_style";
+				no_style.margin = new RectOffset (0, 0, 0, 0);
+				no_style.padding = new RectOffset (0, 0, 0, 0);
 				
 				GUIStyle pic_link = new GUIStyle (GUI.skin.label);
 				pic_link.name = "pic.link";
@@ -85,16 +117,10 @@ namespace KerbalX
 				dark_back_offset.margin = new RectOffset (0, 0, 5, 0);
 
 
-				Texture2D kx_logo_small = new Texture2D(166,30, TextureFormat.ARGB32, false);
-				kx_logo_small = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo_small"), false);
-				assets.Add ("small_logo", kx_logo_small);
 
-
-
-				KerbalX.log ("INITIALIZING SKIN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 				KerbalXWindow.KXskin = Instantiate (GUI.skin);
 				KerbalXWindow.KXskin.customStyles = new GUIStyle[]{ 
-					h1, hyperlink, alert, h1_alert, small, centered, 
+					h1, h2, h3, hyperlink, hyperlink_h2, hyperlink_h3, alert, h2_alert, small, centered, 
 					pic_link, pic_hover, dark_back, dark_back_offset,
 					upload_button, screenshot_button, wrapped_button
 				};

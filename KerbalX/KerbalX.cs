@@ -76,6 +76,7 @@ namespace KerbalX
 		}
 	}
 
+
 	public delegate void AfterLoginAction();
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class KerbalXLoginWindow : KerbalXWindow

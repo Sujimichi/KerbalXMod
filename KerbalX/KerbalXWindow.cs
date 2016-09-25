@@ -302,7 +302,7 @@ namespace KerbalX
 				KerbalX.server_error_message = null;
 				KerbalXDialog dialog = show_dialog((d) => {
 					v_section (w => {
-						GUILayout.Label ("KerbalX Error!:", "h1.alert");
+						GUILayout.Label ("KerbalX Error!:", "alert.h2");
 						GUILayout.Label (message);
 						if(GUILayout.Button ("OK", height (30))){close_dialog (); }
 					});
