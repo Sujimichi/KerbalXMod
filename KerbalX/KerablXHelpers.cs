@@ -3,10 +3,29 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 
-using UnityEngine;
+//using UnityEngine;
 
 namespace KerbalX
 {
+	internal class Checksum{
+
+		public static bool compare(string str1, string str2){
+			return digest (str1) == digest (str2);
+		}
+
+		internal static string digest(string text)
+		{
+			if (String.IsNullOrEmpty(text))
+				return String.Empty;
+			
+			using (var sha = new System.Security.Cryptography.SHA256Managed())
+			{
+				byte[] textData = System.Text.Encoding.UTF8.GetBytes(text);
+				byte[] hash = sha.ComputeHash(textData);
+				return BitConverter.ToString(hash).Replace("-", String.Empty);
+			}
+		}
+	}
 
 	public class Paths{
 		//takes any number of strings and returns them joined together with OS specific path divider, ie:

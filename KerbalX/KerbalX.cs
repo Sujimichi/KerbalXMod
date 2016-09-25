@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Linq;
-using System.Text;
+//using System.Linq;
+//using System.Text;
 
-using System.Collections;
+//using System.Collections;
 using System.Collections.Generic;
 //using System.Collections.Specialized;
 //using System.Globalization;
 
-using SimpleJSON;
+//using SimpleJSON;
 
 using UnityEngine;
 //using UnityEngine.UI;
@@ -200,6 +200,9 @@ namespace KerbalX
 				KerbalX.editor_gui.show_upload_compelte_dialog ("fooobar/moo");
 			}
 
+			if (GUILayout.Button ("test")) {
+			}
+
 			if (GUILayout.Button ("update existing craft")) {
 				KerbalXAPI.fetch_existing_craft (() => {});
 			}
@@ -253,6 +256,5 @@ namespace KerbalX
 			}
 		}
 	}
-
 
 }

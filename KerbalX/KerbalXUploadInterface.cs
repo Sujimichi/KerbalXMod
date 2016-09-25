@@ -4,11 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Globalization;
 using System.Collections.Generic;
-using System.Collections.Specialized;
+//using System.Collections.Specialized;
 
 using SimpleJSON;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace KerbalX
 {
@@ -267,20 +266,22 @@ namespace KerbalX
 			}
 		}
 
-		private bool can_upload(){
+
+		private bool ok_to_send(){
 			bool go_no_go = true;
-			if(pictures.Count == 0){ 
+
+			if(mode == "upload" && pictures.Count == 0){ 
 				errors.Add ("You need to add at least 1 picture.");
 				go_no_go = false;
 			}
-//			go_no_go = true;
-			return go_no_go;
-		}
 
-		private bool can_update(){
-			bool go_no_go = true;
-			if(craft_select.id == 0){
+			if(mode == "update" && craft_select.id == 0){
 				errors.Add ("You need to select a craft to update");
+				go_no_go = false;
+			}
+
+			if(!craft_is_saved ()){
+				errors.Add ("This craft has unsaved changes");
 				go_no_go = false;
 			}
 			return go_no_go;
@@ -301,14 +302,14 @@ namespace KerbalX
 
 		private void upload_craft(){
 			clear_errors ();
-			if(can_upload ()){
+			if(ok_to_send ()){
 				before_upload ("Uploading....");
 
 				WWWForm craft_data = new WWWForm();
-				craft_data.AddField ("craft_name", craft_name);
+				craft_data.AddField ("craft_name", 	craft_name);
 				craft_data.AddField ("craft_style", craft_styles [style_select.id]);
-				craft_data.AddField ("craft_file", craft_file());
-				craft_data.AddField ("part_data", JSONX.toJSON (part_info ()));
+				craft_data.AddField ("craft_file", 	craft_file());
+				craft_data.AddField ("part_data", 	JSONX.toJSON (part_info ()));
 				
 				int pic_count = 0; int url_count = 0;
 				foreach(PicData pic in pictures){
@@ -339,13 +340,13 @@ namespace KerbalX
 
 		private void update_craft(){
 			clear_errors ();
-			if(can_update ()){
+			if(ok_to_send ()){
 				before_upload ("Updating....");
 
 				WWWForm craft_data = new WWWForm();
-				craft_data.AddField ("craft_name", craft_name);
-				craft_data.AddField ("craft_file", craft_file());
-				craft_data.AddField ("part_data", JSONX.toJSON (part_info ()));
+				craft_data.AddField ("craft_name", 	craft_name);
+				craft_data.AddField ("craft_file", 	craft_file());
+				craft_data.AddField ("part_data", 	JSONX.toJSON (part_info ()));
 
 				int craft_id = craft_select.id;
 				KerbalXAPI.update_craft (craft_id, craft_data, (resp, code) => {
@@ -471,6 +472,19 @@ namespace KerbalX
 		private bool craft_file_exists(){
 			return System.IO.File.Exists (craft_path ());
 		}
+
+		private bool craft_is_saved(){
+			if(craft_file_exists ()){
+				string temp_path = Paths.joined (KSPUtil.ApplicationRootPath, "GameData", "KerbalX", "temp.craft");	//set temp place to save current craft
+				EditorLogic.fetch.ship.SaveShip().Save(temp_path);													//tell editor to save craft to temp location
+				bool is_saved = Checksum.compare (File.ReadAllText(temp_path), craft_file ());						//compare checksums of the two craft 
+				File.Delete (temp_path);																			//remove temp craft
+				return is_saved;
+			}else{
+				return false;
+			}
+		}
+
 
 
 		//check if craft_name matches any of the user's existing craft.  Sets matching_craft_ids to contain KX database ids of any matching craft
