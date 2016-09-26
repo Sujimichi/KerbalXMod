@@ -51,10 +51,10 @@ namespace KerbalX
 	KerbalXWindow also provides the handy-dandy fabtastic grid method. grid takes a width and a lambda (delegate) statement and wraps the actions defined in the
 	lambda in calls to BeginHorizontal and EndHorizontal.  This ensures End is always called after a begin, and (I think) makes for clearer and more readable code.
  	*/
-	public class KerbalXWindow : MonoBehaviour
+	public class KerbalXWindow : KerbalXWindowExtensions
 	{
 		public string window_title = "untitled window";
-		public Rect window_pos = new Rect((Screen.width/2 - 500f/2), 200, 500f, 5);
+
 
 		public bool visible 						= true;
 		protected bool footer 						= true;
@@ -66,133 +66,12 @@ namespace KerbalX
 		static int last_window_id = 0;
 
 		public static GUISkin KXskin = null;
-		protected GUIStyle style_override = null;
-		protected GUIStyle section_style = new GUIStyle();
+
 
 		protected bool first_pass = true;
 		protected bool gui_locked = false;
 		protected int gui_depth = 1;
 
-		//shorthand for GUILayout.width()
-		protected GUILayoutOption width(float w){
-			return GUILayout.Width (w);
-		}
-		//shorthand for GUILayout.height()
-		protected GUILayoutOption height(float h){
-			return GUILayout.Height (h);
-		}
-
-		//Definition of delegate to be passed into the section, v_section and scroll methods
-		protected delegate void Content(float width);
-
-
-		/* Essentially wraps the actions of a delegate (lambda) in calls to BeginHorizontal and EndHorizontal
-		 * Can take an optional width float which if given will be passed to BeginHorizontal as GUILayoutOption params for Width and MaxWidth
-		 * Takes a lambda statement as the delegate Content which is called inbetween calls to Begin/End Horizontal
-		 * The lambda will be passed a float which is either the width supplied or is the width of the windown (minus padding and margins)
-		 * Usage:
-			section (400f, w => {
-				// Calls to draw GUI elements inside a BeginHorizontal group ie;
-				// GUILayout.Label ("some nonsense", GUILayout.Width (w*0.5f)); //use w to get the inner width of the section, 400f in this case
-			});	
-			OR without defining a width
-			section (w => {
-				// Calls to draw GUI elements inside a BeginHorizontal group ie;
-				// GUILayout.Label ("some nonsense", GUILayout.Width (w*0.5f)); //use w to get the inner width of the section, window_pos.width in this case
-			});	
-		* In a slightly crazy approach, you can also define a GUIStyle to pass to BeginHorizontal by setting style_override before calling section, ie:
-			style_override = new GUIStyle();
-			style_override.padding = new RectOffset (20, 20, 10, 10);
-			section (w => {
-				// Calls to draw GUI elements inside a BeginHorizontal group ie;
-				// GUILayout.Label ("some nonsense", GUILayout.Width (w*0.5f)); //use w to get the inner width of the section, window_pos.width in this case
-			});	
-		*/
-		protected void section(Content content){ section (-1, content); } //alias (overload) for section when used without a width float, just a lambda.
-		protected void section(float section_width, Content content)
-		{
-			//Call BeginHorizontal giving the style as either default GUIStyle or style_override and any GUILayoutOptions
-			GUILayout.BeginHorizontal(style_override == null ? section_style : style_override, section_options (section_width)); 
-			style_override = null;						//style_override is set back to null so it doesn't effect any other sections.
-			content(callback_width (section_width));	//call the lambda and pass a width (either given width or window.pos.width)
-			GUILayout.EndHorizontal ();					//ze END!
-		}
-
-		//Works in the same way as section but wraps the lambda in Begin/End Vertical instead.
-		protected void v_section(Content content){ v_section (-1, content); } //alias (overload) for v_section when used without a width float, just a lambda.
-		protected void v_section(float section_width, Content content){
-			//Call BeginHorizontal giving the style as either default GUIStyle or style_override and any GUILayoutOptions
-			GUILayout.BeginVertical(style_override == null ? section_style : style_override, section_options (section_width)); 
-			style_override = null;						//style_override is set back to null so it doesn't effect any other sections.
-			content(callback_width (section_width));	//call the lambda and pass a width (either given width or window.pos.width)
-			GUILayout.EndVertical ();					//ze END!
-		}
-
-		protected Vector2 scroll(Vector2 scroll_pos, float scroll_width, float scroll_height, Content content){
-			GUILayoutOption[] opts = new GUILayoutOption[]{ GUILayout.Width(scroll_width), GUILayout.MaxWidth (scroll_width), GUILayout.Height(scroll_height) };
-			scroll_pos = GUILayout.BeginScrollView(scroll_pos, (style_override == null ? section_style : style_override), opts);
-			style_override = null;	//style_override is set back to null so it doesn't effect any other sections.
-			content (scroll_width);
-			GUILayout.EndScrollView();
-			return scroll_pos;
-		}
-
-		//Helpers for section, v_section and scroll
-		//section_options returns GUILayoutOptions to pass into Begin(Horizontal/Vertical). either returns empty set of options (if width is given as -1) 
-		//or a set of options defining Width and MaxWidth.
-		private GUILayoutOption[] section_options(float section_width){
-			GUILayoutOption[] opts = new GUILayoutOption[]{};	//GUILayoutOptions to pass onto BeginHorizontal
-			if (section_width != -1){							//if width is given a -1 then no GUILayoutOptions are used
-				opts = new GUILayoutOption[]{ GUILayout.Width(section_width), GUILayout.MaxWidth (section_width) };
-			}
-			return opts;
-		}
-		//either simply returns the given width, unless it's given as -1 in which case it returns the window width (minus padding and margin)
-		private float callback_width(float section_width){
-			if(section_width == -1){				//if width was given as -1 then the with of the window (minus its padding and margins) is used instead
-				section_width = window_pos.width - GUI.skin.window.padding.horizontal - GUI.skin.window.border.horizontal;
-			}
-			return section_width; //width to pass back into the lambda
-		}
-
-		protected DropdownData dropdown(Dictionary<int, string> collection, DropdownData drop_data, float outer_width, float menu_height){
-			GUIStyle dropdown_field = new GUIStyle (GUI.skin.textField);
-			GUIStyle dropdown_menu_item = new GUIStyle (GUI.skin.label);
-			//dropdown_menu_item.normal.textColor = Color.magenta;
-			dropdown_menu_item.onHover.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
-			dropdown_menu_item.hover.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
-			dropdown_menu_item.padding = new RectOffset (0, 0, 0, 0);
-
-			string selected;
-			collection.TryGetValue (drop_data.id, out selected);
-
-			v_section (outer_width, (inner_width) => {
-				section (inner_width, w2 => {
-					if (GUILayout.Button (selected, dropdown_field, GUILayout.Width (inner_width - 20) )) {
-						drop_data.show_select = !drop_data.show_select;	
-						autoheight ();
-					}
-					if (GUILayout.Button ("\\/", GUILayout.Width (20f) )) {
-						drop_data.show_select = !drop_data.show_select;	
-						autoheight ();
-					}
-				});
-				section (inner_width, w2 => {
-					if(drop_data.show_select){
-						drop_data.scroll_pos = scroll (drop_data.scroll_pos, w2, menu_height, (w3) => {
-							foreach(KeyValuePair<int, string> item in collection){
-								if(GUILayout.Button (item.Value, dropdown_menu_item, GUILayout.Width (w3-25))){
-									drop_data.selected (item.Key);
-									drop_data.show_select = false;
-									autoheight ();
-								}
-							}
-						});
-					}
-				});
-			});
-			return drop_data;
-		}
 
 
 		//opens a dialog window which is populated by the lambda statement passed to show_dialog ie:
@@ -230,11 +109,7 @@ namespace KerbalX
 		}
 
 
-		//As window will have been drawn with GUILayout.ExpandHeight(true) setting the height to a small value will cause the 
-		//window to readjust its height.  Only call after actions which reduce the height of the content, don't call it constantly OnGUI (unless Epilepsy is something you enjoy)
-		public void autoheight(){
-			window_pos.height = 5;
-		}
+
 
 		public void show(){
 			visible = true;
@@ -388,6 +263,145 @@ namespace KerbalX
 
 		protected virtual void OnDestroy(){
 			EditorLogic.fetch.Unlock (window_id.ToString ());
+		}
+	}
+
+
+
+
+	public class KerbalXWindowExtensions : MonoBehaviour
+	{
+		public Rect window_pos = new Rect((Screen.width/2 - 500f/2), 200, 500f, 5);
+		protected GUIStyle style_override = null;
+		protected GUIStyle section_style = new GUIStyle();
+
+
+		//shorthand for GUILayout.width()
+		protected GUILayoutOption width(float w){
+			return GUILayout.Width (w);
+		}
+		//shorthand for GUILayout.height()
+		protected GUILayoutOption height(float h){
+			return GUILayout.Height (h);
+		}
+
+		//As window will have been drawn with GUILayout.ExpandHeight(true) setting the height to a small value will cause the 
+		//window to readjust its height.  Only call after actions which reduce the height of the content, don't call it constantly OnGUI (unless Epilepsy is something you enjoy)
+		public void autoheight(){
+			window_pos.height = 5;
+		}
+
+
+		//Definition of delegate to be passed into the section, v_section and scroll methods
+		protected delegate void Content(float width);
+
+
+		/* Essentially wraps the actions of a delegate (lambda) in calls to BeginHorizontal and EndHorizontal
+		 * Can take an optional width float which if given will be passed to BeginHorizontal as GUILayoutOption params for Width and MaxWidth
+		 * Takes a lambda statement as the delegate Content which is called inbetween calls to Begin/End Horizontal
+		 * The lambda will be passed a float which is either the width supplied or is the width of the windown (minus padding and margins)
+		 * Usage:
+			section (400f, w => {
+				// Calls to draw GUI elements inside a BeginHorizontal group ie;
+				// GUILayout.Label ("some nonsense", GUILayout.Width (w*0.5f)); //use w to get the inner width of the section, 400f in this case
+			});	
+			OR without defining a width
+			section (w => {
+				// Calls to draw GUI elements inside a BeginHorizontal group ie;
+				// GUILayout.Label ("some nonsense", GUILayout.Width (w*0.5f)); //use w to get the inner width of the section, window_pos.width in this case
+			});	
+		* In a slightly crazy approach, you can also define a GUIStyle to pass to BeginHorizontal by setting style_override before calling section, ie:
+			style_override = new GUIStyle();
+			style_override.padding = new RectOffset (20, 20, 10, 10);
+			section (w => {
+				// Calls to draw GUI elements inside a BeginHorizontal group ie;
+				// GUILayout.Label ("some nonsense", GUILayout.Width (w*0.5f)); //use w to get the inner width of the section, window_pos.width in this case
+			});	
+		*/
+		protected void section(Content content){ section (-1, content); } //alias (overload) for section when used without a width float, just a lambda.
+		protected void section(float section_width, Content content)
+		{
+			//Call BeginHorizontal giving the style as either default GUIStyle or style_override and any GUILayoutOptions
+			GUILayout.BeginHorizontal(style_override == null ? section_style : style_override, section_options (section_width)); 
+			style_override = null;						//style_override is set back to null so it doesn't effect any other sections.
+			content(callback_width (section_width));	//call the lambda and pass a width (either given width or window.pos.width)
+			GUILayout.EndHorizontal ();					//ze END!
+		}
+
+		//Works in the same way as section but wraps the lambda in Begin/End Vertical instead.
+		protected void v_section(Content content){ v_section (-1, content); } //alias (overload) for v_section when used without a width float, just a lambda.
+		protected void v_section(float section_width, Content content){
+			//Call BeginHorizontal giving the style as either default GUIStyle or style_override and any GUILayoutOptions
+			GUILayout.BeginVertical(style_override == null ? section_style : style_override, section_options (section_width)); 
+			style_override = null;						//style_override is set back to null so it doesn't effect any other sections.
+			content(callback_width (section_width));	//call the lambda and pass a width (either given width or window.pos.width)
+			GUILayout.EndVertical ();					//ze END!
+		}
+
+		protected Vector2 scroll(Vector2 scroll_pos, float scroll_width, float scroll_height, Content content){
+			GUILayoutOption[] opts = new GUILayoutOption[]{ GUILayout.Width(scroll_width), GUILayout.MaxWidth (scroll_width), GUILayout.Height(scroll_height) };
+			scroll_pos = GUILayout.BeginScrollView(scroll_pos, (style_override == null ? section_style : style_override), opts);
+			style_override = null;	//style_override is set back to null so it doesn't effect any other sections.
+			content (scroll_width);
+			GUILayout.EndScrollView();
+			return scroll_pos;
+		}
+
+		//Helpers for section, v_section and scroll
+		//section_options returns GUILayoutOptions to pass into Begin(Horizontal/Vertical). either returns empty set of options (if width is given as -1) 
+		//or a set of options defining Width and MaxWidth.
+		private GUILayoutOption[] section_options(float section_width){
+			GUILayoutOption[] opts = new GUILayoutOption[]{};	//GUILayoutOptions to pass onto BeginHorizontal
+			if (section_width != -1){							//if width is given a -1 then no GUILayoutOptions are used
+				opts = new GUILayoutOption[]{ GUILayout.Width(section_width), GUILayout.MaxWidth (section_width) };
+			}
+			return opts;
+		}
+		//either simply returns the given width, unless it's given as -1 in which case it returns the window width (minus padding and margin)
+		private float callback_width(float section_width){
+			if(section_width == -1){				//if width was given as -1 then the with of the window (minus its padding and margins) is used instead
+				section_width = window_pos.width - GUI.skin.window.padding.horizontal - GUI.skin.window.border.horizontal;
+			}
+			return section_width; //width to pass back into the lambda
+		}
+
+		protected DropdownData dropdown(Dictionary<int, string> collection, DropdownData drop_data, float outer_width, float menu_height){
+			GUIStyle dropdown_field = new GUIStyle (GUI.skin.textField);
+			GUIStyle dropdown_menu_item = new GUIStyle (GUI.skin.label);
+			//dropdown_menu_item.normal.textColor = Color.magenta;
+			dropdown_menu_item.onHover.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
+			dropdown_menu_item.hover.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
+			dropdown_menu_item.padding = new RectOffset (0, 0, 0, 0);
+
+			string selected;
+			collection.TryGetValue (drop_data.id, out selected);
+
+			v_section (outer_width, (inner_width) => {
+				section (inner_width, w2 => {
+					if (GUILayout.Button (selected, dropdown_field, GUILayout.Width (inner_width - 20) )) {
+						drop_data.show_select = !drop_data.show_select;	
+						autoheight ();
+					}
+					if (GUILayout.Button ("\\/", GUILayout.Width (20f) )) {
+						drop_data.show_select = !drop_data.show_select;	
+						autoheight ();
+					}
+				});
+				section (inner_width, w2 => {
+					if(drop_data.show_select){
+						drop_data.scroll_pos = scroll (drop_data.scroll_pos, w2, menu_height, (w3) => {
+							foreach(KeyValuePair<int, string> item in collection){
+								if(GUILayout.Button (item.Value, dropdown_menu_item, GUILayout.Width (w3-25))){
+									drop_data.selected (item.Key);
+									drop_data.show_select = false;
+									autoheight ();
+								}
+							}
+						});
+					}
+				});
+			});
+			return drop_data;
 		}
 	}
 }
