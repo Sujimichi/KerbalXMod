@@ -304,6 +304,7 @@ namespace KerbalX
 
 		//Definition of delegate to be passed into the section, v_section and scroll methods
 		protected delegate void Content(float width);
+		protected delegate void ContentNoArgs();
 
 
 		/* Essentially wraps the actions of a delegate (lambda) in calls to BeginHorizontal and EndHorizontal
@@ -375,6 +376,11 @@ namespace KerbalX
 			return section_width; //width to pass back into the lambda
 		}
 
+		protected void begin_group(Rect container, ContentNoArgs content){
+			GUI.BeginGroup (container);
+			content ();
+			GUI.EndGroup ();
+		}
 
 
 		protected void combobox(string combo_name, Dictionary<int, string> select_options, int selected_id, float list_width, float list_height, KerbalXWindow win, ComboResponse resp){

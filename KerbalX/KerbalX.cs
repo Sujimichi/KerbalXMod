@@ -198,6 +198,7 @@ namespace KerbalX
 		public Vector2 scroll_pos;
 		public int gui_depth = 0;
 		public string select_field ="";
+		public string filter_string = "";
 
 		Texture2D tex = new Texture2D(1, 1,   TextureFormat.RGBA32, false);
 		int on_hover = 0;
@@ -226,60 +227,79 @@ namespace KerbalX
 		}
 
 		void OnGUI(){
+			//set the container to track it's anchors position (which is relative to the parent window), relative to the screen. 
+			//ie offset from screen 0,0 of the window + the offset from the window of the anchor. (#when-comments-make-less-sense-than-code)
 			container.x = anchor_rect.x + parent_window.window_pos.x;
 			container.y = anchor_rect.y + parent_window.window_pos.y;
-			container.width = anchor_rect.width + 26f;
+			container.width = anchor_rect.width + 26f; //the 26 accouts for the 20f wide button + 3f padding either side of it.
 			container.height = list_height;
 				
-
 			GUI.skin = KerbalXWindow.KXskin;
 			GUI.depth = gui_depth;
 
+			//If the mouse is NOT over the combobox and its list AND the user clicks, the close the combobox.  Otherwise set the parent window to be locked (GUI.enabled = false)
 			if (!container.Contains (Event.current.mousePosition) && Input.GetKeyDown (KeyCode.Mouse0) && Input.GetMouseButtonDown (0)){
 				close ();
 			}else{
 				parent_window.lock_ui ();
 			}
 
-			GUI.BeginGroup (container);
-
-			style_override = GUI.skin.GetStyle ("background.dark");
-			v_section (container.width, w => {
-				GUIStyle text_field = new GUIStyle(GUI.skin.textField);
-				text_field.margin = new RectOffset(0,0,0,0);
-				GUIStyle down_button = new GUIStyle(GUI.skin.button);
-				down_button.margin.top = 0;
-
-				GUIStyle sel_option = new GUIStyle(GUI.skin.label);
-				sel_option.margin = new RectOffset(0,0,0,0);
-				sel_option.padding = new RectOffset(3,3,1,1);
-
-				GUIStyle sel_option_hover = new GUIStyle(sel_option);
-				sel_option_hover.normal.background = tex;
-				sel_option_hover.normal.textColor = Color.black;
-
-
-				section(w2 => {
-					select_field = GUILayout.TextField (select_field, 255, text_field, width(w-26f));
-					if (GUILayout.Button ("\\/", down_button, GUILayout.Width (20f))) {
-						close ();
-					}
-				});
-
-				scroll_pos = scroll (scroll_pos, w, container.height-22f, sw => {
-					foreach(KeyValuePair<int, string> option in sel_options){
-						if(GUILayout.Button (option.Value, on_hover == option.Key ? sel_option_hover : sel_option)){
-							response(option.Key);
+			begin_group (container, () => {
+				
+				style_override = GUI.skin.GetStyle ("background.dark");
+				v_section (container.width, w => {
+					GUIStyle text_field = new GUIStyle(GUI.skin.textField);
+					text_field.margin = new RectOffset(0,0,0,0);
+					GUIStyle down_button = new GUIStyle(GUI.skin.button);
+					down_button.margin.top = 0;
+					
+					GUIStyle sel_option = new GUIStyle(GUI.skin.label);
+					sel_option.margin = new RectOffset(0,0,0,0);
+					sel_option.padding = new RectOffset(3,3,1,1);
+					
+					GUIStyle sel_option_hover = new GUIStyle(sel_option);
+					sel_option_hover.normal.background = tex;
+					sel_option_hover.normal.textColor = Color.black;
+					
+					
+					section(w2 => {
+						GUI.SetNextControlName ("combobox.filter_field");
+						select_field = GUILayout.TextField (select_field, 255, text_field, width(w-26f));
+						if (GUILayout.Button ("\\/", down_button, GUILayout.Width (20f))) {
 							close ();
 						}
-						if(GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition)){
-							on_hover = option.Key;
+						if(GUI.changed){
+							filter_string = select_field;
 						}
-					}
-				});
+						GUI.FocusControl ("combobox.filter_field");
+//						if(filter_string == ""){
+//							TextEditor te = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+//							te.SelectAll ();
+//						}
 
+
+					});
+					
+					scroll_pos = scroll (scroll_pos, w, container.height-22f, sw => {
+						foreach(KeyValuePair<int, string> option in sel_options){
+							if(filter_string.Trim () == "" || option.Value.ToLower ().Contains (filter_string.Trim ().ToLower ())){
+								if(GUILayout.Button (option.Value, on_hover == option.Key ? sel_option_hover : sel_option)){
+									response(option.Key);
+									close ();
+								}
+								if(GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition)){
+									on_hover = option.Key;
+									if(filter_string.Trim () == ""){
+										select_field = option.Value;
+									}
+								}
+							}
+						}
+					});
+					
+				});
 			});
-			GUI.EndGroup ();
+
 			GUI.skin = null;
 		}
 	}
@@ -313,25 +333,6 @@ namespace KerbalX
 			combobox ("craft_style_select", craft_styles, selected_style_id, 150f, 150f, this, id => {selected_style_id = id;});
 			combobox ("craft_style_select2", craft_styles, selected_style_id2, 80f, 150f, this, id => {selected_style_id2 = id;});
 
-			if (GUILayout.Button ("test")) {
-				ComboBox combo = gameObject.AddOrGetComponent<ComboBox> ();
-				GameObject.Destroy (combo);
-			}
-
-			if (GUILayout.Button ("decrease depth")) {
-				gui_depth--;
-				Debug.Log (gui_depth);
-			}
-			if (GUILayout.Button ("increase depth")) {
-				gui_depth++;
-				Debug.Log (gui_depth);
-			}
-
-			if (GUILayout.Button ("depth check")) {
-				Debug.Log (gui_depth.ToString ());
-				Debug.Log (GUI.depth.ToString ());
-			}
-
 
 
 			if (GUILayout.Button ("update existing craft")) {
@@ -358,7 +359,6 @@ namespace KerbalX
 
 		protected override void on_login (){
 			base.on_login ();
-			Debug.Log ("dis shit called from conosle");
 		}
 	}
 
@@ -366,7 +366,7 @@ namespace KerbalX
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class JumpStart : MonoBehaviour
 	{
-		public static bool autostart = true;
+		public static bool autostart = false;
 		public static string save_name = "default";
 		public static string craft_name = "testy";
 
