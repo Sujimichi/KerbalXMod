@@ -70,6 +70,8 @@ namespace KerbalX
 		protected GUIStyle section_style = new GUIStyle();
 
 		protected bool first_pass = true;
+		protected bool gui_locked = false;
+		protected int gui_depth = 1;
 
 		//shorthand for GUILayout.width()
 		protected GUILayoutOption width(float w){
@@ -260,7 +262,14 @@ namespace KerbalX
 		public bool is_visible(){
 			return visible;
 		}
-			
+
+		public void lock_ui(){
+			gui_locked = true;
+		}
+		public void unlock_ui(){
+			gui_locked = false;
+		}
+
 		protected virtual void on_hide(){ }
 		protected virtual void on_show(){ }
 
@@ -277,7 +286,7 @@ namespace KerbalX
 		//MonoBehaviour methods
 
 		//called on each frame, handles drawing the window and will assign the next window id if it's not set
-		protected void OnGUI()
+		protected virtual void OnGUI()
 		{
 			if(first_pass){
 				first_pass = false;
@@ -334,7 +343,13 @@ namespace KerbalX
 				}
 			}else{
 				//Draw the main content of the window as defined by WindowContent
-				WindowContent (window_id);			
+				GUI.enabled = !gui_locked;
+				if(gui_locked){
+//					GUI.color = new Color (1, 1, 1, 2);
+				}
+				WindowContent (window_id);	
+				GUI.enabled = true;
+//				GUI.color = Color.white;
 			}
 
 			//add common footer elements for all windows if footer==true
