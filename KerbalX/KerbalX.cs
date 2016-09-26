@@ -176,20 +176,21 @@ namespace KerbalX
 			if(set_state){
 				set_state = false;
 //				KerbalX.console.window_pos = new Rect(250, 10, 310, 5);
-				KerbalX.console.window_pos = new Rect(Screen.width - 250, Screen.height/2, 310, 5);
+				KerbalX.console.window_pos = new Rect(Screen.width - 400, Screen.height/2, 310, 5);
 			}
 		}
 	}
 
 	public delegate void ComboResponse(int selected);
 
-	public class ComboBox : KerbalXWindowExtensions
+	public class ComboBox : KerbalXWindowExtension
 	{
 		public static ComboBox instance;
 
 
 		public string active_anchor = null;
 		public Rect anchor_rect = new Rect(0,0,100,100);
+		public float list_height = 150;
 		public Rect container 	= new Rect(0,0,100,100);
 		public KerbalXWindow parent_window;
 		public Dictionary<int, string> sel_options = new Dictionary<int, string> ();
@@ -198,26 +199,32 @@ namespace KerbalX
 		public int gui_depth = 0;
 		public string select_field ="";
 
+		Texture2D tex = new Texture2D(1, 1,   TextureFormat.RGBA32, false);
+		int on_hover = 0;
+
 
 		void Start(){
 			instance = this;
+			tex.SetPixel (0,0, new Color (0.4f,0.5f,0.9f,1));
+			tex.Apply ();
 		}
 
-		public void open(string combo_name, Dictionary<int, string> select_options, Rect anchor, KerbalXWindow parent_win, ComboResponse selection_callback){
+		public void open(string combo_name, Dictionary<int, string> select_options, Rect anchor, float height, KerbalXWindow parent_win, ComboResponse selection_callback){
 			if(active_anchor != combo_name){
 				active_anchor = combo_name;
 				sel_options = select_options;
 				response = selection_callback;
 				anchor_rect = anchor;
 				parent_window = parent_win;
+				list_height = height;
 			}
 		}
 
 		void OnGUI(){
 			container.x = anchor_rect.x + parent_window.window_pos.x;
 			container.y = anchor_rect.y + parent_window.window_pos.y;
-			container.width = anchor_rect.width + 20f;
-			container.height = 200f;
+			container.width = anchor_rect.width + 26f;
+			container.height = list_height;
 				
 
 			GUI.skin = KerbalXWindow.KXskin;
@@ -235,16 +242,33 @@ namespace KerbalX
 			v_section (container.width, w => {
 				GUIStyle text_field = new GUIStyle(GUI.skin.textField);
 				text_field.margin = new RectOffset(0,0,0,0);
+				GUIStyle down_button = new GUIStyle(GUI.skin.button);
+				down_button.margin.top = 0;
+
+				GUIStyle sel_option = new GUIStyle(GUI.skin.label);
+				sel_option.margin = new RectOffset(0,0,0,0);
+				sel_option.padding = new RectOffset(3,3,1,1);
+
+				GUIStyle sel_option_hover = new GUIStyle(sel_option);
+				sel_option_hover.normal.background = tex;
+				sel_option_hover.normal.textColor = Color.black;
 
 
-				select_field = GUILayout.TextField (select_field, 255, text_field, width(w-20f));
+				section(w2 => {
+					select_field = GUILayout.TextField (select_field, 255, text_field, width(w-26f));
+					if (GUILayout.Button ("\\/", down_button, GUILayout.Width (20f))) {
+						close ();
+					}
+				});
 
-				float h = GUILayoutUtility.GetLastRect ().height;
-				scroll_pos = scroll (scroll_pos, w, container.height-h, sw => {
+				scroll_pos = scroll (scroll_pos, w, container.height-22f, sw => {
 					foreach(KeyValuePair<int, string> option in sel_options){
-						if(GUILayout.Button (option.Value)){
+						if(GUILayout.Button (option.Value, on_hover == option.Key ? sel_option_hover : sel_option)){
 							response(option.Key);
 							close ();
+						}
+						if(GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition)){
+							on_hover = option.Key;
 						}
 					}
 				});
@@ -279,16 +303,17 @@ namespace KerbalX
 			{0, "Ship"}, {1, "Aircraft"}, {2, "Spaceplane"}, {3, "Lander"}, {4, "Satellite"}, {5, "Station"}, {6, "Base"}, {7, "Probe"}, {8, "Rover"}, {9, "Lifter"}
 		};
 		private int selected_style_id = 0;
+		private int selected_style_id2 = 0;
 
-		public Dictionary<string, Rect> anchors = new Dictionary<string, Rect> ();
-
-		protected void track_rect(string name, Rect rect){
-			if (rect.x != 0 && rect.y != 0) {
-				if (!anchors.ContainsKey (name)) {
-					anchors [name] = rect;
-				}
-			}
-		}
+//		public Dictionary<string, Rect> anchors = new Dictionary<string, Rect> ();
+//
+//		protected void track_rect(string name, Rect rect){
+//			if (rect.x != 0 && rect.y != 0) {
+//				if (!anchors.ContainsKey (name)) {
+//					anchors [name] = rect;
+//				}
+//			}
+//		}
 
 		protected override void WindowContent(int win_id){
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
@@ -313,22 +338,27 @@ namespace KerbalX
 //			track_rect ("anchor2", GUILayoutUtility.GetLastRect ());
 
 
-			section (w => {
-				if (GUILayout.Button (craft_styles [selected_style_id], GUI.skin.textField, width (200f))) {
-					gameObject.AddOrGetComponent<ComboBox> ().open ("anchor3", craft_styles, anchors["anchor3"], this, (id) => {selected_style_id = id;});
-				}
-				track_rect ("anchor3", GUILayoutUtility.GetLastRect ());
-				if (GUILayout.Button ("\\/", GUILayout.Width (20f))) {
-					gameObject.AddOrGetComponent<ComboBox> ().open ("anchor3", craft_styles, anchors["anchor3"], this, (id) => {selected_style_id = id;});
-				}
-			});
+//			section (150f, w => {
+//				float h = 22f + craft_styles.Count * 17;
+//				if(h > 150){h = 150;}
+//				if (GUILayout.Button (craft_styles [selected_style_id], GUI.skin.textField, width (w-20f))) {
+//					gameObject.AddOrGetComponent<ComboBox> ().open ("anchor3", craft_styles, anchors["anchor3"], h, this, (id) => {selected_style_id = id;});
+//				}
+//				track_rect ("anchor3", GUILayoutUtility.GetLastRect ());
+//				if (GUILayout.Button ("\\/", width (20f))) {
+//					gameObject.AddOrGetComponent<ComboBox> ().open ("anchor3", craft_styles, anchors["anchor3"], h, this, (id) => {selected_style_id = id;});
+//				}
+//			});
+
+
+			combobox ("craft_style_select", craft_styles, selected_style_id, 150f, 150f, this, id => {selected_style_id = id;});
 
 			string select_field = "";
 			section (w => {
 				select_field = GUILayout.TextField (select_field, 255, width(w-20f));
 			});
 
-
+			combobox ("craft_style_select2", craft_styles, selected_style_id2, 80f, 150f, this, id => {selected_style_id2 = id;});
 
 			if (GUILayout.Button ("test")) {
 				ComboBox combo = gameObject.AddOrGetComponent<ComboBox> ();

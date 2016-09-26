@@ -139,8 +139,7 @@ namespace KerbalX
 					//drop down select for craft type
 					section (w => {
 						GUILayout.Label ("Select craft type:", width(100f));
-						style_select = dropdown (craft_styles, style_select, 100f, 100f);
-
+						combobox ("craft_style_select", craft_styles, style_select.id, 100f, 150f, this, id => {style_select.id = id;});
 					});
 
 					//buttons for setting action groups and adding pictures.
@@ -207,7 +206,7 @@ namespace KerbalX
 						section (w => {
 							v_section (w*0.7f, inner_w => {
 								section (inner_w, inner_w2 => { GUILayout.Label ("Select Craft on KerbalX to update:"); });
-								craft_select = dropdown (remote_craft, craft_select, inner_w, 100f);
+								combobox ("craft_select", remote_craft, craft_select.id, inner_w, 150f, this, id => {craft_select.id = id;});
 							});
 							v_section (w*0.3f, inner_w => {
 								section (inner_w, inner_w2 => {

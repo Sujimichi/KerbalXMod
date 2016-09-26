@@ -51,7 +51,7 @@ namespace KerbalX
 	KerbalXWindow also provides the handy-dandy fabtastic grid method. grid takes a width and a lambda (delegate) statement and wraps the actions defined in the
 	lambda in calls to BeginHorizontal and EndHorizontal.  This ensures End is always called after a begin, and (I think) makes for clearer and more readable code.
  	*/
-	public class KerbalXWindow : KerbalXWindowExtensions
+	public class KerbalXWindow : KerbalXWindowExtension
 	{
 		public string window_title = "untitled window";
 
@@ -220,11 +220,11 @@ namespace KerbalX
 				//Draw the main content of the window as defined by WindowContent
 				GUI.enabled = !gui_locked;
 				if(gui_locked){
-//					GUI.color = new Color (1, 1, 1, 2);
+					GUI.color = new Color (1, 1, 1, 2);
 				}
 				WindowContent (window_id);	
 				GUI.enabled = true;
-//				GUI.color = Color.white;
+				GUI.color = Color.white;
 			}
 
 			//add common footer elements for all windows if footer==true
@@ -269,7 +269,7 @@ namespace KerbalX
 
 
 
-	public class KerbalXWindowExtensions : MonoBehaviour
+	public class KerbalXWindowExtension : MonoBehaviour
 	{
 		public Rect window_pos = new Rect((Screen.width/2 - 500f/2), 200, 500f, 5);
 		protected GUIStyle style_override = null;
@@ -363,6 +363,30 @@ namespace KerbalX
 				section_width = window_pos.width - GUI.skin.window.padding.horizontal - GUI.skin.window.border.horizontal;
 			}
 			return section_width; //width to pass back into the lambda
+		}
+
+		protected void combobox(string combo_name, Dictionary<int, string> select_options, int selected_id, float list_width, float list_height, KerbalXWindow win, ComboResponse resp){
+			section (list_width, w => {
+				float h = 22f + select_options.Count * 17;
+				if(h > list_height){h = list_height;}
+				if (GUILayout.Button (select_options [selected_id], GUI.skin.textField, width (w-20f))) {
+					gameObject.AddOrGetComponent<ComboBox> ().open (combo_name, select_options, anchors[combo_name], h, win, resp);
+				}
+				track_rect (combo_name, GUILayoutUtility.GetLastRect ());
+				if (GUILayout.Button ("\\/", width (20f))) {
+					gameObject.AddOrGetComponent<ComboBox> ().open (combo_name, select_options, anchors[combo_name], h, win, resp);
+				}
+			});		
+		}
+
+		public Dictionary<string, Rect> anchors = new Dictionary<string, Rect> ();
+
+		protected void track_rect(string name, Rect rect){
+			if (rect.x != 0 && rect.y != 0) {
+				if (!anchors.ContainsKey (name)) {
+					anchors [name] = rect;
+				}
+			}
 		}
 
 		protected DropdownData dropdown(Dictionary<int, string> collection, DropdownData drop_data, float outer_width, float menu_height){
