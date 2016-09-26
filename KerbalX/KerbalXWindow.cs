@@ -17,7 +17,7 @@ namespace KerbalX
 		}
 	}
 
-	/* KerbalXWindow is a base class to be inherited by classes which draw GUI windows
+	/* KerbalXWindow is a base class to be inherited by classes which draw GUI windows. It inherits from KerbalXWindowExtension which in turn inherits from MonoBehaviour
 	It provides common setup required to draw a GUI window, enabling DRY and minimal window classes.
 	A class which inherits KerbalXWindow needs to override the WindowContent method to define the content of the window
 	Basic Usage:
@@ -53,25 +53,22 @@ namespace KerbalX
  	*/
 	public class KerbalXWindow : KerbalXWindowExtension
 	{
-		public string window_title = "untitled window";
 
+		//Window Config variables. Change these in Start() in descendent classes.
+		//public Rect window_pos					= new Rect()			//override in Start() to set window size/pos - default values defined in KerbalXWindowExtension
+		public string window_title 					= "untitled window";	//shockingly enough, this is the window title
+		public bool prevent_editor_click_through 	= false;				//only set to true in editor windows - prevents clicks interacting with elements behind the window
+		protected bool require_login 				= false;				//set to true if the window requires user to be logged into KerbalX
+		protected bool draggable 					= true;					//sets the window as draggable
+		protected bool footer 						= true;					//sets if the set footer content should be draw (see FooterContent method)
+		public bool visible 						= true;					//sets if the window is visible to start with (see show(), hide(), toggle(), on_show(), on_hide())
+		protected bool gui_locked 					= false;				//if true will disable interaction with the window (without changing its appearance) (see lock_ui() and unlock_ui())
+		protected int window_id   					= 0;					//can be set to override automatic ID assignment. If left at 0 it will be auto-assigned
 
-		public bool visible 						= true;
-		protected bool footer 						= true;
-		protected bool draggable 					= true;
-		protected bool require_login 				= false;
-		public bool prevent_editor_click_through 	= false;
+		static int last_window_id = 0;			//static track of the last used window ID, new windows will take the next value and increment this.
+		public static GUISkin KXskin = null;	//static variable to hold the reference to the custom skin. First window created will set it up
 
-		protected int window_id   = 0;
-		static int last_window_id = 0;
-
-		public static GUISkin KXskin = null;
-
-
-		protected bool first_pass = true;
-		protected bool gui_locked = false;
-		protected int gui_depth = 1;
-
+		protected bool first_pass = true;		//used to perform an action on the first call of OnGUI, after which it is switched to false
 
 
 		//show, hide and toggle - basically just change the value of the bool visible which defines whether or not OnGUI will draw the window.
@@ -123,6 +120,12 @@ namespace KerbalX
 			GameObject.Destroy (KerbalX.login_gui);
 		}
 		
+		//As window will have been drawn with GUILayout.ExpandHeight(true) setting the height to a small value will cause the 
+		//window to readjust its height.  Only call after actions which reduce the height of the content, don't call it constantly OnGUI (unless Epilepsy is something you enjoy)
+		public void autoheight(){
+			window_pos.height = 5;
+		}
+
 
 		//Essential for any window which needs to make web requests.  If a window is going to trigger web requests then it needs to call this method on its Start() method
 		//The Request handler handles sending requests asynchronously (so delays in response time don't lag the interface).  In order to do that it 
@@ -149,7 +152,7 @@ namespace KerbalX
 			GameObject.Destroy (KerbalXDialog.instance);
 		}
 
-		//basically just syntax sugar for a call to AddOrGetComponent for specific named windows. 
+		//basically just syntax sugar for a call to AddOrGetComponent for specific named windows. (unfortunatly has nothing to do with launching rockets)
 		protected void launch(string type){
 			if(type == "ImageSelector"){
 				KerbalXImageSelector window = gameObject.AddOrGetComponent<KerbalXImageSelector> ();
@@ -169,7 +172,6 @@ namespace KerbalX
 				}
 			}
 		}
-
 
 
 		//MonoBehaviour methods
@@ -295,11 +297,6 @@ namespace KerbalX
 			return GUILayout.Height (h);
 		}
 
-		//As window will have been drawn with GUILayout.ExpandHeight(true) setting the height to a small value will cause the 
-		//window to readjust its height.  Only call after actions which reduce the height of the content, don't call it constantly OnGUI (unless Epilepsy is something you enjoy)
-		public void autoheight(){
-			window_pos.height = 5;
-		}
 
 
 		//Definition of delegate to be passed into the section, v_section and scroll methods

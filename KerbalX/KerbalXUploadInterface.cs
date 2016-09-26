@@ -15,34 +15,34 @@ namespace KerbalX
 	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
 	public class KerbalXUploadInterface : KerbalXWindow
 	{
-		//private string current_editor = null;
-		private string craft_name = null;
-		private string editor_craft_name = "";
+		private string craft_name = null;						//craft_name is the (adjustable) name used in the upload interface
+		private string editor_craft_name = "";					//editor_craft_name is the craft's name as taken from the editor
 
-		private List<string> errors = new List<string>();
-		private string upload_progress = null;
-		private int upload_ticker_pos = 0;
+		private List<string> errors = new List<string>();		//container for an errors which occur and need displaying to the user
+		private string upload_progress = null;					//message to display while uploaded/updating
+		private int upload_ticker_pos = 0;						//used in upload progress ticker
 		private int frame_count = 0;
 
-		private string mode = "upload";
-		private float win_width = 410f;
-		private bool show_upload_bttn = true;
-		private bool enable_upload_bttn = true;
+		private string mode 		= "upload";					//Interface mode ("upload" || "update")
+		private float win_width 	= 410f;						//window with
+		private int max_pics 		= 3;						//the max number of pics that can be uploaded
 
-		private int max_pics = 3;
+		private bool show_upload_bttn 	= true;					//bool for whether or not to show the upload button
+		private bool enable_upload_bttn = true;					//bool to enable the upload button to be disabled (during upload/update)
+
+		public List<PicData> pictures = new List<PicData> ();	//container to hold the selected pictures to be uploaded
 
 		private DropdownData craft_select;
 		private DropdownData style_select;
 
 
-		private Dictionary<int, string> remote_craft = new Dictionary<int, string> (); //will contain a mapping of KX database-ID to craft name
-		List<int> matching_craft_ids = new List<int> ();	//will contain any matching craft names
+		private Dictionary<int, string> remote_craft = new Dictionary<int, string> (); 	//used to contain a mapping of KX database-ID to craft name
+		List<int> matching_craft_ids = new List<int> ();								//used to hold any matching craft ids
 
-		private Dictionary<int, string> craft_styles = new Dictionary<int, string> (){
+		private Dictionary<int, string> craft_styles = new Dictionary<int, string> (){	//list of craft styles used on KerbalX (might make this auto populate from the site at some point)
 			{0, "Ship"}, {1, "Aircraft"}, {2, "Spaceplane"}, {3, "Lander"}, {4, "Satellite"}, {5, "Station"}, {6, "Base"}, {7, "Probe"}, {8, "Rover"}, {9, "Lifter"}
 		};
 
-		public List<PicData> pictures = new List<PicData> ();
 
 
 
@@ -51,42 +51,42 @@ namespace KerbalX
 			KerbalX.editor_gui = this;
 			window_title = "KerbalX::Upload";
 			window_pos = new Rect ((Screen.width - win_width - 20), 50, win_width, 5);
-			//current_editor = EditorLogic.fetch.ship.shipFacility.ToString ();
 			require_login = true;
 			prevent_editor_click_through = true;
 			enable_request_handler ();
 			fetch_existing_craft ();
 
-			GameEvents.onEditorLoad.Add 	(this.on_craft_load);
-			GameEvents.onEditorRestart.Add 	(this.on_new_craft );
-
+			//bind events to happen when the editor loads a saved craft or when new craft is clicked
+			GameEvents.onEditorLoad.Add 	(this.on_editor_load);	
+			GameEvents.onEditorRestart.Add 	(this.on_editor_new );
 		}
 
-		public void on_craft_load(ShipConstruct a, KSP.UI.Screens.CraftBrowserDialog.LoadType b){
+		//Callback for when the editor loads a craft
+		public void on_editor_load(ShipConstruct a, KSP.UI.Screens.CraftBrowserDialog.LoadType b){
 			KerbalX.editor_gui.reset ();
 		}
-
-		public void on_new_craft(){
+		//Callback for when then editor resets (new craft)
+		public void on_editor_new(){
 			KerbalX.editor_gui.reset ();
 		}
-
 		//Called after a succsessful login, if the login dialog was opened from this window.
 		protected override void on_login ()
 		{
-			base.on_login ();
-			fetch_existing_craft ();
+			base.on_login ();		//inherits call to hide login window
+			fetch_existing_craft ();//run check for users craft on KerablX
 		}
 
 		protected override void OnDestroy ()
 		{
-			base.OnDestroy ();
-			GameEvents.onEditorLoad.Remove 	  (this.on_craft_load);
-			GameEvents.onEditorRestart.Remove (this.on_new_craft);
-			if(KerbalX.image_selector != null){
-				GameObject.Destroy (KerbalX.image_selector);
+			base.OnDestroy (); //releases any UI locks on the editor
+			GameEvents.onEditorLoad.Remove 	  (this.on_editor_load);//unbind editor events
+			GameEvents.onEditorRestart.Remove (this.on_editor_new);
+			if(KerbalX.image_selector != null){						//destroy the ImageSelector if it's open
+				GameObject.Destroy (KerbalX.image_selector);		
 			}
 		}
 
+		//Main interface! woooo!
 		protected override void WindowContent(int win_id)
 		{
 
@@ -113,7 +113,7 @@ namespace KerbalX
 					}
 				});
 			}else{
-				//if checks pass continue with drawing rest of interface (TODO check for unsaved changes).
+				//if checks pass continue with drawing rest of interface
 
 				string mode_title = new CultureInfo ("en-US", false).TextInfo.ToTitleCase (mode);
 				GUILayout.Label (mode_title + " '" + craft_name + "' " + (mode == "update" ? "on" : "to") + " KerbalX", "h3");
@@ -180,7 +180,7 @@ namespace KerbalX
 
 				}else if(mode == "update"){
 
-					if(KerbalX.existing_craft.Count == 0){
+					if(KerbalX.existing_craft.Count == 0){ //show message if the user doesn't have any craft on KerbalX yet.
 						show_upload_bttn = false;
 						GUILayout.Label ("You haven't uploaded any craft yet", "h2");
 						GUILayout.Label ("Once you've uploaded craft they will appear here and you'll be able to select them to update");
@@ -194,11 +194,12 @@ namespace KerbalX
 							change_mode ("upload");
 						}
 					}else{
-						
+
+						//Show message if the current craft name matches the name of one of the users craft on KerablX
 						if (matching_craft_ids.Count > 0) {
 							string label_text = "This craft's name matches the name of " + (matching_craft_ids.Count == 1 ? "a" : "several") + " craft you've already uploaded.";
 							if (matching_craft_ids.Count > 1) {
-								label_text = label_text + " Select which one you want to update";
+								label_text = label_text + " Select which one you want to update"; //in the case of more than one match.
 							}
 							GUILayout.Label (label_text);
 						}
@@ -211,12 +212,10 @@ namespace KerbalX
 									autoheight ();
 								});
 							});
-							v_section (w*0.3f, inner_w => {
-								section (inner_w, inner_w2 => {
-									if (GUILayout.Button ("OR upload this as a new craft", "button.wrapped", height (50) )) {
-										change_mode("upload");
-									}
-								});
+							section (w*0.3f, inner_w2 => {
+								if (GUILayout.Button ("OR upload this as a new craft", "button.wrapped", height (50) )) {
+									change_mode("upload");
+								}
 							});
 						});
 						
@@ -264,13 +263,16 @@ namespace KerbalX
 				if(upload_progress != null){
 					v_section (w => {
 						GUILayout.Label (upload_progress, "h2");
-						progress_spinner (w, 5, 80);
+						progress_spinner (w, 5, 50);
 					});
 				}
 			}
 		}
 
 
+
+		//Go-No-Go checks before upload or update. returns bool which will either block or allow the upload/update action 
+		//Any reasons to stop are added to errors and displayed
 		private bool ok_to_send(){
 			bool go_no_go = true;
 
@@ -291,19 +293,23 @@ namespace KerbalX
 			return go_no_go;
 		}
 
+		//common actions to perform before uploading/updating (take a message string to display)
 		private void before_upload(string message){
 			upload_progress = message;
-			enable_upload_bttn = false;
+			enable_upload_bttn = false;	//disable upload button to prevent multiple requests being fired at once.
 			if(KerbalX.image_selector != null){KerbalX.image_selector.hide ();}
-			frame_count = 0;
+			upload_ticker_pos = 0;//this and frame_count used in the upload in progress....thing, in progess animation
+			frame_count = 0;  		
 		}
 
+		//common actions to perform after upload/update
 		private void after_upload(){
 			enable_upload_bttn = true;
 			upload_progress = null;
 			autoheight ();
 		}
 
+		//Prepare craft data to upload as new craft on KerbalX
 		private void upload_craft(){
 			clear_errors ();
 			if(ok_to_send ()){
@@ -342,17 +348,18 @@ namespace KerbalX
 			}
 		}
 
+		//prepare craft data to upload as an update to an existing craft on KerbalX
 		private void update_craft(){
 			clear_errors ();
 			if(ok_to_send ()){
 				before_upload ("Updating....");
+				int craft_id = craft_select.id;	
 
 				WWWForm craft_data = new WWWForm();
 				craft_data.AddField ("craft_name", 	craft_name);
 				craft_data.AddField ("craft_file", 	craft_file());
 				craft_data.AddField ("part_data", 	JSONX.toJSON (part_info ()));
 
-				int craft_id = craft_select.id;
 				KerbalXAPI.update_craft (craft_id, craft_data, (resp, code) => {
 					var resp_data = JSON.Parse (resp);
 					if (code == 200) {
@@ -368,6 +375,7 @@ namespace KerbalX
 			}
 		}
 
+		//Dialog box to display once an upload has compelted.
 		public void show_upload_compelte_dialog(string craft_path){  //TODO re-privatise
 			KerbalXDialog dialog = show_dialog ((d) => {
 				v_section (w => {
@@ -426,7 +434,8 @@ namespace KerbalX
 			}
 		}
 
-
+		//removes a selected picture from pictures. Does this by creating a new List<PicData> and adding all other pics into it
+		//because using pictures.Remove () causes an error to be shown in the console, (about breaking enumeration).
 		public void remove_picture(PicData picture){
 			List<PicData> new_list = new List<PicData> ();
 			foreach(PicData pic in pictures){
@@ -444,6 +453,7 @@ namespace KerbalX
 			autoheight ();
 		}
 
+		//reset interface
 		public void reset(){
 			KerbalX.log ("Resetting UploadInterface");
 			clear_errors ();
@@ -477,6 +487,8 @@ namespace KerbalX
 			return System.IO.File.Exists (craft_path ());
 		}
 
+		//Check if the current craft in the editor has unsaved changes. 
+		//Kinda horrible appoach involing a temporary file, some C4 and a Swedish chiropractor (well not really, but it's kinda convoluted).
 		private bool craft_is_saved(){
 			if(craft_file_exists ()){
 				string temp_path = Paths.joined (KSPUtil.ApplicationRootPath, "GameData", "KerbalX", "temp.craft");	//set temp place to save current craft
@@ -494,23 +506,25 @@ namespace KerbalX
 		//check if craft_name matches any of the user's existing craft.  Sets matching_craft_ids to contain KX database ids of any matching craft
 		//if only one match is found then craft_select.id is also set to the matched id (which them selects the craft in the select menu)
 		private void check_for_matching_craft_name(){
-			KerbalX.log ("checking for matching craft - " + craft_name);
-			string lower_name = craft_name.Trim ().ToLower ();
-			matching_craft_ids.Clear ();
-			foreach(KeyValuePair<int, string> craft in remote_craft){
-				string rc_lower = craft.Value.Trim ().ToLower ();
-				if( lower_name == rc_lower || lower_name == rc_lower.Replace ("-", " ")){
-					matching_craft_ids.Add (craft.Key);
+			if(craft_name != "" || craft_name != null){
+				KerbalX.log ("checking for matching craft - " + craft_name);
+				string lower_name = craft_name.Trim ().ToLower ();
+				matching_craft_ids.Clear ();
+				foreach(KeyValuePair<int, string> craft in remote_craft){
+					string rc_lower = craft.Value.Trim ().ToLower ();
+					if( lower_name == rc_lower || lower_name == rc_lower.Replace ("-", " ")){
+						matching_craft_ids.Add (craft.Key);
+					}
 				}
+				change_mode (matching_craft_ids.Count > 0 ? "update" : "upload");
+				if(matching_craft_ids.Count == 1){
+					craft_select.id = matching_craft_ids.First ();
+				}			
 			}
-			change_mode (matching_craft_ids.Count > 0 ? "update" : "upload");
-			if(matching_craft_ids.Count == 1){
-				craft_select.id = matching_craft_ids.First ();
-			}			
 		}
 
 		//returns a unique set of the craft's parts and data about each part;
-		//{"partname1" => {"mod" => "mod_name"}, "partname2" => {"mod" => "mod_name"}, ....} #yeah, explained in Ruby hash notation, cos...it's terse. 
+		//{"partname1" => {"mod" => "mod_name"}, "partname2" => {"mod" => "mod_name"}, ....} #yeah, explained in Ruby hash notation, cos...it's terse
 		private Dictionary<string, object> part_info(){
 			Dictionary<string, object> part_data = new Dictionary<string, object>();
 			var part_list = EditorLogic.fetch.ship.parts;
