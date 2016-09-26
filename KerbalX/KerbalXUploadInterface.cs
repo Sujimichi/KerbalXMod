@@ -140,6 +140,7 @@ namespace KerbalX
 					section (w => {
 						GUILayout.Label ("Select craft type:", width(100f));
 						style_select = dropdown (craft_styles, style_select, 100f, 100f);
+
 					});
 
 					//buttons for setting action groups and adding pictures.
@@ -232,7 +233,7 @@ namespace KerbalX
 					}
 				}
 
-
+				//Display any errors preventing upload
 				if (errors.Count () > 0) {
 					style_override = GUI.skin.GetStyle ("background.dark.margin");
 					v_section (w => {
@@ -242,6 +243,7 @@ namespace KerbalX
 					});
 				}
 
+				//The great big ol' thing what you whack to make stuff happen
 				if (show_upload_bttn) {
 					GUI.enabled = enable_upload_bttn;
 					section (w => {
@@ -256,7 +258,7 @@ namespace KerbalX
 					GUI.enabled = true;
 				}
 
-
+				//display some feedback to show that upload/update is happening
 				if(upload_progress != null){
 					v_section (w => {
 						GUILayout.Label (upload_progress, "h2");
