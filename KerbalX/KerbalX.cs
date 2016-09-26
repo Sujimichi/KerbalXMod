@@ -186,6 +186,8 @@ namespace KerbalX
 		public static KerbalXWindow parent_window;
 		public static ComboList instance;
 		public static Rect container = new Rect(0,0,100,100);
+		public static string active_anchor = null;
+
 		void Start(){
 			instance = this;
 			gui_depth = 0;
@@ -195,27 +197,25 @@ namespace KerbalX
 		void OnGUI(){
 			GUI.skin = KerbalXWindow.KXskin;
 
-			if(container.Contains (Event.current.mousePosition)){
-				parent_window.lock_ui ();
+			if (!container.Contains (Event.current.mousePosition) && Input.GetKeyDown (KeyCode.Mouse0) && Input.GetMouseButtonDown (0)){
+				parent_window.unlock_ui ();
+				active_anchor = null;
+				close ();
 			}else{
-				if(Input.GetKeyDown (KeyCode.Mouse0)){
-					parent_window.unlock_ui ();
-				}
+				parent_window.lock_ui ();
 			}
 
 			GUI.BeginGroup (container);
 			GUI.depth = gui_depth;
-			GUILayout.BeginVertical (GUI.skin.GetStyle ("background.dark"), GUILayout.Width (100f), GUILayout.Height (100f));
+			GUILayout.BeginVertical (GUI.skin.GetStyle ("background.dark"), GUILayout.Width (container.width), GUILayout.Height (container.height));
 			
 			GUILayout.Label ("test", "h1");
 
-			if (GUILayout.Button ("decrease depth")) {
-				gui_depth--;
-				Debug.Log (gui_depth);
+			if (GUILayout.Button ("test")) {
+				Debug.Log ("test");
 			}
-			if (GUILayout.Button ("increase depth")) {
-				gui_depth++;
-				Debug.Log (gui_depth);
+			if (GUILayout.Button ("test2")) {
+				Debug.Log ("test2");
 			}
 
 			GUILayout.EndVertical ();
@@ -240,20 +240,20 @@ namespace KerbalX
 			enable_request_handler ();
 		}
 
-		private Dictionary<int, string> craft_styles = new Dictionary<int, string> (){
-			{0, "Ship"}, {1, "Aircraft"}, {2, "Spaceplane"}, {3, "Lander"}, {4, "Satellite"}, {5, "Station"}, {6, "Base"}, {7, "Probe"}, {8, "Rover"}, {9, "Lifter"}
-		};
+//		private Dictionary<int, string> craft_styles = new Dictionary<int, string> (){
+//			{0, "Ship"}, {1, "Aircraft"}, {2, "Spaceplane"}, {3, "Lander"}, {4, "Satellite"}, {5, "Station"}, {6, "Base"}, {7, "Probe"}, {8, "Rover"}, {9, "Lifter"}
+//		};
 
 
 		public Dictionary<string, Rect> rectangle = new Dictionary<string, Rect> ();
 
-		public string active_anchor = null;
+
 
 		protected void combobolify(){
-			if(active_anchor != null){
-				Rect anchor = rectangle [active_anchor];
+			if(ComboList.active_anchor != null){
+				Rect anchor = rectangle [ComboList.active_anchor];
 				anchor.x = anchor.x + window_pos.x;
-				anchor.y = anchor.y + window_pos.y + anchor.height;
+				anchor.y = anchor.y + window_pos.y;
 				anchor.height = 200f;
 				ComboList.container = anchor;
 				ComboList.parent_window = this;
@@ -261,14 +261,22 @@ namespace KerbalX
 		}
 
 		protected void toggle_combo(string combo_name){
-			if(active_anchor != combo_name){
+			if(ComboList.active_anchor != combo_name){
 				gameObject.AddOrGetComponent<ComboList> ();
-				active_anchor = combo_name;
+				ComboList.active_anchor = combo_name;
 //				this.gui_locked = true;
 			}else{
-				active_anchor = null;
+				ComboList.active_anchor = null;
 //				GameObject.Destroy (ComboList.instance);
 //				this.gui_locked = false;
+			}
+		}
+
+		protected void track_rect(string name, Rect rect){
+			if (rect.x != 0 && rect.y != 0) {
+				if (!rectangle.ContainsKey (name)) {
+					rectangle [name] = rect;
+				}
 			}
 		}
 
@@ -276,7 +284,7 @@ namespace KerbalX
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
 
 
-			GUILayout.Label ("active_anchor: " + active_anchor);
+			GUILayout.Label ("active_anchor: " + ComboList.active_anchor);
 
 			if (GUILayout.Button ("show thing")) {
 				KerbalX.editor_gui.show_upload_compelte_dialog ("fooobar/moo");
@@ -285,13 +293,13 @@ namespace KerbalX
 			if (GUILayout.Button ("test1")) {
 				toggle_combo ("anchor1");
 			}
-			rectangle ["anchor1"] = GUILayoutUtility.GetLastRect ();
+			track_rect ("anchor1", GUILayoutUtility.GetLastRect ());
 
 
 			if (GUILayout.Button ("test2")) {
 				toggle_combo ("anchor2");
 			}
-			rectangle ["anchor2"] = GUILayoutUtility.GetLastRect ();
+			track_rect ("anchor2", GUILayoutUtility.GetLastRect ());
 
 
 			combobolify ();
