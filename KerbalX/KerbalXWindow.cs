@@ -74,6 +74,67 @@ namespace KerbalX
 
 
 
+		//show, hide and toggle - basically just change the value of the bool visible which defines whether or not OnGUI will draw the window.
+		//also provides hooks (on_show and on_hide) for decendent classes to trigger actions when showing or hiding. 
+		public void show(){
+			visible = true;
+			on_show ();
+		}
+		public void hide(){
+			visible = false;
+			on_hide ();
+			StartCoroutine (unlock_delay ()); //remove any locks on the editor interface, after a slight delay.
+		}
+
+		public void toggle(){
+			(visible ? (Action)hide : show) (); //perhaps not the 'correct' way to use a ternary, but it works, it's one line, it's clear what it does.
+		}
+
+		//overridable methods for class which inherit this class to define actions which are called on hide and show
+		protected virtual void on_hide(){ }
+		protected virtual void on_show(){ }
+
+		public bool is_visible(){
+			return visible;
+		}
+
+		//unlock delay just adds a slight delay between an action and unlocking the editor.
+		//incases where a click on the window also result in closing the window (ie a close button) then the click would also get registered by whatever is behind the window
+		//adding this short delay prevents that from happening.
+		public IEnumerator unlock_delay(){
+			yield return true;	//doesn't seem to matter what this returns
+			Thread.Sleep (100);
+			EditorLogic.fetch.Unlock (window_id.ToString ()); //ensure any locks on the editor interface are release when hiding.
+		}
+
+
+		//lock_iu and unlock_ui result in GUI.enabled being set around the call to draw the contents of the window.
+		//lets you disable the whole window (it also results in a change to the GUI.color which makes this change without a visual change).
+		public void lock_ui(){
+			gui_locked = true;
+		}
+		public void unlock_ui(){
+			gui_locked = false;
+		}
+
+		//called after successful login IF the login was initiated from a KerbalXWindow. Windows which inherit from KerbalXWindow can override this 
+		//method to have specific actions performed after login (ie: UploadInterface will request a fetch of existing craft).
+		protected virtual void on_login(){
+			GameObject.Destroy (KerbalX.login_gui);
+		}
+		
+
+		//Essential for any window which needs to make web requests.  If a window is going to trigger web requests then it needs to call this method on its Start() method
+		//The Request handler handles sending requests asynchronously (so delays in response time don't lag the interface).  In order to do that it 
+		//uses Coroutines which are a MonoBehaviour concept, hence this calls in a decendent of MonoBehaviour can't be started by the static methods on the API class.
+		protected void enable_request_handler(){
+			if(RequestHandler.instance == null){
+				KerbalX.log ("starting web request handler");
+				RequestHandler request_handler = gameObject.AddOrGetComponent<RequestHandler> ();
+				RequestHandler.instance = request_handler;
+			}
+		}
+
 		//opens a dialog window which is populated by the lambda statement passed to show_dialog ie:
 		//show_dialog((d) => {
 		//	GUILayout.Label("hello I'm a dialog");
@@ -88,7 +149,8 @@ namespace KerbalX
 			GameObject.Destroy (KerbalXDialog.instance);
 		}
 
-		protected void launch(string type, bool show){
+		//basically just syntax sugar for a call to AddOrGetComponent for specific named windows. 
+		protected void launch(string type){
 			if(type == "ImageSelector"){
 				KerbalXImageSelector window = gameObject.AddOrGetComponent<KerbalXImageSelector> ();
 				window.show ();
@@ -110,54 +172,6 @@ namespace KerbalX
 
 
 
-
-		public void show(){
-			visible = true;
-			on_show ();
-		}
-		public void hide(){
-			visible = false;
-			on_hide ();
-			StartCoroutine (unlock_delay ());
-		}
-
-		public IEnumerator unlock_delay(){
-			yield return true;							//doesn't seem to matter what this returns
-			Thread.Sleep (100);
-			EditorLogic.fetch.Unlock (window_id.ToString ()); //ensure any locks on the editor interface are release when hiding.
-		}
-
-		public void toggle(){
-			if(visible){
-				hide ();
-			}else{
-				show ();
-			}
-		}
-		public bool is_visible(){
-			return visible;
-		}
-
-		public void lock_ui(){
-			gui_locked = true;
-		}
-		public void unlock_ui(){
-			gui_locked = false;
-		}
-
-		protected virtual void on_hide(){ }
-		protected virtual void on_show(){ }
-
-
-		protected void enable_request_handler(){
-			if(RequestHandler.instance == null){
-				KerbalX.log ("starting web request handler");
-				RequestHandler request_handler = gameObject.AddOrGetComponent<RequestHandler> ();
-				RequestHandler.instance = request_handler;
-			}
-		}
-
-
 		//MonoBehaviour methods
 
 		//called on each frame, handles drawing the window and will assign the next window id if it's not set
@@ -173,11 +187,11 @@ namespace KerbalX
 				last_window_id = last_window_id + 1;
 			}
 
-			GUI.skin = KXskin;
 			if(visible){
+				GUI.skin = KXskin;
 				window_pos = GUILayout.Window (window_id, window_pos, DrawWindow, window_title, GUILayout.Width( window_pos.width ), GUILayout.MaxWidth( window_pos.width ), GUILayout.ExpandHeight (true));
+				GUI.skin = null;
 			}
-			GUI.skin = null;
 		}
 
 		//Callback methods which is passed to GUILayout.Window in OnGUI.  Calls WindowContent and performs common window actions
@@ -220,7 +234,7 @@ namespace KerbalX
 				//Draw the main content of the window as defined by WindowContent
 				GUI.enabled = !gui_locked;
 				if(gui_locked){
-					GUI.color = new Color (1, 1, 1, 2);
+					GUI.color = new Color (1, 1, 1, 2); //This enables the GUI to be locked from input, but without changing it's appearance. 
 				}
 				WindowContent (window_id);	
 				GUI.enabled = true;
@@ -237,11 +251,6 @@ namespace KerbalX
 			}
 		}
 
-		//called after successful login IF the login was initiated from a KerbalXWindow. Windows which inherit from KerbalXWindow can override this 
-		//method to have specific actions performed after login (ie: UploadInterface will request a fetch of existing craft).
-		protected virtual void on_login(){
-			Debug.Log ("called after login");
-		}
 
 		//The main method which defines the content of a window.  This method is provided so as to be overridden in inherited classes
 		protected virtual void WindowContent(int window_id)
@@ -275,6 +284,7 @@ namespace KerbalX
 		protected GUIStyle style_override = null;
 		protected GUIStyle section_style = new GUIStyle();
 
+		public Dictionary<string, Rect> anchors = new Dictionary<string, Rect> ();
 
 		//shorthand for GUILayout.width()
 		protected GUILayoutOption width(float w){
@@ -365,6 +375,8 @@ namespace KerbalX
 			return section_width; //width to pass back into the lambda
 		}
 
+
+
 		protected void combobox(string combo_name, Dictionary<int, string> select_options, int selected_id, float list_width, float list_height, KerbalXWindow win, ComboResponse resp){
 			section (list_width, w => {
 				float h = 22f + select_options.Count * 17;
@@ -379,8 +391,6 @@ namespace KerbalX
 			});		
 		}
 
-		public Dictionary<string, Rect> anchors = new Dictionary<string, Rect> ();
-
 		protected void track_rect(string name, Rect rect){
 			if (rect.x != 0 && rect.y != 0) {
 				if (!anchors.ContainsKey (name)) {
@@ -389,44 +399,44 @@ namespace KerbalX
 			}
 		}
 
-		protected DropdownData dropdown(Dictionary<int, string> collection, DropdownData drop_data, float outer_width, float menu_height){
-			GUIStyle dropdown_field = new GUIStyle (GUI.skin.textField);
-			GUIStyle dropdown_menu_item = new GUIStyle (GUI.skin.label);
-			//dropdown_menu_item.normal.textColor = Color.magenta;
-			dropdown_menu_item.onHover.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
-			dropdown_menu_item.hover.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
-			dropdown_menu_item.padding = new RectOffset (0, 0, 0, 0);
-
-			string selected;
-			collection.TryGetValue (drop_data.id, out selected);
-
-			v_section (outer_width, (inner_width) => {
-				section (inner_width, w2 => {
-					if (GUILayout.Button (selected, dropdown_field, GUILayout.Width (inner_width - 20) )) {
-						drop_data.show_select = !drop_data.show_select;	
-						autoheight ();
-					}
-					if (GUILayout.Button ("\\/", GUILayout.Width (20f) )) {
-						drop_data.show_select = !drop_data.show_select;	
-						autoheight ();
-					}
-				});
-				section (inner_width, w2 => {
-					if(drop_data.show_select){
-						drop_data.scroll_pos = scroll (drop_data.scroll_pos, w2, menu_height, (w3) => {
-							foreach(KeyValuePair<int, string> item in collection){
-								if(GUILayout.Button (item.Value, dropdown_menu_item, GUILayout.Width (w3-25))){
-									drop_data.selected (item.Key);
-									drop_data.show_select = false;
-									autoheight ();
-								}
-							}
-						});
-					}
-				});
-			});
-			return drop_data;
-		}
+//		protected DropdownData dropdown(Dictionary<int, string> collection, DropdownData drop_data, float outer_width, float menu_height){
+//			GUIStyle dropdown_field = new GUIStyle (GUI.skin.textField);
+//			GUIStyle dropdown_menu_item = new GUIStyle (GUI.skin.label);
+//			//dropdown_menu_item.normal.textColor = Color.magenta;
+//			dropdown_menu_item.onHover.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
+//			dropdown_menu_item.hover.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
+//			dropdown_menu_item.padding = new RectOffset (0, 0, 0, 0);
+//
+//			string selected;
+//			collection.TryGetValue (drop_data.id, out selected);
+//
+//			v_section (outer_width, (inner_width) => {
+//				section (inner_width, w2 => {
+//					if (GUILayout.Button (selected, dropdown_field, GUILayout.Width (inner_width - 20) )) {
+//						drop_data.show_select = !drop_data.show_select;	
+//						autoheight ();
+//					}
+//					if (GUILayout.Button ("\\/", GUILayout.Width (20f) )) {
+//						drop_data.show_select = !drop_data.show_select;	
+//						autoheight ();
+//					}
+//				});
+//				section (inner_width, w2 => {
+//					if(drop_data.show_select){
+//						drop_data.scroll_pos = scroll (drop_data.scroll_pos, w2, menu_height, (w3) => {
+//							foreach(KeyValuePair<int, string> item in collection){
+//								if(GUILayout.Button (item.Value, dropdown_menu_item, GUILayout.Width (w3-25))){
+//									drop_data.selected (item.Key);
+//									drop_data.show_select = false;
+//									autoheight ();
+//								}
+//							}
+//						});
+//					}
+//				});
+//			});
+//			return drop_data;
+//		}
 	}
 }
 

@@ -73,7 +73,7 @@ namespace KerbalX
 		//Called after a succsessful login, if the login dialog was opened from this window.
 		protected override void on_login ()
 		{
-			GameObject.Destroy (KerbalX.login_gui);
+			base.on_login ();
 			fetch_existing_craft ();
 		}
 
@@ -148,7 +148,7 @@ namespace KerbalX
 						}					
 						if (GUILayout.Button ("Add Pictures", width(w*0.5f), height (30)) ) {
 							if(KerbalX.image_selector == null){
-								launch ("ImageSelector", true);
+								launch ("ImageSelector");
 							}else{
 								KerbalX.image_selector.toggle ();
 							}

@@ -202,7 +202,6 @@ namespace KerbalX
 		Texture2D tex = new Texture2D(1, 1,   TextureFormat.RGBA32, false);
 		int on_hover = 0;
 
-
 		void Start(){
 			instance = this;
 			tex.SetPixel (0,0, new Color (0.4f,0.5f,0.9f,1));
@@ -218,6 +217,12 @@ namespace KerbalX
 				parent_window = parent_win;
 				list_height = height;
 			}
+		}
+
+		public void close(){
+			parent_window.unlock_ui ();
+			active_anchor = null;
+			GameObject.Destroy (ComboBox.instance);
 		}
 
 		void OnGUI(){
@@ -277,15 +282,6 @@ namespace KerbalX
 			GUI.EndGroup ();
 			GUI.skin = null;
 		}
-
-
-
-		public void close(){
-			parent_window.unlock_ui ();
-			active_anchor = null;
-			GameObject.Destroy (ComboBox.instance);
-		}
-
 	}
 
 	[KSPAddon(KSPAddon.Startup.AllGameScenes, false)]
@@ -305,59 +301,16 @@ namespace KerbalX
 		private int selected_style_id = 0;
 		private int selected_style_id2 = 0;
 
-//		public Dictionary<string, Rect> anchors = new Dictionary<string, Rect> ();
-//
-//		protected void track_rect(string name, Rect rect){
-//			if (rect.x != 0 && rect.y != 0) {
-//				if (!anchors.ContainsKey (name)) {
-//					anchors [name] = rect;
-//				}
-//			}
-//		}
 
 		protected override void WindowContent(int win_id){
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
 
 
-//			GUILayout.Label ("active_anchor: " + ComboList.instance.active_anchor);
-//			GUILayout.Label ("selected: " + selected_style_id.ToString ());
-
 			if (GUILayout.Button ("show thing")) {
 				KerbalX.editor_gui.show_upload_compelte_dialog ("fooobar/moo");
 			}
 
-//			if (GUILayout.Button ("test1")) {
-//				ComboList.open ("anchor1", craft_styles, anchors["anchor1"], (id) => {selected_style_id = id;});
-//			}
-//			track_rect ("anchor1", GUILayoutUtility.GetLastRect ());
-//
-//
-//			if (GUILayout.Button ("test2")) {
-//				ComboList.open ("anchor2", craft_styles, anchors["anchor2"], (id) => {selected_style_id = id;});
-//			}
-//			track_rect ("anchor2", GUILayoutUtility.GetLastRect ());
-
-
-//			section (150f, w => {
-//				float h = 22f + craft_styles.Count * 17;
-//				if(h > 150){h = 150;}
-//				if (GUILayout.Button (craft_styles [selected_style_id], GUI.skin.textField, width (w-20f))) {
-//					gameObject.AddOrGetComponent<ComboBox> ().open ("anchor3", craft_styles, anchors["anchor3"], h, this, (id) => {selected_style_id = id;});
-//				}
-//				track_rect ("anchor3", GUILayoutUtility.GetLastRect ());
-//				if (GUILayout.Button ("\\/", width (20f))) {
-//					gameObject.AddOrGetComponent<ComboBox> ().open ("anchor3", craft_styles, anchors["anchor3"], h, this, (id) => {selected_style_id = id;});
-//				}
-//			});
-
-
 			combobox ("craft_style_select", craft_styles, selected_style_id, 150f, 150f, this, id => {selected_style_id = id;});
-
-			string select_field = "";
-			section (w => {
-				select_field = GUILayout.TextField (select_field, 255, width(w-20f));
-			});
-
 			combobox ("craft_style_select2", craft_styles, selected_style_id2, 80f, 150f, this, id => {selected_style_id2 = id;});
 
 			if (GUILayout.Button ("test")) {
