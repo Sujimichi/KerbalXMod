@@ -21,6 +21,19 @@ namespace KerbalX
 				assets.Add ("logo_small", kx_logo_small);
 				assets.Add ("logo_large", kx_logo_large);
 
+				Texture2D blue_background = new Texture2D(1, 1,   TextureFormat.RGBA32, false);
+				blue_background.SetPixel(0, 0, new Color (0.4f,0.5f,0.9f,1));
+				blue_background.wrapMode = TextureWrapMode.Repeat;
+				blue_background.Apply ();
+				
+				Texture2D dark_background = new Texture2D(1, 1,   TextureFormat.RGBA32, false);
+				dark_background.SetPixel(0, 0, new Color (0.12f,0.12f,0.12f,0.7f));
+				dark_background.Apply ();
+
+				Texture2D pic_highlight = new Texture2D(1, 1,   TextureFormat.RGBA32, false);
+				pic_highlight.SetPixel(0, 0, new Color (0.4f,0.5f,0.9f,1));
+				pic_highlight.Apply ();
+
 
 
 				GUIStyle h1 = new GUIStyle (GUI.skin.label);
@@ -82,11 +95,7 @@ namespace KerbalX
 				GUIStyle pic_hover = new GUIStyle (pic_link);
 				pic_hover.name = "pic.hover";
 				pic_hover.normal.textColor = Color.black;
-
-				Texture2D pic_highlight = new Texture2D(1, 1,   TextureFormat.RGBA32, false);
-				pic_highlight.SetPixel(0, 0, new Color (0.4f,0.5f,0.9f,1));
-				pic_highlight.Apply ();
-				pic_hover.normal.background = pic_highlight;
+				pic_hover.normal.background = blue_background;
 
 				GUIStyle login_button = new GUIStyle (GUI.skin.button);
 				login_button.name = "button.login";
@@ -111,19 +120,12 @@ namespace KerbalX
 				wrapped_button.wordWrap = true;
 
 
-				Texture2D blue_background = new Texture2D(1, 1,   TextureFormat.RGBA32, false);
-				blue_background.SetPixel(0, 0, new Color (0.4f,0.5f,0.9f,1));
-				blue_background.wrapMode = TextureWrapMode.Repeat;
-				blue_background.Apply ();
+
 				GUIStyle blue_box = new GUIStyle (GUI.skin.box);
 				blue_box.normal.background = blue_background;
 				blue_box.border = new RectOffset (3, 3, 3, 3);
 				blue_box.name = "box.blue";
 
-
-				Texture2D dark_background = new Texture2D(1, 1,   TextureFormat.RGBA32, false);
-				dark_background.SetPixel(0, 0, new Color (0.12f,0.12f,0.12f,0.7f));
-				dark_background.Apply ();
 				GUIStyle dark_back = new GUIStyle ();
 				dark_back.name = "background.dark";
 				dark_back.normal.background = dark_background;
@@ -134,11 +136,32 @@ namespace KerbalX
 
 
 
+				GUIStyle combo_field = new GUIStyle(GUI.skin.textField);
+				combo_field.margin = new RectOffset(0,0,0,0);
+				combo_field.name = "combobox.filter_field";
+
+				GUIStyle combo_bttn = new GUIStyle(GUI.skin.button);
+				combo_bttn.margin.top = 0;
+				combo_bttn.name = "combobox.bttn";
+
+				GUIStyle combo_option = new GUIStyle(GUI.skin.label);
+				combo_option.margin = new RectOffset(0,0,0,0);
+				combo_option.padding = new RectOffset(3,3,1,1);
+				combo_option.name = "combobox.option";
+
+				GUIStyle combo_option_hover = new GUIStyle(combo_option);
+				combo_option_hover.normal.background = blue_background;
+				combo_option_hover.normal.textColor = Color.black;
+				combo_option_hover.name = "combobox.option.hover";
+
+
 				KerbalXWindow.KXskin = Instantiate (GUI.skin);
 				KerbalXWindow.KXskin.customStyles = new GUIStyle[]{ 
 					h1, h2, h3, hyperlink, hyperlink_h2, hyperlink_h3, alert, alert_h2, small, centered, 
 					pic_link, pic_hover, dark_back, dark_back_offset, blue_box, no_style,
-					login_button, upload_button, screenshot_button, wrapped_button
+					login_button, upload_button, screenshot_button, wrapped_button,
+					combo_field, combo_bttn, combo_option, combo_option_hover
+
 				};
 			}
 

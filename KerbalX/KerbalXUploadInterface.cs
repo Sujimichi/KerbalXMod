@@ -206,7 +206,10 @@ namespace KerbalX
 						section (w => {
 							v_section (w*0.7f, inner_w => {
 								section (inner_w, inner_w2 => { GUILayout.Label ("Select Craft on KerbalX to update:"); });
-								combobox ("craft_select", remote_craft, craft_select.id, inner_w, 150f, this, id => {craft_select.id = id;});
+								combobox ("craft_select", remote_craft, craft_select.id, inner_w, 150f, this, id => {
+									craft_select.id = id;
+									autoheight ();
+								});
 							});
 							v_section (w*0.3f, inner_w => {
 								section (inner_w, inner_w2 => {

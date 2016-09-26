@@ -57,6 +57,7 @@
     <Compile Include="KerbalXUploadInterface.cs" />
     <Compile Include="KerbalXImageSelector.cs" />
     <Compile Include="Stylesheet.cs" />
+    <Compile Include="ComboBox.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
