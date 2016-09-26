@@ -175,57 +175,91 @@ namespace KerbalX
 		private void Update(){
 			if(set_state){
 				set_state = false;
-				KerbalX.console.window_pos = new Rect(250, 10, 310, 5);
+//				KerbalX.console.window_pos = new Rect(250, 10, 310, 5);
+				KerbalX.console.window_pos = new Rect(Screen.width - 250, Screen.height/2, 310, 5);
 			}
 		}
 	}
 
-	public class ComboList : MonoBehaviour
+	public delegate void ComboResponse(int selected);
+
+	public class ComboBox : KerbalXWindowExtensions
 	{
-		public static int gui_depth = 0;
-		public static KerbalXWindow parent_window;
-		public static ComboList instance;
-		public static Rect container = new Rect(0,0,100,100);
-		public static string active_anchor = null;
+		public static ComboBox instance;
+
+
+		public string active_anchor = null;
+		public Rect anchor_rect = new Rect(0,0,100,100);
+		public Rect container 	= new Rect(0,0,100,100);
+		public KerbalXWindow parent_window;
+		public Dictionary<int, string> sel_options = new Dictionary<int, string> ();
+		public ComboResponse response;
+		public Vector2 scroll_pos;
+		public int gui_depth = 0;
+		public string select_field ="";
+
 
 		void Start(){
 			instance = this;
-			gui_depth = 0;
 		}
-//		if(GUILayoutUtility.GetLastRect ().Contains (Event.current.mousePosition)){ //detect of mouse is over the last vertical section 
+
+		public void open(string combo_name, Dictionary<int, string> select_options, Rect anchor, KerbalXWindow parent_win, ComboResponse selection_callback){
+			if(active_anchor != combo_name){
+				active_anchor = combo_name;
+				sel_options = select_options;
+				response = selection_callback;
+				anchor_rect = anchor;
+				parent_window = parent_win;
+			}
+		}
 
 		void OnGUI(){
+			container.x = anchor_rect.x + parent_window.window_pos.x;
+			container.y = anchor_rect.y + parent_window.window_pos.y;
+			container.width = anchor_rect.width + 20f;
+			container.height = 200f;
+				
+
 			GUI.skin = KerbalXWindow.KXskin;
+			GUI.depth = gui_depth;
 
 			if (!container.Contains (Event.current.mousePosition) && Input.GetKeyDown (KeyCode.Mouse0) && Input.GetMouseButtonDown (0)){
-				parent_window.unlock_ui ();
-				active_anchor = null;
 				close ();
 			}else{
 				parent_window.lock_ui ();
 			}
 
 			GUI.BeginGroup (container);
-			GUI.depth = gui_depth;
-			GUILayout.BeginVertical (GUI.skin.GetStyle ("background.dark"), GUILayout.Width (container.width), GUILayout.Height (container.height));
-			
-			GUILayout.Label ("test", "h1");
 
-			if (GUILayout.Button ("test")) {
-				Debug.Log ("test");
-			}
-			if (GUILayout.Button ("test2")) {
-				Debug.Log ("test2");
-			}
+			style_override = GUI.skin.GetStyle ("background.dark");
+			v_section (container.width, w => {
+				GUIStyle text_field = new GUIStyle(GUI.skin.textField);
+				text_field.margin = new RectOffset(0,0,0,0);
 
-			GUILayout.EndVertical ();
-			
+
+				select_field = GUILayout.TextField (select_field, 255, text_field, width(w-20f));
+
+				float h = GUILayoutUtility.GetLastRect ().height;
+				scroll_pos = scroll (scroll_pos, w, container.height-h, sw => {
+					foreach(KeyValuePair<int, string> option in sel_options){
+						if(GUILayout.Button (option.Value)){
+							response(option.Key);
+							close ();
+						}
+					}
+				});
+
+			});
 			GUI.EndGroup ();
 			GUI.skin = null;
 		}
 
-		public static void close(){
-			GameObject.Destroy (ComboList.instance);
+
+
+		public void close(){
+			parent_window.unlock_ui ();
+			active_anchor = null;
+			GameObject.Destroy (ComboBox.instance);
 		}
 
 	}
@@ -238,44 +272,20 @@ namespace KerbalX
 			window_pos = new Rect(0, 0, 310, 5);
 			KerbalX.console = this;
 			enable_request_handler ();
+			prevent_editor_click_through = true;
 		}
 
-//		private Dictionary<int, string> craft_styles = new Dictionary<int, string> (){
-//			{0, "Ship"}, {1, "Aircraft"}, {2, "Spaceplane"}, {3, "Lander"}, {4, "Satellite"}, {5, "Station"}, {6, "Base"}, {7, "Probe"}, {8, "Rover"}, {9, "Lifter"}
-//		};
+		private Dictionary<int, string> craft_styles = new Dictionary<int, string> (){
+			{0, "Ship"}, {1, "Aircraft"}, {2, "Spaceplane"}, {3, "Lander"}, {4, "Satellite"}, {5, "Station"}, {6, "Base"}, {7, "Probe"}, {8, "Rover"}, {9, "Lifter"}
+		};
+		private int selected_style_id = 0;
 
-
-		public Dictionary<string, Rect> rectangle = new Dictionary<string, Rect> ();
-
-
-
-		protected void combobolify(){
-			if(ComboList.active_anchor != null){
-				Rect anchor = rectangle [ComboList.active_anchor];
-				anchor.x = anchor.x + window_pos.x;
-				anchor.y = anchor.y + window_pos.y;
-				anchor.height = 200f;
-				ComboList.container = anchor;
-				ComboList.parent_window = this;
-			}
-		}
-
-		protected void toggle_combo(string combo_name){
-			if(ComboList.active_anchor != combo_name){
-				gameObject.AddOrGetComponent<ComboList> ();
-				ComboList.active_anchor = combo_name;
-//				this.gui_locked = true;
-			}else{
-				ComboList.active_anchor = null;
-//				GameObject.Destroy (ComboList.instance);
-//				this.gui_locked = false;
-			}
-		}
+		public Dictionary<string, Rect> anchors = new Dictionary<string, Rect> ();
 
 		protected void track_rect(string name, Rect rect){
 			if (rect.x != 0 && rect.y != 0) {
-				if (!rectangle.ContainsKey (name)) {
-					rectangle [name] = rect;
+				if (!anchors.ContainsKey (name)) {
+					anchors [name] = rect;
 				}
 			}
 		}
@@ -284,29 +294,44 @@ namespace KerbalX
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
 
 
-			GUILayout.Label ("active_anchor: " + ComboList.active_anchor);
+//			GUILayout.Label ("active_anchor: " + ComboList.instance.active_anchor);
+//			GUILayout.Label ("selected: " + selected_style_id.ToString ());
 
 			if (GUILayout.Button ("show thing")) {
 				KerbalX.editor_gui.show_upload_compelte_dialog ("fooobar/moo");
 			}
 
-			if (GUILayout.Button ("test1")) {
-				toggle_combo ("anchor1");
-			}
-			track_rect ("anchor1", GUILayoutUtility.GetLastRect ());
+//			if (GUILayout.Button ("test1")) {
+//				ComboList.open ("anchor1", craft_styles, anchors["anchor1"], (id) => {selected_style_id = id;});
+//			}
+//			track_rect ("anchor1", GUILayoutUtility.GetLastRect ());
+//
+//
+//			if (GUILayout.Button ("test2")) {
+//				ComboList.open ("anchor2", craft_styles, anchors["anchor2"], (id) => {selected_style_id = id;});
+//			}
+//			track_rect ("anchor2", GUILayoutUtility.GetLastRect ());
 
 
-			if (GUILayout.Button ("test2")) {
-				toggle_combo ("anchor2");
-			}
-			track_rect ("anchor2", GUILayoutUtility.GetLastRect ());
+			section (w => {
+				if (GUILayout.Button (craft_styles [selected_style_id], GUI.skin.textField, width (200f))) {
+					gameObject.AddOrGetComponent<ComboBox> ().open ("anchor3", craft_styles, anchors["anchor3"], this, (id) => {selected_style_id = id;});
+				}
+				track_rect ("anchor3", GUILayoutUtility.GetLastRect ());
+				if (GUILayout.Button ("\\/", GUILayout.Width (20f))) {
+					gameObject.AddOrGetComponent<ComboBox> ().open ("anchor3", craft_styles, anchors["anchor3"], this, (id) => {selected_style_id = id;});
+				}
+			});
 
+			string select_field = "";
+			section (w => {
+				select_field = GUILayout.TextField (select_field, 255, width(w-20f));
+			});
 
-			combobolify ();
 
 
 			if (GUILayout.Button ("test")) {
-				ComboList combo = gameObject.AddOrGetComponent<ComboList> ();
+				ComboBox combo = gameObject.AddOrGetComponent<ComboBox> ();
 				GameObject.Destroy (combo);
 			}
 
