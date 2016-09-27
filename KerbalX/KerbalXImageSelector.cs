@@ -31,9 +31,11 @@ namespace KerbalX
 	//[KSPAddon(KSPAddon.Startup.EditorAny, false)]
 	public class KerbalXImageSelector : KerbalXWindow
 	{
-		private List<PicData> pictures = new List<PicData>();				//populated by load_pics, contains PicData objects for each pic 
-		private List<List<PicData>> groups = new List<List<PicData>> ();	//nested list of lists - rows of pictures for display in the interface
+		private List<PicData> pictures 		= new List<PicData>();			//populated by load_pics, contains PicData objects for each pic 
+		private List<List<PicData>> groups 	= new List<List<PicData>> ();	//nested list of lists - rows of pictures for display in the interface
 		private bool[] loaded_pics;											//array of bools used to track which pictures have had their textures loaded.
+
+		private List<KerbalXWindow> open_windows = new List<KerbalXWindow>();
 
 		private string mode = "pic_selector";
 		private int pics_per_row = 4;
@@ -42,7 +44,7 @@ namespace KerbalX
 		private Vector2 scroll_pos;
 		private int file_count = 0;
 
-		private string pic_url = "";
+		private string pic_url 	 = "";
 		private string hover_ele = "";
 
 		private void Start(){
@@ -51,8 +53,9 @@ namespace KerbalX
 			window_pos = new Rect((Screen.width/2 - w/2), Screen.height/3, w, 5);
 			prevent_editor_click_through = true;
 			KerbalX.image_selector = this;
-
+			this.show (); //perform on_show actions when started
 		}
+
 
 		protected override void on_show(){
 			change_mode ("pic_selector");
@@ -64,7 +67,7 @@ namespace KerbalX
 		}
 
 		protected override void on_hide (){
-			KerbalX.editor_gui.clear_errors ();
+			KerbalX.upload_gui.clear_errors ();
 		}
 
 		protected override void WindowContent(int win_id){
@@ -82,7 +85,7 @@ namespace KerbalX
 						if(GUILayout.Button ("Add url", width (100f))){
 							PicData pic = new PicData();
 							pic.url = pic_url;
-							KerbalX.editor_gui.add_picture (pic);
+							KerbalX.upload_gui.add_picture (pic);
 							this.hide ();
 						};	
 					});
@@ -168,8 +171,24 @@ namespace KerbalX
 		private void grab_screenshot (){
 			string filename = "screenshot - " + string.Format ("{0:yyyy-MM-dd_hh-mm-ss}", DateTime.Now) + ".png";
 			KerbalX.log ("grabbing screenshot: " + filename);
-			KerbalX.editor_gui.hide ();
-			this.hide ();
+
+			//track which windows are currently open in open_windows
+			open_windows.Clear ();
+			if(KerbalX.upload_gui && KerbalX.upload_gui.visible){
+				open_windows.Add (KerbalX.upload_gui);
+			}
+			if(KerbalX.action_group_gui && KerbalX.action_group_gui.visible){
+				open_windows.Add (KerbalX.action_group_gui);
+			}
+			if(KerbalX.console && KerbalX.console.visible){
+				open_windows.Add (KerbalX.console);
+			}
+			open_windows.Add (this);
+			//hide all the open windows
+			foreach(KerbalXWindow win in open_windows){
+				win.hide ();
+			}
+
 			Application.CaptureScreenshot (filename);
 			StartCoroutine (shutter (filename));		//shutter re-opens the windows. well, it's kinda the exact opposite of what a shutter does, but yeah....whatever
 		}
@@ -184,8 +203,10 @@ namespace KerbalX
 				KerbalX.log ("moving file: " + origin_path + " to: " + png_path);
 				File.Move (origin_path,  png_path);
 			}
-			KerbalX.editor_gui.show (); 				//re-open the KX windows (after the file has been moved so the ImageSelector will notice it).
-			this.show ();
+			//re-open the KX windows (after the file has been moved so the ImageSelector will notice it).
+			foreach(KerbalXWindow win in open_windows){
+				win.show ();
+			}
 		}
 
 		private void change_mode(string new_mode){
@@ -195,7 +216,7 @@ namespace KerbalX
 
 		//adds pic to list of selected pics on UploadInterface
 		private void select_pic(PicData pic){
-			KerbalX.editor_gui.add_picture (pic);
+			KerbalX.upload_gui.add_picture (pic);
 		}
 
 		//Get file info for all files of defined file_types within the screenshot dir

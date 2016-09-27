@@ -1,39 +1,31 @@
 ﻿using System;
 //using System.Linq;
-//using System.Text;
-
+using System.Text;
 //using System.Collections;
 using System.Collections.Generic;
-//using System.Collections.Specialized;
-//using System.Globalization;
-
-//using SimpleJSON;
 
 using UnityEngine;
-//using UnityEngine.EventSystems;
-//using UnityEngine.Networking;
-
 
 namespace KerbalX
 {
 	public class KerbalX
 	{
+		public static string site_url = "http://localhost:3000";
 		public static string token_path = Paths.joined (KSPUtil.ApplicationRootPath, "KerbalX.key");
-		public static List<string> log_data = new List<string>();
+		public static string screenshot_dir = Paths.joined (KSPUtil.ApplicationRootPath, "Screenshots"); //TODO make this a setting, oh and make settings.
+
 		public static bool failed_to_connect = false;
 		public static string server_error_message = null;
-
-
-		public static string site_url = "http://localhost:3000";
-		public static string screenshot_dir = Paths.joined (KSPUtil.ApplicationRootPath, "Screenshots"); //TODO make this a setting, oh and make settings.
+		public static List<string> log_data = new List<string>();
 
 		public static Dictionary<int, Dictionary<string, string>> existing_craft; //container for listing of user's craft already on KX and some details about them.
 
 		//window handles (cos a window without a handle is just a pane)
-		public static KerbalXConsole console 				= null;
-		public static KerbalXLoginWindow login_gui 			= null;
-		public static KerbalXUploadInterface editor_gui 	= null;
-		public static KerbalXImageSelector image_selector 	= null;
+		public static KerbalXConsole console 						= null;
+		public static KerbalXLoginWindow login_gui 					= null;
+		public static KerbalXUploadInterface upload_gui 			= null;
+		public static KerbalXImageSelector image_selector 			= null;
+		public static KerbalXActionGroupInterface action_group_gui 	= null;
 
 
 		//methodical things
@@ -166,6 +158,8 @@ namespace KerbalX
 		}
 	}
 
+
+
 	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
 	public class KerbalXConsoleReposition : MonoBehaviour
 	{
@@ -193,38 +187,24 @@ namespace KerbalX
 //			prevent_editor_click_through = true;
 		}
 
-		private Dictionary<int, string> craft_styles = new Dictionary<int, string> (){
-			{0, "Ship"}, {1, "Aircraft"}, {2, "Spaceplane"}, {3, "Lander"}, {4, "Satellite"}, {5, "Station"}, {6, "Base"}, {7, "Probe"}, {8, "Rover"}, {9, "Lifter"}
-		};
-		private int selected_style_id = 0;
-		private int selected_style_id2 = 0;
-
 
 		protected override void WindowContent(int win_id){
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
 
 
-			if(KerbalX.editor_gui != null){
-				if (GUILayout.Button ("show thing")) {
-					KerbalX.editor_gui.show_upload_compelte_dialog ("fooobar/moo");
-				}
+			if (GUILayout.Button ("where are you")) {
+				Debug.Log (KerbalX.action_group_gui.window_pos.ToString ());
 			}
-
-			combobox ("craft_style_select", craft_styles, selected_style_id, 150f, 150f, this, id => {selected_style_id = id;});
-			combobox ("craft_style_select2", craft_styles, selected_style_id2, 80f, 150f, this, id => {selected_style_id2 = id;});
-
-
 
 			if (GUILayout.Button ("update existing craft")) {
 				KerbalXAPI.fetch_existing_craft (() => {});
 			}
-
 			if(GUILayout.Button ("open interface")){
 				gameObject.AddOrGetComponent<KerbalXUploadInterface> ();
 			}
 
 			if(GUILayout.Button ("close interface")){
-				GameObject.Destroy (KerbalX.editor_gui);
+				GameObject.Destroy (KerbalX.upload_gui);
 			}
 
 			if (GUILayout.Button ("show Login")) {
@@ -232,6 +212,19 @@ namespace KerbalX
 				login_window.after_login_action = () => {
 					on_login ();
 				};
+			}
+
+			if(KerbalX.action_group_gui){
+				GUILayout.Label ("action group gui open");
+			}
+			if(KerbalX.image_selector){
+				GUILayout.Label ("image selector loaded");
+			}
+			
+			if(KerbalX.upload_gui != null){
+				if (GUILayout.Button ("show thing")) {
+					KerbalX.upload_gui.show_upload_compelte_dialog ("fooobar/moo");
+				}
 			}
 
 			if (GUILayout.Button ("print log to console")) { KerbalX.show_log (); }
@@ -267,5 +260,6 @@ namespace KerbalX
 			}
 		}
 	}
+
 
 }

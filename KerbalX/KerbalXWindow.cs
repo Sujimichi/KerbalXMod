@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-using System.Reflection;
+//using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,14 +8,7 @@ using UnityEngine;
 namespace KerbalX
 {
 
-	public struct DropdownData{
-		public int id;
-		public bool show_select;
-		public Vector2 scroll_pos;
-		public void selected(int set_id){
-			id = set_id;
-		}
-	}
+
 
 	/* KerbalXWindow is a base class to be inherited by classes which draw GUI windows. It inherits from KerbalXWindowExtension which in turn inherits from MonoBehaviour
 	It provides common setup required to draw a GUI window, enabling DRY and minimal window classes.
@@ -84,16 +77,16 @@ namespace KerbalX
 		}
 
 		public void toggle(){
-			(visible ? (Action)hide : show) (); //perhaps not the 'correct' way to use a ternary, but it works, it's one line, it's clear what it does.
+			if (visible) {
+				hide ();	
+			} else {
+				show ();
+			}
 		}
 
 		//overridable methods for class which inherit this class to define actions which are called on hide and show
 		protected virtual void on_hide(){ }
 		protected virtual void on_show(){ }
-
-		public bool is_visible(){
-			return visible;
-		}
 
 		//unlock delay just adds a slight delay between an action and unlocking the editor.
 		//incases where a click on the window also result in closing the window (ie a close button) then the click would also get registered by whatever is behind the window
@@ -155,8 +148,9 @@ namespace KerbalX
 		//basically just syntax sugar for a call to AddOrGetComponent for specific named windows. (unfortunatly has nothing to do with launching rockets)
 		protected void launch(string type){
 			if(type == "ImageSelector"){
-				KerbalXImageSelector window = gameObject.AddOrGetComponent<KerbalXImageSelector> ();
-				window.show ();
+				gameObject.AddOrGetComponent<KerbalXImageSelector> ();
+			}else if(type == "ActionGroupEditor"){
+				gameObject.AddOrGetComponent<KerbalXActionGroupInterface> ();
 			}
 		}
 
@@ -234,8 +228,8 @@ namespace KerbalX
 				}
 			}else{
 				//Draw the main content of the window as defined by WindowContent
-				GUI.enabled = !gui_locked;
 				if(gui_locked){
+					GUI.enabled = false;
 					GUI.color = new Color (1, 1, 1, 2); //This enables the GUI to be locked from input, but without changing it's appearance. 
 				}
 				WindowContent (window_id);	
@@ -286,7 +280,7 @@ namespace KerbalX
 		protected GUIStyle style_override = null;
 		protected GUIStyle section_style = new GUIStyle();
 
-		public Dictionary<string, Rect> anchors = new Dictionary<string, Rect> ();
+		public Dictionary<string, Rect> anchors = new Dictionary<string, Rect> ();	//anchors are used by the ComboBox. Each anchor is a named reference to a Rect obtained from GetLastRect
 
 		//shorthand for GUILayout.width()
 		protected GUILayoutOption width(float w){
@@ -402,6 +396,15 @@ namespace KerbalX
 			}
 		}
 
+
+//		public struct DropdownData{
+//			public int id;
+//			public bool show_select;
+//			public Vector2 scroll_pos;
+//			public void selected(int set_id){
+//				id = set_id;
+//			}
+//		}
 //		protected DropdownData dropdown(Dictionary<int, string> collection, DropdownData drop_data, float outer_width, float menu_height){
 //			GUIStyle dropdown_field = new GUIStyle (GUI.skin.textField);
 //			GUIStyle dropdown_menu_item = new GUIStyle (GUI.skin.label);

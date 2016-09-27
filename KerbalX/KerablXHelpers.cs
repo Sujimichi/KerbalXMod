@@ -45,6 +45,15 @@ namespace KerbalX
 	//(the same arg is also used to pass on the level of indentation when called recusively)
 	//handle with caution, if swallowed seek medical attention.
 	public class JSONX{
+
+		public static string toJSON(Dictionary<string, string> data, params object[] opts){
+			Dictionary<string, object> n_data = new Dictionary<string, object> ();
+			foreach(KeyValuePair<string, string> pair in data){
+				n_data.Add (pair.Key, (object)pair.Value);
+			}
+			return toJSON (n_data, opts);
+		}
+
 		public static string toJSON(Dictionary<string, object> data, params object[] opts){
 			int indent = 0;
 			bool do_indent = false;

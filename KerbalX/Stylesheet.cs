@@ -4,8 +4,12 @@ using UnityEngine;
 
 namespace KerbalX
 {
-	//defines a set of GUIStyle elements for various label and button styles
-	//it's like we need a sorta sheet of styles, maybe one that can cascade, a cascading style sheet if you will.
+	//StyleSheet defines a set of GUIStyle and assigns them as custom styles to a new skin which is Instantiated from the current GUI.skin
+	//StyleSheet.prepare will be called from inside OnGUI on the base class KerbalXWindow but only on the first call to OnGUI.
+	//That will Instantiate the new skin and set it to a static var on KerbalXWindow (KXskin), once it's set further calls to StyleSheet.prepare won't do anything
+	//Essentially this is a one time process that sets up all the GUIStyles needed and makes them available as named styles on the GUI.skin (OnGUI in KerbalXWindow 
+	//will set GUI.skin to the KXskin and unset it at the end so as to not effect other windows
+	//....it's like we need a sorta sheet of styles, maybe one that can cascade, a cascading style sheet if you will....
 	public class StyleSheet : MonoBehaviour
 	{
 

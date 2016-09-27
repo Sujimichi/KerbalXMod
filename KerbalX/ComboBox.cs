@@ -13,8 +13,8 @@ namespace KerbalX
 
 		public string active_anchor = null;
 		public Rect anchor_rect = new Rect(0,0,100,100);
-		public float list_height = 150;
 		public Rect container 	= new Rect(0,0,100,100);
+		public float list_height = 150;
 		public KerbalXWindow parent_window;
 		public Dictionary<int, string> sel_options = new Dictionary<int, string> ();
 		public ComboResponse response;
