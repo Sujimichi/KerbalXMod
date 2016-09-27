@@ -46,6 +46,10 @@
       <HintPath>..\..\..\..\KSP\dev_KSP_linux-1.2\KSP_Data\Managed\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Assembly-UnityScript-firstpass">
+      <HintPath>..\..\..\..\KSP\dev_KSP_linux-1.2\KSP_Data\Managed\Assembly-UnityScript-firstpass.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -59,6 +63,7 @@
     <Compile Include="Stylesheet.cs" />
     <Compile Include="ComboBox.cs" />
     <Compile Include="KerbalXActionGroupInterface.cs" />
+    <Compile Include="KerbalXToolBar.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

@@ -48,8 +48,12 @@ namespace KerbalX
 			{ "1", "" }, { "2", "" }, { "3", "" }, { "4", "" }, { "5", "" }, { "6", "" }, { "7", "" }, { "8", "" }, { "9", "" }, { "0", "" }, 
 			{ "stage", "" }, { "gears", "" }, { "lights", "" }, { "RCS", "" }, { "SAS", "" }, { "brakes", "" }, { "abort", "" }
 		};
+		public Dictionary<string, string> action_groups_blank = new Dictionary<string, string> () {	//Action group data. 
+			{ "1", "" }, { "2", "" }, { "3", "" }, { "4", "" }, { "5", "" }, { "6", "" }, { "7", "" }, { "8", "" }, { "9", "" }, { "0", "" }, 
+			{ "stage", "" }, { "gears", "" }, { "lights", "" }, { "RCS", "" }, { "SAS", "" }, { "brakes", "" }, { "abort", "" }
+		};
 
-
+		private List<KerbalXWindow> open_windows = new List<KerbalXWindow>();
 
 		private void Start()
 		{
@@ -60,6 +64,7 @@ namespace KerbalX
 			prevent_editor_click_through = true;
 			enable_request_handler ();
 			fetch_existing_craft ();
+			visible = false;
 
 			//bind events to happen when the editor loads a saved craft or when new craft is clicked
 			GameEvents.onEditorLoad.Add 	(this.on_editor_load);	
@@ -79,6 +84,28 @@ namespace KerbalX
 		{
 			base.on_login ();		//inherits call to hide login window
 			fetch_existing_craft ();//run check for users craft on KerablX
+		}
+
+		protected override void on_hide (){
+			open_windows.Clear ();
+			if(KerbalX.action_group_gui && KerbalX.action_group_gui.visible){
+				open_windows.Add (KerbalX.action_group_gui);
+			}
+			if(KerbalX.image_selector && KerbalX.image_selector.visible){
+				open_windows.Add (KerbalX.image_selector);
+			}
+			foreach(KerbalXWindow win in open_windows){
+				win.hide ();
+			}
+			if(KerbalXDialog.instance){
+				close_dialog ();
+			}
+		}
+
+		protected override void on_show (){
+			foreach(KerbalXWindow win in open_windows){
+				win.show ();
+			}
 		}
 
 		protected override void OnDestroy ()
@@ -340,6 +367,13 @@ namespace KerbalX
 			pictures.Clear ();
 			selected_style_index = 0;
 			selected_craft_id = 0;
+			if(KerbalX.action_group_gui){
+				KerbalX.action_group_gui.close ();
+			}
+			if(KerbalX.image_selector){
+				KerbalX.image_selector.hide ();
+			}
+			action_groups = action_groups_blank;
 		}
 
 

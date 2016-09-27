@@ -5,6 +5,7 @@ using System.Text;
 using System.Collections.Generic;
 
 using UnityEngine;
+using KSP.UI.Screens;
 
 namespace KerbalX
 {
@@ -27,7 +28,7 @@ namespace KerbalX
 		public static KerbalXImageSelector image_selector 			= null;
 		public static KerbalXActionGroupInterface action_group_gui 	= null;
 
-
+		public static ApplicationLauncherButton button = null;
 		//methodical things
 
 
@@ -47,6 +48,14 @@ namespace KerbalX
 		}
 		public static void show_log(){
 			foreach (string l in log_data) { Debug.Log (l); }
+		}
+
+		public static void toggle_upload_interface(){
+			if(KerbalX.upload_gui){
+				KerbalX.upload_gui.toggle ();
+			}else{
+				KerbalX.log ("UploadInterface has not been started");
+			}
 		}
 
 	}
@@ -175,7 +184,6 @@ namespace KerbalX
 	}
 
 
-
 	[KSPAddon(KSPAddon.Startup.AllGameScenes, false)]
 	public class KerbalXConsole : KerbalXWindow
 	{
@@ -191,10 +199,6 @@ namespace KerbalX
 		protected override void WindowContent(int win_id){
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
 
-
-			if (GUILayout.Button ("where are you")) {
-				Debug.Log (KerbalX.action_group_gui.window_pos.ToString ());
-			}
 
 			if (GUILayout.Button ("update existing craft")) {
 				KerbalXAPI.fetch_existing_craft (() => {});
@@ -239,7 +243,7 @@ namespace KerbalX
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class JumpStart : MonoBehaviour
 	{
-		public static bool autostart = true;
+		public static bool autostart = false;
 		public static string save_name = "default";
 		public static string craft_name = "testy";
 
