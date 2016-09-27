@@ -48,10 +48,6 @@ namespace KerbalX
 			{ "1", "" }, { "2", "" }, { "3", "" }, { "4", "" }, { "5", "" }, { "6", "" }, { "7", "" }, { "8", "" }, { "9", "" }, { "0", "" }, 
 			{ "stage", "" }, { "gears", "" }, { "lights", "" }, { "RCS", "" }, { "SAS", "" }, { "brakes", "" }, { "abort", "" }
 		};
-		public Dictionary<string, string> action_groups_blank = new Dictionary<string, string> () {	//Action group data. 
-			{ "1", "" }, { "2", "" }, { "3", "" }, { "4", "" }, { "5", "" }, { "6", "" }, { "7", "" }, { "8", "" }, { "9", "" }, { "0", "" }, 
-			{ "stage", "" }, { "gears", "" }, { "lights", "" }, { "RCS", "" }, { "SAS", "" }, { "brakes", "" }, { "abort", "" }
-		};
 
 		private List<KerbalXWindow> open_windows = new List<KerbalXWindow>();
 
@@ -64,7 +60,7 @@ namespace KerbalX
 			prevent_editor_click_through = true;
 			enable_request_handler ();
 			fetch_existing_craft ();
-			visible = false;
+			visible = true;
 
 			//bind events to happen when the editor loads a saved craft or when new craft is clicked
 			GameEvents.onEditorLoad.Add 	(this.on_editor_load);	
@@ -373,7 +369,13 @@ namespace KerbalX
 			if(KerbalX.image_selector){
 				KerbalX.image_selector.hide ();
 			}
-			action_groups = action_groups_blank;
+			if(KerbalXDialog.instance){
+				close_dialog ();
+			}
+			List<string> keys = new List<string> (action_groups.Keys);
+			foreach(string key in keys){
+				action_groups [key] = "";
+			}
 		}
 
 

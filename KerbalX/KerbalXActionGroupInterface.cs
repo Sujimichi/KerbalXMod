@@ -9,7 +9,6 @@ namespace KerbalX
 
 	public class KerbalXActionGroupInterface : KerbalXWindow
 	{
-		private Dictionary<string, string> action_groups;
 		private List<string> keys;
 //		private bool auto_close_action_group_panel = false;
 
@@ -23,8 +22,7 @@ namespace KerbalX
 		}
 
 		protected override void on_show (){
-			action_groups = KerbalX.upload_gui.action_groups;		//Fetch the current definition of action groups from the main upload gui
-			keys = new List<string>(action_groups.Keys);			//Get the names of action groups - used in itterating over action groups
+			keys = new List<string>(KerbalX.upload_gui.action_groups.Keys);	//Get the names of action groups - used in itterating over action groups
 //			if(EditorLogic.fetch.actionPanelBtn.interactable){		
 //				EditorLogic.fetch.actionPanelBtn.onClick.Invoke ();	//auto open the action group panel if it's not already open - TODO make this a setting.
 //				auto_close_action_group_panel = true;				//set to true to close it again when closing this window.
@@ -32,7 +30,7 @@ namespace KerbalX
 		}
 
 		protected override void on_hide(){
-			KerbalX.upload_gui.action_groups = action_groups;	//Put the altered action group info back onto the main upload gui
+//			KerbalX.upload_gui.action_groups = action_groups;	//Put the altered action group info back onto the main upload gui
 //			if(auto_close_action_group_panel){
 //				EditorLogic.fetch.partPanelBtn.onClick.Invoke ();
 //			}
@@ -76,7 +74,7 @@ namespace KerbalX
 		private void action_group_field(string name, string key, float container_width){
 			section (container_width, w => {
 				GUILayout.Label (name, width (w*0.2f));
-				action_groups[key] = GUILayout.TextArea(action_groups[key], width (w*0.7f));
+				KerbalX.upload_gui.action_groups[key] = GUILayout.TextArea(KerbalX.upload_gui.action_groups[key], width (w*0.7f));
 			});
 		}
 	}	 
