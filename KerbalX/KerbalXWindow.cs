@@ -142,7 +142,7 @@ namespace KerbalX
 			return dialog;
 		}
 		protected void close_dialog(){
-			GameObject.Destroy (KerbalXDialog.instance);
+			KerbalXDialog.close ();		//close instance of dialog if it exists.
 		}
 
 		//basically just syntax sugar for a call to AddOrGetComponent for specific named windows. (unfortunatly has nothing to do with launching rockets)

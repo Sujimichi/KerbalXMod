@@ -36,8 +36,10 @@ namespace KerbalX
 //			}
 		}
 
-		public void close(){
-			GameObject.Destroy (KerbalX.action_group_gui);	
+		public static void close(){
+			if(KerbalX.action_group_gui){
+				GameObject.Destroy (KerbalX.action_group_gui);	
+			}
 		}
 
 		protected override void WindowContent(int win_id){

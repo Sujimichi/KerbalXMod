@@ -74,6 +74,12 @@ namespace KerbalX
 		protected override void WindowContent(int win_id){
 			content (this);
 		}
+
+		public static void close(){
+			if(KerbalXDialog.instance){
+				GameObject.Destroy (KerbalXDialog.instance);
+			}
+		}
 	}
 
 

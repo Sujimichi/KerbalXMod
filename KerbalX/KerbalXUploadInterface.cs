@@ -59,9 +59,11 @@ namespace KerbalX
 			require_login = true;
 			prevent_editor_click_through = true;
 			enable_request_handler ();
-			fetch_existing_craft ();
 			visible = true;
 
+			if(visible){
+				on_show ();
+			}
 			//bind events to happen when the editor loads a saved craft or when new craft is clicked
 			GameEvents.onEditorLoad.Add 	(this.on_editor_load);	
 			GameEvents.onEditorRestart.Add 	(this.on_editor_new );
@@ -71,15 +73,24 @@ namespace KerbalX
 		public void on_editor_load(ShipConstruct a, KSP.UI.Screens.CraftBrowserDialog.LoadType b){
 			KerbalX.upload_gui.reset ();
 		}
+
 		//Callback for when then editor resets (new craft)
 		public void on_editor_new(){
 			KerbalX.upload_gui.reset ();
 		}
+
 		//Called after a succsessful login, if the login dialog was opened from this window.
 		protected override void on_login ()
 		{
 			base.on_login ();		//inherits call to hide login window
 			fetch_existing_craft ();//run check for users craft on KerablX
+		}
+
+		protected override void on_show (){
+			fetch_existing_craft ();
+			foreach(KerbalXWindow win in open_windows){
+				win.show ();
+			}
 		}
 
 		protected override void on_hide (){
@@ -98,23 +109,15 @@ namespace KerbalX
 			}
 		}
 
-		protected override void on_show (){
-			foreach(KerbalXWindow win in open_windows){
-				win.show ();
-			}
-		}
 
 		protected override void OnDestroy ()
 		{
 			base.OnDestroy (); //releases any UI locks on the editor
 			GameEvents.onEditorLoad.Remove 	  (this.on_editor_load);//unbind editor events
-			GameEvents.onEditorRestart.Remove (this.on_editor_new);
-			if(KerbalX.image_selector != null){						//destroy the ImageSelector if it's open
-				GameObject.Destroy (KerbalX.image_selector);		
-			}
-			if(KerbalX.action_group_gui != null){					//destroy the ActionGroupInterface if it's open
-				GameObject.Destroy (KerbalX.action_group_gui);		
-			}
+			GameEvents.onEditorRestart.Remove (this.on_editor_new );
+			KerbalXActionGroupInterface.close ();					//destroy action group interface (if it is open)
+			KerbalXImageSelector.close ();							//destroy image selector (if it is open)
+			KerbalXDialog.close ();									//destroy dialog (if one is open)
 		}
 
 		//Main Upload/Update interface!
@@ -359,23 +362,17 @@ namespace KerbalX
 		//reset interface
 		public void reset(){
 			KerbalX.log ("Resetting UploadInterface");
-			clear_errors ();
-			pictures.Clear ();
-			selected_style_index = 0;
-			selected_craft_id = 0;
-			if(KerbalX.action_group_gui){
-				KerbalX.action_group_gui.close ();
-			}
-			if(KerbalX.image_selector){
-				KerbalX.image_selector.hide ();
-			}
-			if(KerbalXDialog.instance){
-				close_dialog ();
-			}
+			KerbalXActionGroupInterface.close ();		//destroy action group interface (if it is open)
+			KerbalXImageSelector.close ();				//destroy image selector (if it is open)
+			KerbalXDialog.close ();						//destroy dialog (if one is open)
+			pictures.Clear ();							//remove all selected pictures
+			selected_style_index = 0;					//reset selected craft style to default (Ship)
+			selected_craft_id = 0;						//reset selected_craft_id (0 is non-value Database ID)
 			List<string> keys = new List<string> (action_groups.Keys);
-			foreach(string key in keys){
+			foreach(string key in keys){				//revert all values for action groups back to empty string
 				action_groups [key] = "";
 			}
+			clear_errors ();							//remove all errors (will also call autoheight, which is why this is called last)
 		}
 
 

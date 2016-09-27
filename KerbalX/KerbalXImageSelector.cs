@@ -70,6 +70,12 @@ namespace KerbalX
 			KerbalX.upload_gui.clear_errors ();
 		}
 
+		public static void close(){
+			if(KerbalX.image_selector){
+				GameObject.Destroy (KerbalX.image_selector);
+			}
+		}
+
 		protected override void WindowContent(int win_id){
 
 			if(mode == "url_entry"){
