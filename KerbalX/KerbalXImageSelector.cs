@@ -39,6 +39,7 @@ namespace KerbalX
 
 		private string mode = "pic_selector";
 		private int pics_per_row = 4;
+		private float pics_scroll_height = 300f;
 		private string[] file_types = new string[]{"jpg", "png"};
 
 		private Vector2 scroll_pos;
@@ -46,11 +47,14 @@ namespace KerbalX
 
 		private string pic_url 	 = "";
 		private string hover_ele = "";
+		private bool minimized = false;
+		private Rect normal_size;
 
 		private void Start(){
 			window_title = "KerbalX::ScreenShots";
 			float w = 640;
-			window_pos = new Rect((Screen.width/2 - w/2), Screen.height/3, w, 5);
+			window_pos 	= new Rect((Screen.width/2 - w/2), Screen.height/3, w, 5);
+			normal_size = new Rect (window_pos);
 			prevent_editor_click_through = true;
 			KerbalX.image_selector = this;
 			this.show (); //perform on_show actions when started
@@ -101,27 +105,45 @@ namespace KerbalX
 				});
 
 			}else{
+				if(!minimized){
+					section (w => {
+						v_section (w-100f, w2 => {
+							GUILayout.Label ("Select a picture for your craft", "h2", width (w2));
+							GUILayout.Label ("Click on pics below to add them", width (w2));
+						});
+						v_section (100f, w2 => {
+							if(GUILayout.Button ("or enter a url", width (w2), height (30) )){ change_mode ("url_entry"); }
+							if(GUILayout.Button ("close", width (w2), height (30) )){ this.hide (); }
+						});
+					});
+					
+				}
+
 				section (w => {
-					v_section (w-100f, w2 => {
-						GUILayout.Label ("Select a picture for your craft", "h2", width (w2));
-						GUILayout.Label ("Click on pics below to add them", width (w2));
-					});
-					v_section (100f, w2 => {
-						if(GUILayout.Button ("or enter a url", width (w2), height (30) )){ change_mode ("url_entry"); }
-						if(GUILayout.Button ("close", width (w2), height (30) )){ this.hide (); }
-					});
+					if (GUILayout.Button ("Take Screenshot now", "button.screenshot", width (w-40f))) {
+						grab_screenshot ();
+					}
+					if(GUILayout.Button ((minimized ? ">>" : "<<"), "button.screenshot.bold", width (40f))){
+						minimized = !minimized;
+						if (minimized) {
+							minimize ();
+						} else {
+							maximize ();
+						}
+					}
 				});
 
-				if (GUILayout.Button ("Take Screenshot now", "button.screenshot")) {
-					grab_screenshot ();
+				if(!minimized){
+					GUILayout.Label ("Grabs a screen shot of the current view (KX windows will hide while taking the pic).", "small");
 				}
-				GUILayout.Label ("Grabs a screen shot of the current view (KX windows will hide while taking the pic).", "small");
+
+
 
 				//Display picture selector - scrolling container of selectable pictures.
 				//picture files will have already been selected and sorted (by prepare_pics()) and then grouped into rows of 4 pics per row (by group_pics())
 				//but the files won't have been read yet, so the picture textures haven't been set.  Trying to load all picture textures on load is very time consuming.
 				//so instead pictures are loaded and have their texture set row by row, on demand as the user scrolls down.
-				if (pictures.Count > 0) {
+				if (pictures.Count > 0 && !minimized) {
 					int n = 0;
 					foreach(bool p in loaded_pics){ if(p){n++;}}
 					section (w => {
@@ -131,7 +153,7 @@ namespace KerbalX
 						}
 					});
 
-					scroll_pos = scroll (scroll_pos, 620f, 300f, w => {
+					scroll_pos = scroll (scroll_pos, 620f, pics_scroll_height, w => {
 						int row_n = 1;
 						foreach(List<PicData> row in groups){
 
@@ -195,6 +217,7 @@ namespace KerbalX
 				win.hide ();
 			}
 
+			maximize ();
 			Application.CaptureScreenshot (filename);
 			StartCoroutine (shutter (filename));		//shutter re-opens the windows. well, it's kinda the exact opposite of what a shutter does, but yeah....whatever
 		}
@@ -213,6 +236,19 @@ namespace KerbalX
 			foreach(KerbalXWindow win in open_windows){
 				win.show ();
 			}
+		}
+
+		public void minimize(){
+			minimized = true;
+			window_pos.height = 60f;
+			window_pos.width  = 250f;
+			footer = false;
+		}
+		public void maximize(){
+			minimized = false;
+			window_pos.height = normal_size.height;
+			window_pos.width = normal_size.width;
+			footer = true;
 		}
 
 		private void change_mode(string new_mode){

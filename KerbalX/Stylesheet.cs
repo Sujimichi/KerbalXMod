@@ -118,7 +118,11 @@ namespace KerbalX
 				screenshot_button.name = "button.screenshot";
 				screenshot_button.fontSize = 15;
 				screenshot_button.padding = new RectOffset (3, 3, 10, 10);
-				
+
+				GUIStyle screenshot_button_bold = new GUIStyle (screenshot_button);
+				screenshot_button_bold.name = "button.screenshot.bold";
+				screenshot_button_bold.fontStyle = FontStyle.Bold;
+
 				GUIStyle wrapped_button = new GUIStyle (GUI.skin.button);
 				wrapped_button.name = "button.wrapped";
 				wrapped_button.wordWrap = true;
@@ -163,7 +167,7 @@ namespace KerbalX
 				KerbalXWindow.KXskin.customStyles = new GUIStyle[]{ 
 					h1, h2, h3, hyperlink, hyperlink_h2, hyperlink_h3, alert, alert_h2, small, centered, 
 					pic_link, pic_hover, dark_back, dark_back_offset, blue_box, no_style,
-					login_button, upload_button, screenshot_button, wrapped_button,
+					login_button, upload_button, screenshot_button, screenshot_button_bold, wrapped_button,
 					combo_field, combo_bttn, combo_option, combo_option_hover
 
 				};

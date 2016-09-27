@@ -205,10 +205,14 @@ namespace KerbalX
 		protected override void WindowContent(int win_id){
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
 
+			if (GUILayout.Button ("size check")) {
+				KerbalX.log (KerbalX.image_selector.window_pos.ToString ());
+			}
 
 			if (GUILayout.Button ("update existing craft")) {
 				KerbalXAPI.fetch_existing_craft (() => {});
 			}
+
 			if(GUILayout.Button ("open interface")){
 				gameObject.AddOrGetComponent<KerbalXUploadInterface> ();
 			}
