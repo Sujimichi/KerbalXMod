@@ -33,7 +33,7 @@ namespace KerbalX
 		static public string joined(params string[] paths){
 			string path = paths [0];
 			for(int i=1; i<paths.Length; i++){
-				path = Path.Combine (path, paths[i]);
+				path = path + "/" + paths [i];
 			}
 			return path;
 		}

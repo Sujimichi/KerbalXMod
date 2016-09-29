@@ -252,7 +252,14 @@ namespace KerbalX
 			if(File.Exists ((origin_path))){
 				KerbalX.log ("moving file: " + origin_path + " to: " + png_path);
 				File.Move (origin_path,  png_path);
+			}else{																						//TODO find less hacky way of solving which Data folder to look in
+				origin_path = Paths.joined (KSPUtil.ApplicationRootPath, "KSP_x64_Data", filename);		//location where screenshot is created (as a png)
+				if (File.Exists ((origin_path))) {
+					KerbalX.log ("moving file: " + origin_path + " to: " + png_path);
+					File.Move (origin_path, png_path);
+				}
 			}
+
 			//re-open the KX windows (after the file has been moved so the ImageSelector will notice it).
 			foreach(KerbalXWindow win in open_windows){
 				win.show ();

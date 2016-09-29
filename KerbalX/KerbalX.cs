@@ -11,7 +11,9 @@ namespace KerbalX
 {
 	public class KerbalX
 	{
-		public static string site_url = "http://localhost:3000";
+//		public static string site_url = "http://localhost:3000";
+		public static string site_url = "http://192.168.1.2:3000";
+
 		public static string token_path = Paths.joined (KSPUtil.ApplicationRootPath, "KerbalX.key");
 		public static string screenshot_dir = Paths.joined (KSPUtil.ApplicationRootPath, "Screenshots"); //TODO make this a setting, oh and make settings.
 		public static string version = "0.0.2";
@@ -103,6 +105,7 @@ namespace KerbalX
 
 
 		private void Start(){
+
 			window_title = "KerbalX::Login";
 			window_pos = new Rect((Screen.width/2 - 400/2),100, 400, 5);
 			KerbalX.login_gui = this;

@@ -18,6 +18,7 @@ namespace KerbalX
 			{"logo large", 		GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo"), false)}, 		//664x120
 			{"editor_btn", 		GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "button"), false)},
 			{"editor_btn_hover",GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "button_hover"), false)}
+
 		};
 
 		public static void prepare(){

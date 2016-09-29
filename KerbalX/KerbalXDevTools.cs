@@ -10,7 +10,7 @@ namespace KerbalX
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class JumpStart : MonoBehaviour
 	{
-		public static bool autostart = true;
+		public static bool autostart = false;
 		public static string save_name = "default";
 		public static string craft_name = "testy";
 
@@ -61,8 +61,6 @@ namespace KerbalX
 
 		protected override void WindowContent(int win_id){
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
-
-	
 
 			if (GUILayout.Button ("update existing craft")) {
 				KerbalXAPI.fetch_existing_craft (() => {});
