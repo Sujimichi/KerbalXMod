@@ -10,7 +10,7 @@ namespace KerbalX
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class JumpStart : MonoBehaviour
 	{
-		public static bool autostart = false;
+		public static bool autostart = true;
 		public static string save_name = "default";
 		public static string craft_name = "testy";
 
@@ -62,23 +62,7 @@ namespace KerbalX
 		protected override void WindowContent(int win_id){
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
 
-			GUILayout.Label (RequestHandler.show_401_message.ToString ());
-
-			if (GUILayout.Button ("button1")) {
-				RequestHandler.show_401_message = true;
-			}
-
-			List<string> asset_names= new List<string> (StyleSheet.assets.Keys);
-			foreach(string name in asset_names){
-				GUILayout.Label (name);
-			}
-
-			if (GUILayout.Button ("button1")) {
-				KerbalX.button.SetTexture (StyleSheet.assets["editor_btn"]);
-			}
-			if (GUILayout.Button ("button2")) {
-				KerbalX.button.SetTexture (StyleSheet.assets["editor_btn_hover"]);
-			}
+	
 
 			if (GUILayout.Button ("update existing craft")) {
 				KerbalXAPI.fetch_existing_craft (() => {});
@@ -97,13 +81,6 @@ namespace KerbalX
 				login_window.after_login_action = () => {
 					on_login ();
 				};
-			}
-
-			if(KerbalX.action_group_gui){
-				GUILayout.Label ("action group gui open");
-			}
-			if(KerbalX.image_selector){
-				GUILayout.Label ("image selector loaded");
 			}
 
 			if(KerbalX.upload_gui != null){

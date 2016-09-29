@@ -46,6 +46,7 @@ namespace KerbalX
 		private int file_count = 0;
 
 		private string pic_url 	 = "";
+		private bool show_content_type_error = false;
 		private string hover_ele = "";
 		private bool minimized = false;
 		private Rect normal_size;
@@ -94,12 +95,31 @@ namespace KerbalX
 					section(w2 => {
 						pic_url = GUILayout.TextField (pic_url, width (w2-100f));
 						if(GUILayout.Button ("Add url", width (100f))){
-							PicData pic = new PicData();
-							pic.url = pic_url;
-							KerbalX.upload_gui.add_picture (pic);
-							this.hide ();
+							show_content_type_error = false;
+							HTTP.verify_image (pic_url, (content_type) => {
+								Debug.Log ("resp: " + content_type);
+								if(content_type.StartsWith ("image/")){
+									PicData pic = new PicData();
+									pic.url = pic_url;
+									KerbalX.upload_gui.add_picture (pic);
+									this.hide ();
+								}else{
+									show_content_type_error = true;
+								}
+							});
 						};	
 					});
+					if(GUILayout.Button ("check image", width (100f))){
+						HTTP.verify_image (pic_url, (content_type) => {
+							Debug.Log ("resp: " + content_type.StartsWith ("image/"));
+						});
+					}
+
+					if(show_content_type_error){
+						GUILayout.Label ("The entered URL does not return the content-type for an image", "alert");
+					}
+
+
 					if(GUILayout.Button ("or pic a pic from your pics, erm.", height (40f))){
 						change_mode ("pic_selector");
 					};

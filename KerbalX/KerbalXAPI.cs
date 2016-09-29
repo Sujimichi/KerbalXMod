@@ -17,6 +17,7 @@ namespace KerbalX
 {
 	//define delegates to be used to pass lambda statement as callbacks in request methods.
 	public delegate void RequestCallback(string data, int status_code);
+	public delegate void ImageUrlCheck(string content_type);
 	public delegate void ActionCallback();
 
 	public class KerbalXAPI
@@ -167,6 +168,7 @@ namespace KerbalX
 	{
 		public UnityWebRequest request; 
 
+
 		public static HTTP get(string url){
 			HTTP http = new HTTP ();
 			http.request = UnityWebRequest.Get (url);
@@ -189,6 +191,17 @@ namespace KerbalX
 			return http;
 		}
 
+		//This differs from the other HTTP static methods in that is doesn't return anything and only fetches the HEADER info from the url
+		//It also uses a different method in the RequestHandler which doesn't deal with status codes and only returns the Content-Type into the callback.
+		//This is the one route which will make calls to other sites, but only to urls entered by the user for images
+		public static void verify_image(string url, ImageUrlCheck callback){
+			HTTP http = new HTTP ();
+			http.request = UnityWebRequest.Get (url);
+			http.request.method = "HEAD";
+			http.send (callback);
+		}
+
+
 		public HTTP set_header(string key, string value){
 			request.SetRequestHeader (key, value);
 			return this;
@@ -202,6 +215,11 @@ namespace KerbalX
 			}else{
 				RequestHandler.instance.send_request (request, callback);
 			}
+		}
+
+		//override for send when using ImageUrlCheck callback
+		public void send(ImageUrlCheck callback){
+			RequestHandler.instance.send_request (request, callback);
 		}
 	}
 
@@ -217,22 +235,36 @@ namespace KerbalX
 
 		public static bool show_401_message = true;
 
-
 		private UnityWebRequest last_request  = null;
 		private RequestCallback last_callback = null;
-
-		public void send_request(UnityWebRequest request, RequestCallback callback){
-			StartCoroutine (transmit (request, callback));
-		}
 
 		public void try_again(){		
 			send_request(last_request, last_callback);
 		}
-
+		
 		public bool can_retry(){
 			return last_request != null;
 		}
 
+
+		//Used to fetch Content-Type Header info for urls entered by user for an image (to check if image is an image)
+		public void send_request(UnityWebRequest request, ImageUrlCheck callback){
+			StartCoroutine (transmit (request, callback));
+		}
+		
+		//Used in all requests to KerablX
+		public void send_request(UnityWebRequest request, RequestCallback callback){
+			StartCoroutine (transmit (request, callback));
+		}
+
+		//Used in request to url entered by user for image, returns just the content type header info
+		public IEnumerator transmit(UnityWebRequest request, ImageUrlCheck callback){
+			KerbalX.log("sending request to: " + request.url);
+			yield return request.Send ();
+			callback (request.GetResponseHeaders ()["Content-Type"]);
+		}
+
+		//Used in all interacton with KerbalX, called from a Coroutine and handles the response error codes from the site
 		public IEnumerator transmit(UnityWebRequest request, RequestCallback callback){
 
 			last_request  = null;
@@ -244,10 +276,11 @@ namespace KerbalX
 			KerbalX.log("sending request to: " + request.url);
 			yield return request.Send ();
 
+
 			if (request.isError){															//Request Failed, most likely due to being unable to get a response, therefore no status code
 				KerbalX.failed_to_connect = true;
 				KerbalX.log ("request failed: " + request.error);
-
+				
 				last_request = new UnityWebRequest (request.url, request.method);					//  \ create a copy of the request which is about to be sent
 				if(request.method != "GET"){														//  | if the request fails because of inability to connect to site
 					last_request.uploadHandler = new UploadHandlerRaw (request.uploadHandler.data);;// <  then try_again() can be used to fire the copied request
@@ -258,10 +291,10 @@ namespace KerbalX
 			}else{
 				int status_code = (int)request.responseCode;								//server responded - get status code
 				KerbalX.log ("request returned " + status_code + status_codes[status_code.ToString ()]); 						
-
+				
 				if (status_code == 500) {													//KerbalX server error
 					string error_message = "KerbalX server error!!\n" + 					//default error message incase server doesn't come back with something more helpful
-					                       "An error has occurred on KerbalX (it was probably Jebs fault)";
+						"An error has occurred on KerbalX (it was probably Jebs fault)";
 					var resp_data = JSON.Parse (request.downloadHandler.text);				//read response message and assuming there is one change the error_message
 					if (!(resp_data ["error"] == null || resp_data ["error"] == "")) {
 						error_message = "KerbalX server error!!\n" + resp_data ["error"];
@@ -269,11 +302,11 @@ namespace KerbalX
 					KerbalX.log (error_message);
 					KerbalX.server_error_message = error_message;							//Set the error_message on KerbalX, any open window will pick this up and render error dialog
 					callback (request.downloadHandler.text, status_code);					//Still call the callback, assumption is all callbacks will test status code for 200 before proceeding, this allows for further handling if needed
-
+					
 				}else if(status_code == 426){												//426 - Upgrade Required, only for a major version change that makes past versions incompatible with the site's API
 					KerbalX.lock_interface = true;
 					KerbalX.interface_lock_message = "This version of the KerbalX mod is out of date!\nYou need to get the latest version";
-
+					
 				}else if(status_code == 401) {												//401s (Unauthorized) - response to the user's token not being recognized.
 					if(RequestHandler.show_401_message == true){							//In the case of login/authenticate steps the 401 message is not shown (handled by login dialog)
 						KerbalX.server_error_message = "Authorization Failed\nKerbalX did not recognize your authorization token, perhaps you were logged out.";
@@ -281,9 +314,10 @@ namespace KerbalX
 					}else{
 						callback (request.downloadHandler.text, status_code);
 					}
+
 				}else if(status_code == 200 || status_code == 400 || status_code == 422){	//Error codes returned for OK and failed validations which are handled by the requesting method
 					callback (request.downloadHandler.text, status_code);					
-				
+					
 				}else{																		//Unhandled error codes - All other error codes. 
 					KerbalX.server_error_message = "Unknown Error!!\n" + request.downloadHandler.text;
 					callback (request.downloadHandler.text, status_code);
