@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 //using System.Reflection;
 using System.Collections;
@@ -62,6 +63,7 @@ namespace KerbalX
 		public static GUISkin KXskin = null;	//static variable to hold the reference to the custom skin. First window created will set it up
 
 		protected bool first_pass = true;		//used to perform an action on the first call of OnGUI, after which it is switched to false
+		protected bool is_dialog = false;
 
 
 		//show, hide and toggle - basically just change the value of the bool visible which defines whether or not OnGUI will draw the window.
@@ -84,9 +86,6 @@ namespace KerbalX
 			}
 		}
 
-		//overridable methods for class which inherit this class to define actions which are called on hide and show
-		protected virtual void on_hide(){ }
-		protected virtual void on_show(){ }
 
 		//unlock delay just adds a slight delay between an action and unlocking the editor.
 		//incases where a click on the window also result in closing the window (ie a close button) then the click would also get registered by whatever is behind the window
@@ -97,6 +96,11 @@ namespace KerbalX
 			EditorLogic.fetch.Unlock (window_id.ToString ()); //ensure any locks on the editor interface are release when hiding.
 		}
 
+		//overridable methods for class which inherit this class to define actions which are called on hide and show
+		protected virtual void on_hide(){ }
+		protected virtual void on_show(){ }
+
+		protected virtual void on_error(){}
 
 		//lock_iu and unlock_ui result in GUI.enabled being set around the call to draw the contents of the window.
 		//lets you disable the whole window (it also results in a change to the GUI.color which makes this change without a visual change).
@@ -199,16 +203,22 @@ namespace KerbalX
 
 			//if a server error has occured display error in dialog, but don't halt drawing of interface. 
 			if(KerbalX.server_error_message != null){
-				string message = KerbalX.server_error_message;
+				List<string> messages = KerbalX.server_error_message.Split (new string[] { Environment.NewLine }, StringSplitOptions.None).ToList ();
 				KerbalX.server_error_message = null;
+				string title = messages [0];
+				messages [0] = "";
+
 				KerbalXDialog dialog = show_dialog((d) => {
 					v_section (w => {
-						GUILayout.Label ("KerbalX Error!:", "alert.h2");
-						GUILayout.Label (message);
+						GUILayout.Label (title, "alert.h2");
+						foreach(string message in messages){
+							if(message != ""){GUILayout.Label (message);}
+						}
 						if(GUILayout.Button ("OK", height (30))){close_dialog (); }
 					});
 				});
-				dialog.window_title = "KerablX - Server Error";
+				dialog.window_title = title;
+				on_error ();
 			}
 
 			//If unable to connect to KerbalX halt drawing interface and replace with "try again" button"
@@ -217,8 +227,8 @@ namespace KerbalX
 				if (GUILayout.Button ("try again")) {
 					RequestHandler.instance.try_again ();
 				}
-			//If user is not logged in halt drawing interface and show login button"
-			}else if(require_login && KerbalXAPI.logged_out ()){
+			//If user is not logged in halt drawing interface and show login button (unless the window is a dialog window)"
+			}else if(!is_dialog && require_login && KerbalXAPI.logged_out ()){
 				GUILayout.Label ("You are not logged in.");
 				if (GUILayout.Button ("Login")) {
 					KerbalXLoginWindow login_window = gameObject.AddOrGetComponent<KerbalXLoginWindow> ();
@@ -226,8 +236,8 @@ namespace KerbalX
 						on_login ();
 					};
 				}
+			//otherwse all is good, draw the main content of the window as defined by WindowContent
 			}else{
-				//Draw the main content of the window as defined by WindowContent
 				if(gui_locked){
 					GUI.enabled = false;
 					GUI.color = new Color (1, 1, 1, 2); //This enables the GUI to be locked from input, but without changing it's appearance. 

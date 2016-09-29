@@ -65,6 +65,7 @@ namespace KerbalX
 		public static void authenticate_token(string current_token){
 			KerbalX.log("Authenticating with KerbalX.com...");
 			NameValueCollection data = new NameValueCollection (){{"token", current_token}};
+			RequestHandler.show_401_message = false;
 			HTTP.post (url_to ("api/authenticate"), data).send ((resp, code) => {
 				if(code==200){
 					var resp_data = JSON.Parse (resp);
@@ -84,6 +85,7 @@ namespace KerbalX
 			KerbalX.login_gui.login_failed = false;
 			KerbalX.log("loging into KerbalX.com...");
 			NameValueCollection data = new NameValueCollection (){{"username", username}, {"password", password}};
+			RequestHandler.show_401_message = false;
 			HTTP.post (url_to ("api/login"), data).send ((resp, code) => {
 				if(code==200){
 					var resp_data = JSON.Parse (resp);
@@ -94,6 +96,7 @@ namespace KerbalX
 					KerbalX.login_gui.after_login_action();
 				}else{
 					KerbalX.login_gui.login_failed = true;
+					KerbalX.login_gui.enable_login = true;
 				}
 				KerbalX.login_gui.enable_login = true;
 				KerbalX.login_gui.autoheight ();
@@ -194,6 +197,14 @@ namespace KerbalX
 	public class RequestHandler : MonoBehaviour
 	{
 		public static RequestHandler instance = null;
+		private static NameValueCollection status_codes = new NameValueCollection(){
+			{"200", "OK"}, {"401", "Unauthorized"}, {"404", "Not Found"}, {"500", "Server Error!"}
+		};
+
+
+		public static bool show_401_message = true;
+
+
 		private UnityWebRequest last_request  = null;
 		private RequestCallback last_callback = null;
 
@@ -232,24 +243,31 @@ namespace KerbalX
 				
 			}else{
 				int status_code = (int)request.responseCode;								//server responded - get status code
+				KerbalX.log ("request returned " + status_code + status_codes[status_code.ToString ()]); 						
+
 				if(status_code == 500){														//KerbalX server error
 					string error_message = "An error has occurred on KerbalX " +			//default error message incase server doesn't come back with something more helpful
 						"(it was probably Jebs fault) - Error 500";
 					var resp_data = JSON.Parse (request.downloadHandler.text);				//read response message and assuming there is one change the error_message
 					if(!(resp_data["error"] == null || resp_data["error"] == "")){
-						error_message = "KerbalX server error:\n" + resp_data["error"];
+						error_message = "KerbalX server error!!\n" + resp_data["error"];
 					}
-
-					KerbalX.log ("request returned 500 - Server Error!");
 					KerbalX.log (error_message);
 					KerbalX.server_error_message = error_message;							//Set the error_message on KerbalX, any open window will pick this up and render error dialog
 					callback (request.downloadHandler.text, status_code);					//Still call the callback, assumption is all callbacks will test status code for 200 before proceeding, this allows for further handling if needed
-				}else{
-					KerbalX.log ("request returned " + status_code); 						//All other status codes - will prob add separate handling of 404 when downloads get added TODO
-					callback (request.downloadHandler.text, status_code);					//401s (Unauthorized) will get handled by login/authenticate methods 
 
+				}else if(status_code == 401) {												//401s (Unauthorized) will get handled by login/authenticate methods 
+					if(RequestHandler.show_401_message == true){
+						KerbalX.server_error_message = "Authorization Failed\nKerbalX did not recognize your authorization token, perhaps you were logged out.";
+						KerbalXAPI.log_out ();
+					}else{
+						callback (request.downloadHandler.text, status_code);
+					}
+				}else{
+					callback (request.downloadHandler.text, status_code);					//All other status codes - will prob add separate handling of 404 when downloads get added TODO
 				}
 				request.Dispose ();
+				RequestHandler.show_401_message = true;
 			}
 		}
 	}

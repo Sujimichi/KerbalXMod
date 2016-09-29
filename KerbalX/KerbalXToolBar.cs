@@ -11,6 +11,7 @@ namespace KerbalX
 		public Texture button_texture = new Texture();
 
 		private void Awake(){
+//			StyleSheet.load_assets ();
 			button_texture = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "button"), false); 
 			GameEvents.onGUIApplicationLauncherReady.Add (this.app_launcher_ready);
 			GameEvents.onGUIApplicationLauncherDestroyed.Add (this.remove_from_toolbar);
@@ -28,12 +29,20 @@ namespace KerbalX
 			KerbalX.log ("Adding buttons to toolbar");
 			KerbalX.button = ApplicationLauncher.Instance.AddModApplication (
 				KerbalX.toggle_upload_interface, KerbalX.toggle_upload_interface, 
-				null, null, 
+				editor_btn_hover_on, editor_btn_hover_off, 
 				null, null, 
 				ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH, 
-				button_texture
+				StyleSheet.assets["editor_btn"]
 			);
 		}
+
+		public void editor_btn_hover_on(){
+			KerbalX.button.SetTexture (StyleSheet.assets["editor_btn_hover"]);
+		}
+		public void editor_btn_hover_off(){
+			KerbalX.button.SetTexture (StyleSheet.assets["editor_btn"]);
+		}
+
 		public void remove_from_toolbar(){
 			KerbalX.log ("Removing buttons from toolbar");
 			ApplicationLauncher.Instance.RemoveModApplication (KerbalX.button);

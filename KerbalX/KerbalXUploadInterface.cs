@@ -59,7 +59,7 @@ namespace KerbalX
 			require_login = true;
 			prevent_editor_click_through = true;
 			enable_request_handler ();
-			visible = true;
+			visible = false;
 
 			if(visible){
 				on_show ();
@@ -91,6 +91,10 @@ namespace KerbalX
 			foreach(KerbalXWindow win in open_windows){
 				win.show ();
 			}
+		}
+
+		protected override void on_error (){
+			after_upload ();
 		}
 
 		protected override void on_hide (){
@@ -453,12 +457,13 @@ namespace KerbalX
 					GUILayout.Space (10f);
 					if(GUILayout.Button (craft_url, "hyperlink.h2", width (500f))){
 						Application.OpenURL (craft_url);
+						close_dialog ();
 					}
-					if(GUILayout.Button (StyleSheet.assets["logo_large"], "no_style", width (500f), height (90.36f))){
+					if(GUILayout.Button (StyleSheet.assets["logo large"], "no_style", width (500f), height (90.36f))){
 						Application.OpenURL (craft_url);
+						close_dialog ();
 					}
 					GUILayout.Label ("Click the link (or logo) to view your craft.\nIf you want to the page layout click the \"Edit Craft\" link at the top of the page.", "small");
-//					GUILayout.Label (d.window_pos.ToString ());
 					section (w2 => {
 						GUILayout.FlexibleSpace ();
 						if(GUILayout.Button ("close", width (50f))){

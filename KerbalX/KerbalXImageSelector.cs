@@ -63,6 +63,7 @@ namespace KerbalX
 
 		protected override void on_show(){
 			change_mode ("pic_selector");
+			maximize ();
 			pic_url = "";
 			int count = picture_files ().Count;
 			if(count != file_count){
