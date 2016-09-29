@@ -13,12 +13,6 @@ namespace KerbalX
 	public class StyleSheet : MonoBehaviour
 	{
 
-//		public static Texture load_texture(string name){
-//			KerbalX.log ("LOADING TEXTURE YO BICHES -- " + name);
-//			return assets [name];
-//		}
-
-
 		public static Dictionary<string, Texture> assets = new Dictionary<string, Texture> (){
 			{"logo_small", 		GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo_small"), false)}, 	//166x30
 			{"logo large", 		GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo"), false)}, 		//664x120
@@ -26,25 +20,9 @@ namespace KerbalX
 			{"editor_btn_hover",GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "button_hover"), false)}
 		};
 
-//		public static void load_assets(){
-//			Texture2D kx_logo_small 		= GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo_small"), false); //166x30
-//			Texture2D kx_logo_large 		= GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo"), false); //664x120
-//			Texture2D editor_button 		= GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "button"), false); 
-//			Texture2D editor_button_hover 	= GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "button_hover"), false); 
-//			assets ["KXlogo_small"] = kx_logo_small;
-//			assets ["KXlogo"] = kx_logo_large;
-//			assets ["button"] = editor_button;
-//			assets ["button_hover"] = editor_button_hover;
-//			assets.Add ("logo_small", kx_logo_small);
-//			assets.Add ("logo_large", kx_logo_large);
-//			assets.Add ("editor_button", editor_button);
-//			assets.Add ("editor_button_hover", editor_button_hover);
-//		}
-
 		public static void prepare(){
 
 			if(KerbalXWindow.KXskin == null){
-
 
 				Texture2D blue_background = new Texture2D(1, 1,   TextureFormat.RGBA32, false);
 				blue_background.SetPixel(0, 0, new Color (0.4f,0.5f,0.9f,1));

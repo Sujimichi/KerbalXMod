@@ -34,6 +34,16 @@ namespace KerbalX
 			return kx_username;
 		}
 
+		private static void save_token(string token){
+			File.WriteAllText(KerbalX.token_path, token);
+		}
+		
+		//takes partial url and returns full url to site; ie url_to("some/place") -> "http://whatever_domain_site_url_defines.com/some/place"
+		public static string url_to (string path){
+			if(!path.StartsWith ("/")){ path = "/" + path;}
+			return KerbalX.site_url + path;
+		}
+		
 		//Check if Token file exists and if so authenticate it with KerbalX. Otherwise instruct login window to display login fields.
 		public static void load_and_authenticate_token(){
 			KerbalX.login_gui.enable_login = false;
@@ -51,30 +61,24 @@ namespace KerbalX
 			}
 		}
 
-		private static void save_token(string token){
-			File.WriteAllText(KerbalX.token_path, token);
-		}
-
-		//takes partial url and returns full url to site; ie url_to("some/place") -> "http://whatever_domain_site_url_defines.com/some/place"
-		public static string url_to (string path){
-			if(!path.StartsWith ("/")){ path = "/" + path;}
-			return KerbalX.site_url + path;
-		}
-
 		//make request to site to authenticate token 
 		public static void authenticate_token(string current_token){
 			KerbalX.log("Authenticating with KerbalX.com...");
 			NameValueCollection data = new NameValueCollection (){{"token", current_token}};
-			RequestHandler.show_401_message = false;
+			RequestHandler.show_401_message = false; //don't show error dialog
 			HTTP.post (url_to ("api/authenticate"), data).send ((resp, code) => {
 				if(code==200){
 					var resp_data = JSON.Parse (resp);
 					kx_username = resp_data["username"];
 					token = current_token;
+					if(!String.IsNullOrEmpty (resp_data["update_available"])){
+						KerbalX.login_gui.show_upgrade_available_message(resp_data["update_available"]);
+					}
 					KerbalX.login_gui.after_login_action();
 				}else{
 					KerbalX.login_gui.enable_login = true;
 				}
+				KerbalX.login_gui.enable_login = true;
 				KerbalX.login_gui.autoheight ();
 			});
 		}
@@ -93,6 +97,10 @@ namespace KerbalX
 					save_token (resp_data["token"]);
 					kx_username = resp_data["username"];
 					KerbalX.login_gui.login_successful = true;
+					KerbalX.log ("upgrade message: '" + resp_data["update_available"] + "'");
+					if(!String.IsNullOrEmpty (resp_data["update_available"])){
+						KerbalX.login_gui.show_upgrade_available_message(resp_data["update_available"]);
+					}
 					KerbalX.login_gui.after_login_action();
 				}else{
 					KerbalX.login_gui.login_failed = true;
@@ -112,7 +120,8 @@ namespace KerbalX
 			//TODO delete token file.
 		}
 
-
+		//Fetches data on the users current craft on the site.  This is kept in a Dictionary of craft_id => Dict of key value pairs....here let me explain it in Ruby;
+		//{craft_id => {:id => craft.id, :name => craft.name, :version => craft.ksp_version, :url => craft.unique_url}, ...}
 		public static void fetch_existing_craft(ActionCallback callback){
 			HTTP.get (url_to ("api/existing_craft.json")).set_header ("token", KerbalXAPI.token).send ((resp, code) => {
 				if(code==200){
@@ -135,18 +144,20 @@ namespace KerbalX
 			});
 		}
 
+		//Send new craft to Mun....or KerbalX.com as a POST request
 		public static void upload_craft(WWWForm craft_data, RequestCallback callback){
 			HTTP http = HTTP.post (url_to ("api/craft"), craft_data);
 			http.set_header ("token", KerbalXAPI.token);
-			http.request.SetRequestHeader ("Content-Type", "multipart/form-data");
+			http.set_header ("Content-Type", "multipart/form-data");
 			http.send (callback);
 		}
 
+		//Update existing craft on KerbalX as a PUT request with the KerbalX database ID of the craft to be updated
 		public static void update_craft(int id, WWWForm craft_data, RequestCallback callback){
 			HTTP http = HTTP.post (url_to ("api/craft/" + id), craft_data);
 			http.request.method = "PUT"; //because unity's PUT method doesn't take a form, so we create a POST and then change the verb.
 			http.set_header ("token", KerbalXAPI.token);
-			http.request.SetRequestHeader ("Content-Type", "multipart/form-data");
+			http.set_header ("Content-Type", "multipart/form-data");
 			http.send (callback);
 		}
 	}
@@ -184,6 +195,8 @@ namespace KerbalX
 		}
 
 		public void send(RequestCallback callback){
+			set_header ("MODCLIENT", "KerbalXMod");
+			set_header ("MODCLIENTVERSION", KerbalX.version);
 			if(RequestHandler.instance == null){
 				throw new Exception ("[KerbalX] RequestHandler is not ready, unable to make request");
 			}else{
@@ -226,8 +239,9 @@ namespace KerbalX
 			last_callback = null;
 			KerbalX.server_error_message = null;
 			KerbalX.failed_to_connect = false;
-			KerbalX.log("sending request to: " + request.url);
+			KerbalX.lock_interface = false;
 
+			KerbalX.log("sending request to: " + request.url);
 			yield return request.Send ();
 
 			if (request.isError){															//Request Failed, most likely due to being unable to get a response, therefore no status code
@@ -245,26 +259,34 @@ namespace KerbalX
 				int status_code = (int)request.responseCode;								//server responded - get status code
 				KerbalX.log ("request returned " + status_code + status_codes[status_code.ToString ()]); 						
 
-				if(status_code == 500){														//KerbalX server error
-					string error_message = "An error has occurred on KerbalX " +			//default error message incase server doesn't come back with something more helpful
-						"(it was probably Jebs fault) - Error 500";
+				if (status_code == 500) {													//KerbalX server error
+					string error_message = "KerbalX server error!!\n" + 					//default error message incase server doesn't come back with something more helpful
+					                       "An error has occurred on KerbalX (it was probably Jebs fault)";
 					var resp_data = JSON.Parse (request.downloadHandler.text);				//read response message and assuming there is one change the error_message
-					if(!(resp_data["error"] == null || resp_data["error"] == "")){
-						error_message = "KerbalX server error!!\n" + resp_data["error"];
+					if (!(resp_data ["error"] == null || resp_data ["error"] == "")) {
+						error_message = "KerbalX server error!!\n" + resp_data ["error"];
 					}
 					KerbalX.log (error_message);
 					KerbalX.server_error_message = error_message;							//Set the error_message on KerbalX, any open window will pick this up and render error dialog
 					callback (request.downloadHandler.text, status_code);					//Still call the callback, assumption is all callbacks will test status code for 200 before proceeding, this allows for further handling if needed
 
-				}else if(status_code == 401) {												//401s (Unauthorized) will get handled by login/authenticate methods 
-					if(RequestHandler.show_401_message == true){
+				}else if(status_code == 426){												//426 - Upgrade Required, only for a major version change that makes past versions incompatible with the site's API
+					KerbalX.lock_interface = true;
+					KerbalX.interface_lock_message = "This version of the KerbalX mod is out of date!\nYou need to get the latest version";
+
+				}else if(status_code == 401) {												//401s (Unauthorized) - response to the user's token not being recognized.
+					if(RequestHandler.show_401_message == true){							//In the case of login/authenticate steps the 401 message is not shown (handled by login dialog)
 						KerbalX.server_error_message = "Authorization Failed\nKerbalX did not recognize your authorization token, perhaps you were logged out.";
 						KerbalXAPI.log_out ();
 					}else{
 						callback (request.downloadHandler.text, status_code);
 					}
-				}else{
-					callback (request.downloadHandler.text, status_code);					//All other status codes - will prob add separate handling of 404 when downloads get added TODO
+				}else if(status_code == 200 || status_code == 400 || status_code == 422){	//Error codes returned for OK and failed validations which are handled by the requesting method
+					callback (request.downloadHandler.text, status_code);					
+				
+				}else{																		//Unhandled error codes - All other error codes. 
+					KerbalX.server_error_message = "Unknown Error!!\n" + request.downloadHandler.text;
+					callback (request.downloadHandler.text, status_code);
 				}
 				request.Dispose ();
 				RequestHandler.show_401_message = true;

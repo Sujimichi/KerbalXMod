@@ -14,12 +14,18 @@ namespace KerbalX
 		public static string site_url = "http://localhost:3000";
 		public static string token_path = Paths.joined (KSPUtil.ApplicationRootPath, "KerbalX.key");
 		public static string screenshot_dir = Paths.joined (KSPUtil.ApplicationRootPath, "Screenshots"); //TODO make this a setting, oh and make settings.
+		public static string version = "0.0.2";
+
 
 		public static bool failed_to_connect = false;
 		public static string server_error_message = null;
+		public static bool lock_interface = false;
+		public static string interface_lock_message = null;
+
 		public static List<string> log_data = new List<string>();
 
 		public static Dictionary<int, Dictionary<string, string>> existing_craft; //container for listing of user's craft already on KX and some details about them.
+
 
 		//window handles (cos a window without a handle is just a pane)
 		public static KerbalXConsole console 						= null;
@@ -106,6 +112,19 @@ namespace KerbalX
 			if (KerbalXAPI.logged_out()) {
 				KerbalXAPI.load_and_authenticate_token ();	
 			}
+		}
+
+		public void show_upgrade_available_message(string message){
+			KerbalXDialog dialog = show_dialog((d) => {
+				v_section (w => {
+					GUILayout.Label ("KerbalX Update Available", "h2");
+					GUILayout.Label	("A new version of the KerbalX mod is available");
+					GUILayout.Label (message);
+					if(GUILayout.Button ("OK", height (30))){close_dialog (); }
+				});
+			});
+			dialog.window_title = "KerbaX - Update Available";
+			dialog.window_pos = new Rect ((Screen.width / 2 - 400 / 2), (Screen.height / 2)-100, 400, 5);
 		}
 
 		protected override void WindowContent(int win_id){

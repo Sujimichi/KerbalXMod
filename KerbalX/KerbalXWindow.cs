@@ -100,7 +100,7 @@ namespace KerbalX
 		protected virtual void on_hide(){ }
 		protected virtual void on_show(){ }
 
-		protected virtual void on_error(){}
+		protected virtual void on_error(){ }
 
 		//lock_iu and unlock_ui result in GUI.enabled being set around the call to draw the contents of the window.
 		//lets you disable the whole window (it also results in a change to the GUI.color which makes this change without a visual change).
@@ -218,8 +218,8 @@ namespace KerbalX
 					});
 				});
 				dialog.window_title = title;
-				on_error ();
 			}
+
 
 			//If unable to connect to KerbalX halt drawing interface and replace with "try again" button"
 			if (KerbalX.failed_to_connect) {
@@ -228,7 +228,7 @@ namespace KerbalX
 					RequestHandler.instance.try_again ();
 				}
 			//If user is not logged in halt drawing interface and show login button (unless the window is a dialog window)"
-			}else if(!is_dialog && require_login && KerbalXAPI.logged_out ()){
+			} else if (!is_dialog && require_login && KerbalXAPI.logged_out ()) {
 				GUILayout.Label ("You are not logged in.");
 				if (GUILayout.Button ("Login")) {
 					KerbalXLoginWindow login_window = gameObject.AddOrGetComponent<KerbalXLoginWindow> ();
@@ -236,6 +236,11 @@ namespace KerbalX
 						on_login ();
 					};
 				}
+
+			//If the interface lock has been set (ie for upgrade required), halt drawing interface and show message;
+			} else if (KerbalX.lock_interface) {
+				GUILayout.Label (KerbalX.interface_lock_message, "h3");
+				on_error ();
 			//otherwse all is good, draw the main content of the window as defined by WindowContent
 			}else{
 				if(gui_locked){
