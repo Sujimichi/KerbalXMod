@@ -71,12 +71,12 @@ namespace KerbalX
 
 		//Callback for when the editor loads a craft
 		public void on_editor_load(ShipConstruct a, KSP.UI.Screens.CraftBrowserDialog.LoadType b){
-			KerbalX.upload_gui.reset ();
+			if (visible) {KerbalX.upload_gui.reset ();}
 		}
 
 		//Callback for when then editor resets (new craft)
 		public void on_editor_new(){
-			KerbalX.upload_gui.reset ();
+			if (visible) {KerbalX.upload_gui.reset ();}
 		}
 
 		//Called after a succsessful login, if the login dialog was opened from this window.
@@ -87,7 +87,9 @@ namespace KerbalX
 		}
 
 		protected override void on_show (){
-			fetch_existing_craft ();
+			if(remote_craft.Count == 0){
+				fetch_existing_craft ();
+			}
 			foreach(KerbalXWindow win in open_windows){
 				win.show ();
 			}
@@ -366,6 +368,7 @@ namespace KerbalX
 		//reset interface
 		public void reset(){
 			KerbalX.log ("Resetting UploadInterface");
+			check_for_matching_craft_name ();
 			KerbalXActionGroupInterface.close ();		//destroy action group interface (if it is open)
 			KerbalXImageSelector.close ();				//destroy image selector (if it is open)
 			KerbalXDialog.close ();						//destroy dialog (if one is open)

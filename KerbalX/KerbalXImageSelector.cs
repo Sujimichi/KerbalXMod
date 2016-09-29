@@ -54,7 +54,7 @@ namespace KerbalX
 		private void Start(){
 			window_title = "KerbalX::ScreenShots";
 			float w = 640;
-			window_pos 	= new Rect((Screen.width/2 - w/2), Screen.height/3, w, 5);
+			window_pos 	= new Rect((Screen.width/2 - w/2)-200, 50, w, 5);
 			normal_size = new Rect (window_pos);
 			prevent_editor_click_through = true;
 			KerbalX.image_selector = this;

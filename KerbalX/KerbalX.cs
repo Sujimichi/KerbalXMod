@@ -107,7 +107,8 @@ namespace KerbalX
 		private void Start(){
 
 			window_title = "KerbalX::Login";
-			window_pos = new Rect((Screen.width/2 - 400/2),100, 400, 5);
+			//window_pos = new Rect((Screen.width/2 - 400/2),100, 400, 5);
+			window_pos = new Rect (50, 50, 400, 5);
 			KerbalX.login_gui = this;
 			enable_request_handler ();
 
@@ -127,7 +128,7 @@ namespace KerbalX
 				});
 			});
 			dialog.window_title = "KerbaX - Update Available";
-			dialog.window_pos = new Rect ((Screen.width / 2 - 400 / 2), (Screen.height / 2)-100, 400, 5);
+			dialog.window_pos = new Rect(window_pos.x + window_pos.width + 10, window_pos.y, 400f, 5);
 		}
 
 		protected override void WindowContent(int win_id){
@@ -142,6 +143,10 @@ namespace KerbalX
 					GUILayout.Label ("password", GUILayout.Width(60f));
 					password = GUILayout.PasswordField (password, '*', 255, width (w-60f));
 				});
+				Event e = Event.current;
+				if(e.type == EventType.keyDown && e.keyCode == KeyCode.Return && !String.IsNullOrEmpty (username) && !String.IsNullOrEmpty (password)){
+					KerbalXAPI.login (username, password);
+				}
 				GUI.enabled = true;
 			}
 
@@ -157,14 +162,14 @@ namespace KerbalX
 						KerbalXDialog dialog = show_dialog((d) => {
 							string message = "The KerbalX.key is a token that is used to authenticate you with the site." +
 								"\nIt will also persist your login, so next time you start KSP you won't need to login again." +
-								"\nIf you want to login to KerbalX from multiple instances of KSP copy the KerbalX.key file into each install.";
+								"\nIf you want to login to KerbalX from multiple KSP installs, copy the KerbalX.key file into each install.";
 							GUILayout.Label (message);
 							if(GUILayout.Button ("OK")){
 								close_dialog ();
 							};
 						});
-						dialog.window_pos = new Rect(window_pos.x + window_pos.width + 10, window_pos.y, 300f, 5);
 						dialog.window_title = "KerablX Token File";
+						dialog.window_pos = new Rect(window_pos.x + window_pos.width + 10, window_pos.y, 350f, 5);
 					}
 				});
 			}

@@ -175,7 +175,7 @@ namespace KerbalX
 		//MonoBehaviour methods
 
 		//called on each frame, handles drawing the window and will assign the next window id if it's not set
-		protected virtual void OnGUI()
+		protected void OnGUI()
 		{
 			if(first_pass){
 				first_pass = false;
