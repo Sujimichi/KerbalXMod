@@ -58,9 +58,16 @@ namespace KerbalX
 			//			prevent_editor_click_through = true;
 		}
 
+		long milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
 		protected override void WindowContent(int win_id){
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
+
+			GUILayout.Label (milliseconds.ToString ());
+
+			if (GUILayout.Button ("reset")) {
+				milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+			}
 
 			if (GUILayout.Button ("update existing craft")) {
 				KerbalXAPI.fetch_existing_craft (() => {});

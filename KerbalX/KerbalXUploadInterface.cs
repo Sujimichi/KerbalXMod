@@ -21,7 +21,7 @@ namespace KerbalX
 		private List<string> errors = new List<string>();		//container for an errors which occur and need displaying to the user
 		private string transfer_activity = null;					//message to display while uploaded/updating
 		private int upload_ticker_pos = 0;						//used in upload progress ticker
-		private int frame_count = 0;
+		private long time_counter = 0;
 
 		private string mode 		= "upload";					//Interface mode ("upload" || "update")
 		private float win_width 	= 410f;						//window with
@@ -88,6 +88,7 @@ namespace KerbalX
 			fetch_existing_craft ();//run check for users craft on KerablX
 		}
 
+		//Called when window is made visible, will re-show other windows which were open when it was made hidden
 		protected override void on_show (){
 			if(remote_craft.Count == 0){
 				fetch_existing_craft ();
@@ -97,6 +98,7 @@ namespace KerbalX
 			}
 		}
 
+		//Called when window is has visible set to false, tracks which other windows are open and closes dialog if one is present.
 		protected override void on_hide (){
 			open_windows.Clear ();
 			if(KerbalX.action_group_gui && KerbalX.action_group_gui.visible){
@@ -113,6 +115,7 @@ namespace KerbalX
 			}
 		}
 
+		//Callback from base class in OnGUI, if a server error message has been set.  Calls after upload actions to clean up interface.
 		protected override void on_error (){
 			after_upload ();
 		}
@@ -317,7 +320,7 @@ namespace KerbalX
 						if(transfer_activity != null){
 							GUILayout.Label (transfer_activity, "h2");
 						}
-						progress_spinner (w, 5, 50);
+						progress_spinner (w, 5, 20);
 					});
 				}
 
@@ -359,7 +362,6 @@ namespace KerbalX
 			enable_upload_bttn = false;	//disable upload button to prevent multiple requests being fired at once.
 			if(KerbalX.image_selector != null){KerbalX.image_selector.hide ();}
 			upload_ticker_pos = 0;//this and frame_count used in the upload in progress....thing, in progess animation
-			frame_count = 0;  		
 		}
 
 		//common actions to perform after upload/update
@@ -623,9 +625,12 @@ namespace KerbalX
 			}
 		}
 
+		private long millisecs(){
+			return DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+		}
 		//Derpy little upload waiting thing.
 		//takes a container width, number of boxes to draw and how fast to cycle (lower is faster)
-		private void progress_spinner(float w, int box_count, int speed){
+		private void progress_spinner(float w, int box_count, int interval){
 			GUIStyle centered_container = new GUIStyle();
 			float box_size = 15f;
 			float space_size = 20;
@@ -633,11 +638,10 @@ namespace KerbalX
 			centered_container.padding = new RectOffset(p,p,0,0);
 			style_override = centered_container;
 			section (w2 => {
-				frame_count++;
-				if(frame_count > speed){
+				if(millisecs () - time_counter > interval){
 					upload_ticker_pos++;
-					if(upload_ticker_pos > box_count){upload_ticker_pos=0;}
-					frame_count = 0;
+					if(upload_ticker_pos > box_count + 20){upload_ticker_pos=0;} //+20 for delay after each phase
+					time_counter = millisecs ();
 				}
 				for(int i=0; i < box_count; i++){
 					GUILayout.Label ("", (upload_ticker_pos == i ? "box.blue" : "box"), width (box_size), height (box_size));
