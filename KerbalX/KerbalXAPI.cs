@@ -62,20 +62,18 @@ namespace KerbalX
 			}
 		}
 
-		//make request to site to authenticate token 
+		//make request to site to authenticate token. If token authentication fails, no error message is shown, it just sets the login window to show u-name/password fields.
 		public static void authenticate_token(string current_token){
 			KerbalX.log("Authenticating with KerbalX.com...");
 			NameValueCollection data = new NameValueCollection (){{"token", current_token}};
-			RequestHandler.show_401_message = false; //don't show error dialog
+			RequestHandler.show_401_message = false; //don't show standard 401 error dialog
 			HTTP.post (url_to ("api/authenticate"), data).send ((resp, code) => {
 				if(code==200){
 					var resp_data = JSON.Parse (resp);
 					kx_username = resp_data["username"];
 					token = current_token;
-					if(!String.IsNullOrEmpty (resp_data["update_available"])){
-						KerbalX.login_gui.show_upgrade_available_message(resp_data["update_available"]);
-					}
 					KerbalX.login_gui.after_login_action();
+					KerbalX.login_gui.show_upgrade_available_message(resp_data["update_available"]); //triggers display of update available message if the passed string is not empty
 				}else{
 					KerbalX.login_gui.enable_login = true;
 				}
@@ -90,7 +88,7 @@ namespace KerbalX
 			KerbalX.login_gui.login_failed = false;
 			KerbalX.log("loging into KerbalX.com...");
 			NameValueCollection data = new NameValueCollection (){{"username", username}, {"password", password}};
-			RequestHandler.show_401_message = false;
+			RequestHandler.show_401_message = false; //don't show standard 401 error dialog
 			HTTP.post (url_to ("api/login"), data).send ((resp, code) => {
 				if(code==200){
 					var resp_data = JSON.Parse (resp);
@@ -98,11 +96,8 @@ namespace KerbalX
 					save_token (resp_data["token"]);
 					kx_username = resp_data["username"];
 					KerbalX.login_gui.login_successful = true;
-					KerbalX.log ("upgrade message: '" + resp_data["update_available"] + "'");
-					if(!String.IsNullOrEmpty (resp_data["update_available"])){
-						KerbalX.login_gui.show_upgrade_available_message(resp_data["update_available"]);
-					}
 					KerbalX.login_gui.after_login_action();
+					KerbalX.login_gui.show_upgrade_available_message(resp_data["update_available"]); //triggers display of update available message if the passed string is not empty
 				}else{
 					KerbalX.login_gui.login_failed = true;
 					KerbalX.login_gui.enable_login = true;
@@ -143,6 +138,13 @@ namespace KerbalX
 					callback();
 				}
 			});
+		}
+
+		public static void dismiss_current_update_notification(){
+			HTTP http = HTTP.get (url_to ("api/dismiss_update_notification"));
+			http.request.method = "POST";
+			http.set_header ("token", KerbalXAPI.token);
+			http.send ((resp,code) => {});
 		}
 
 		//Send new craft to Mun....or KerbalX.com as a POST request
@@ -271,7 +273,7 @@ namespace KerbalX
 			last_callback = null;
 			KerbalX.server_error_message = null;
 			KerbalX.failed_to_connect = false;
-			KerbalX.lock_interface = false;
+			KerbalX.upgrade_required = false;
 
 			KerbalX.log("sending request to: " + request.url);
 			yield return request.Send ();
@@ -304,8 +306,9 @@ namespace KerbalX
 					callback (request.downloadHandler.text, status_code);					//Still call the callback, assumption is all callbacks will test status code for 200 before proceeding, this allows for further handling if needed
 					
 				}else if(status_code == 426){												//426 - Upgrade Required, only for a major version change that makes past versions incompatible with the site's API
-					KerbalX.lock_interface = true;
-					KerbalX.interface_lock_message = "This version of the KerbalX mod is out of date!\nYou need to get the latest version";
+					KerbalX.upgrade_required = true;
+					var resp_data = JSON.Parse (request.downloadHandler.text);	
+					KerbalX.upgrade_required_message = resp_data ["upgrade_message"];
 					
 				}else if(status_code == 401) {												//401s (Unauthorized) - response to the user's token not being recognized.
 					if(RequestHandler.show_401_message == true){							//In the case of login/authenticate steps the 401 message is not shown (handled by login dialog)

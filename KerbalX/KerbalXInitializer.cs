@@ -6,29 +6,37 @@ namespace KerbalX
 {
 
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
-	public class KerbalXToolBarSetter : MonoBehaviour
+	public class KerbalXInitializer : MonoBehaviour
 	{
+		public static KerbalXInitializer instance = null;
 		public Texture button_texture = new Texture();
 
 		private void Awake(){
-//			StyleSheet.load_assets ();
+			instance = this;
 			button_texture = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "button"), false); 
 			GameEvents.onGUIApplicationLauncherReady.Add (this.app_launcher_ready);
 			GameEvents.onGUIApplicationLauncherDestroyed.Add (this.remove_from_toolbar);
 		}
 
+		public void OnGUI(){
+			if(KerbalXWindow.KXskin == null){
+				StyleSheet.prepare ();
+			}
+		}
+
+
 		public void app_launcher_ready(){
 			GameEvents.onGUIApplicationLauncherReady.Remove (this.app_launcher_ready);
-			//ApplicationLauncher.Instance.AddOnShowCallback ();
-			if(!KerbalX.button){
+			ApplicationLauncher.Instance.AddOnHideCallback (this.toolbar_on_hide);
+			if(!KerbalX.editor_toolbar_button){
 				add_to_toolbar ();
 			}
 		}
 
 		public void add_to_toolbar(){
 			KerbalX.log ("Adding buttons to toolbar");
-			KerbalX.button = ApplicationLauncher.Instance.AddModApplication (
-				KerbalX.toggle_upload_interface, KerbalX.toggle_upload_interface, 
+			KerbalX.editor_toolbar_button = ApplicationLauncher.Instance.AddModApplication (
+				toggle_upload_interface, toggle_upload_interface, 
 				editor_btn_hover_on, editor_btn_hover_off, 
 				null, null, 
 				ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH, 
@@ -36,16 +44,30 @@ namespace KerbalX
 			);
 		}
 
+		public void toggle_upload_interface(){
+			if(KerbalX.upload_gui){
+				KerbalX.upload_gui.toggle ();
+			}else{
+				KerbalX.log ("UploadInterface has not been started");
+			}
+		}
+
+		public void toolbar_on_hide(){
+			if(KerbalX.upload_gui){
+				GameObject.Destroy (KerbalX.upload_gui);
+			}
+		}
+		
 		public void editor_btn_hover_on(){
-			KerbalX.button.SetTexture (StyleSheet.assets["editor_btn_hover"]);
+			KerbalX.editor_toolbar_button.SetTexture (StyleSheet.assets["editor_btn_hover"]);
 		}
 		public void editor_btn_hover_off(){
-			KerbalX.button.SetTexture (StyleSheet.assets["editor_btn"]);
+			KerbalX.editor_toolbar_button.SetTexture (StyleSheet.assets["editor_btn"]);
 		}
 
 		public void remove_from_toolbar(){
 			KerbalX.log ("Removing buttons from toolbar");
-			ApplicationLauncher.Instance.RemoveModApplication (KerbalX.button);
+			ApplicationLauncher.Instance.RemoveModApplication (KerbalX.editor_toolbar_button);
 		}
 	}
 

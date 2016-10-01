@@ -18,11 +18,10 @@ namespace KerbalX
 		public static string screenshot_dir = Paths.joined (KSPUtil.ApplicationRootPath, "Screenshots"); //TODO make this a setting, oh and make settings.
 		public static string version = "0.0.2";
 
-
-		public static bool failed_to_connect = false;
-		public static string server_error_message = null;
-		public static bool lock_interface = false;
-		public static string interface_lock_message = null;
+		public static bool 	 failed_to_connect 			= false;
+		public static string server_error_message 		= null;
+		public static bool 	 upgrade_required 			= false;
+		public static string upgrade_required_message 	= null;
 
 		public static List<string> log_data = new List<string>();
 
@@ -36,8 +35,8 @@ namespace KerbalX
 		public static KerbalXImageSelector image_selector 			= null;
 		public static KerbalXActionGroupInterface action_group_gui 	= null;
 
-		public static ApplicationLauncherButton button = null;
-		//methodical things
+		//Toolbar Buttons
+		public static ApplicationLauncherButton editor_toolbar_button = null;
 
 
 		//logging stuf, not suitable for lumberjacks
@@ -58,20 +57,12 @@ namespace KerbalX
 			foreach (string l in log_data) { Debug.Log (l); }
 		}
 
-		public static void toggle_upload_interface(){
-			if(KerbalX.upload_gui){
-				KerbalX.upload_gui.toggle ();
-			}else{
-				KerbalX.log ("UploadInterface has not been started");
-			}
-		}
-
 	}
 
 	public delegate void DialogContent(KerbalXWindow dialog);
 	public class KerbalXDialog : KerbalXWindow
 	{
-		public static KerbalXDialog instance;
+		public static KerbalXDialog instance = null;
 		public DialogContent content;
 
 		private void Start(){
@@ -96,39 +87,51 @@ namespace KerbalX
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class KerbalXLoginWindow : KerbalXWindow
 	{
-		private string username = "";
-		private string password = "";
-		public bool enable_login = true;  //used to toggle enabled/disabled state on login fields and button
-		public bool login_failed = false;
-		public bool login_successful = false;
-		public AfterLoginAction after_login_action = () => {};
+		private string username 	 = "";
+		private string password 	 = "";
+		public bool enable_login 	 = true;  	//used to toggle enabled/disabled state on login fields and button
+		public bool login_failed 	 = false;	//if true, displays login failed message and link to recover password on the site
+		public bool login_successful = false;	//if true, hides login field and shows logged in as and a logout button
+
+		//in the the case of a login being trigger from elsewhere, enables the window which triggered it to add actions to happen after login
+		public AfterLoginAction after_login_action = () => {};	
 
 
 		private void Start(){
-
 			window_title = "KerbalX::Login";
-			//window_pos = new Rect((Screen.width/2 - 400/2),100, 400, 5);
 			window_pos = new Rect (50, 50, 400, 5);
 			KerbalX.login_gui = this;
 			enable_request_handler ();
-
 			//try to load a token from file and if present authenticate it with KerbalX.  if token isn't present or token authentication fails then show login fields.
 			if (KerbalXAPI.logged_out()) {
 				KerbalXAPI.load_and_authenticate_token ();	
 			}
 		}
 
+		//Shows an upgrade available message after login if the server provides a upload available message string
 		public void show_upgrade_available_message(string message){
-			KerbalXDialog dialog = show_dialog((d) => {
-				v_section (w => {
-					GUILayout.Label ("KerbalX Update Available", "h2");
-					GUILayout.Label	("A new version of the KerbalX mod is available");
-					GUILayout.Label (message);
-					if(GUILayout.Button ("OK", height (30))){close_dialog (); }
+			if (!String.IsNullOrEmpty (message)) {
+				KerbalXDialog dialog = show_dialog ((d) => {
+					v_section (w => {
+						GUILayout.Label ("KerbalX Update Available", "h2");
+						GUILayout.Label	("A new version of the KerbalX mod is available");
+						GUILayout.Label (message);
+
+						section (w2 => {
+							if (GUILayout.Button ("Remind me later", height (30), width (w*0.5f))) {
+								close_dialog ();
+							}
+							if (GUILayout.Button ("Yeah ok, stop bugging me", height (30), width (w*0.5f))) {
+								KerbalXAPI.dismiss_current_update_notification ();
+								close_dialog ();
+							}
+						});
+
+					});
 				});
-			});
-			dialog.window_title = "KerbaX - Update Available";
-			dialog.window_pos = new Rect(window_pos.x + window_pos.width + 10, window_pos.y, 400f, 5);
+				dialog.window_title = "KerbaX - Update Available";
+				dialog.window_pos = new Rect (window_pos.x + window_pos.width + 10, window_pos.y, 400f, 5);
+			}
 		}
 
 		protected override void WindowContent(int win_id){
@@ -158,7 +161,6 @@ namespace KerbalX
 				section (w => {
 					GUILayout.Label ("KerbalX.key saved in KSP root", width (w-20f));
 					if (GUILayout.Button ("?", width (20f))) {
-
 						KerbalXDialog dialog = show_dialog((d) => {
 							string message = "The KerbalX.key is a token that is used to authenticate you with the site." +
 								"\nIt will also persist your login, so next time you start KSP you won't need to login again." +

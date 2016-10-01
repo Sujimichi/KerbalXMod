@@ -62,7 +62,6 @@ namespace KerbalX
 		static int last_window_id = 0;			//static track of the last used window ID, new windows will take the next value and increment this.
 		public static GUISkin KXskin = null;	//static variable to hold the reference to the custom skin. First window created will set it up
 
-		protected bool first_pass = true;		//used to perform an action on the first call of OnGUI, after which it is switched to false
 		protected bool is_dialog = false;
 
 
@@ -77,7 +76,6 @@ namespace KerbalX
 			on_hide ();
 			StartCoroutine (unlock_delay ()); //remove any locks on the editor interface, after a slight delay.
 		}
-
 		public void toggle(){
 			if (visible) {
 				hide ();	
@@ -139,7 +137,7 @@ namespace KerbalX
 		//show_dialog((d) => {
 		//	GUILayout.Label("hello I'm a dialog");
 		//})
-		//The dialog instance is returned by show_dialog, and it's also passed into the lambda (although I'm not quite sure why I did that).
+		//The dialog instance is returned by show_dialog, and it's also passed into the lambda.
 		protected KerbalXDialog show_dialog(DialogContent content){
 			KerbalXDialog dialog = gameObject.AddOrGetComponent<KerbalXDialog> ();
 			dialog.content = content;
@@ -177,11 +175,6 @@ namespace KerbalX
 		//called on each frame, handles drawing the window and will assign the next window id if it's not set
 		protected void OnGUI()
 		{
-			if(first_pass){
-				first_pass = false;
-				StyleSheet.prepare (); //defines KXskin as a copy of the default GUI.skin and adds a bunch of custom styles to it.  
-				//This needs to be called in OnGUI and all windows will call this, but it will only initiate the skin once (by which ever window gets to it first).
-			}
 			if(window_id == 0){
 				window_id = last_window_id + 1;
 				last_window_id = last_window_id + 1;
@@ -218,6 +211,7 @@ namespace KerbalX
 					});
 				});
 				dialog.window_title = title;
+				on_error ();
 			}
 
 
@@ -237,9 +231,11 @@ namespace KerbalX
 					};
 				}
 
-			//If the interface lock has been set (ie for upgrade required), halt drawing interface and show message;
-			} else if (KerbalX.lock_interface) {
-				GUILayout.Label (KerbalX.interface_lock_message, "h3");
+			//If an upgrade is required, halt drawing interface and show message;
+			} else if (KerbalX.upgrade_required) {
+				GUILayout.Label ("Upgrade Required", "h3");
+				GUILayout.Label ("This version of the KerbalX mod is no longer compatible with KerbalX.com\nYou need to get the latest version.");
+				GUILayout.Label (KerbalX.upgrade_required_message);
 				on_error ();
 			//otherwse all is good, draw the main content of the window as defined by WindowContent
 			}else{
@@ -272,13 +268,12 @@ namespace KerbalX
 		//Default Footer for all windows, can be overridden only called if footer==true
 		protected virtual void FooterContent(int window_id){
 			section (w => {
-				if(GUILayout.Button ("KerbalX.com", "hyperlink", width (75f), height (30f))){
+				if(GUILayout.Button ("KerbalX.com", "hyperlink.footer", width (75f), height (30f))){
 					Application.OpenURL (KerbalX.site_url);
 				}
 				GUILayout.FlexibleSpace ();
 				GUILayout.Label (StyleSheet.assets["logo_small"]);
 			});
-			//GUILayout.Label ("window id: " + window_id);			
 		}
 
 		protected virtual void OnDestroy(){

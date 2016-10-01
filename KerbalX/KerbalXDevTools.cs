@@ -10,7 +10,7 @@ namespace KerbalX
 	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 	public class JumpStart : MonoBehaviour
 	{
-		public static bool autostart = true;
+		public static bool autostart = false;
 		public static string save_name = "default";
 		public static string craft_name = "testy";
 
@@ -58,15 +58,12 @@ namespace KerbalX
 			//			prevent_editor_click_through = true;
 		}
 
-		long milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
 		protected override void WindowContent(int win_id){
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
 
-			GUILayout.Label (milliseconds.ToString ());
-
-			if (GUILayout.Button ("reset")) {
-				milliseconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+			if(KerbalXInitializer.instance){
+				GUILayout.Label ("initializer is active");
 			}
 
 			if (GUILayout.Button ("update existing craft")) {

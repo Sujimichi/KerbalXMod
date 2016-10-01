@@ -63,8 +63,8 @@
     <Compile Include="Stylesheet.cs" />
     <Compile Include="ComboBox.cs" />
     <Compile Include="KerbalXActionGroupInterface.cs" />
-    <Compile Include="KerbalXToolBar.cs" />
     <Compile Include="KerbalXDevTools.cs" />
+    <Compile Include="KerbalXInitializer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

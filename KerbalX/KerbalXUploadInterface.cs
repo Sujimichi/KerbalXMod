@@ -559,7 +559,7 @@ namespace KerbalX
 		}
 
 		//Check if the current craft in the editor has unsaved changes. 
-		//Kinda horrible appoach involing a temporary file, some C4 and a Swedish chiropractor (well not really, but it's kinda convoluted).
+		//Kinda horrible appoach involing a temporary file, some C4 and a Swedish chiropractor (well not really, but it's kinda convoluted). TODO make this work better
 		private bool craft_is_saved(){
 			if(craft_file_exists ()){
 				string temp_path = Paths.joined (KSPUtil.ApplicationRootPath, "GameData", "KerbalX", "temp.craft");	//set temp place to save current craft

@@ -25,6 +25,7 @@ namespace KerbalX
 
 			if(KerbalXWindow.KXskin == null){
 
+				//Textures
 				Texture2D blue_background = new Texture2D(1, 1,   TextureFormat.RGBA32, false);
 				blue_background.SetPixel(0, 0, new Color (0.4f,0.5f,0.9f,1));
 				blue_background.wrapMode = TextureWrapMode.Repeat;
@@ -39,7 +40,7 @@ namespace KerbalX
 				pic_highlight.Apply ();
 
 
-
+				//Label Styles
 				GUIStyle h1 = new GUIStyle (GUI.skin.label);
 				h1.fontStyle = FontStyle.Bold;
 				h1.fontSize = 30;
@@ -68,6 +69,12 @@ namespace KerbalX
 				hyperlink_h3.fontSize = 15;
 				hyperlink_h3.name = "hyperlink.h3";
 
+				GUIStyle hyperlink_footer = new GUIStyle (hyperlink);
+				hyperlink_footer.alignment = TextAnchor.LowerLeft;
+				hyperlink_footer.name = "hyperlink.footer";
+
+
+
 
 				GUIStyle alert = new GUIStyle (GUI.skin.label);
 				alert.normal.textColor = Color.red;
@@ -85,7 +92,6 @@ namespace KerbalX
 				centered.name = "centered";
 				centered.alignment = TextAnchor.UpperCenter;
 
-
 				GUIStyle no_style = new GUIStyle (GUI.skin.label);
 				no_style.name = "no_style";
 				no_style.margin = new RectOffset (0, 0, 0, 0);
@@ -101,6 +107,8 @@ namespace KerbalX
 				pic_hover.normal.textColor = Color.black;
 				pic_hover.normal.background = blue_background;
 
+
+				//Button Styles
 				GUIStyle login_button = new GUIStyle (GUI.skin.button);
 				login_button.name = "button.login";
 				login_button.fontSize = 15;
@@ -128,7 +136,7 @@ namespace KerbalX
 				wrapped_button.wordWrap = true;
 
 
-
+				//Background (Box) Styles
 				GUIStyle blue_box = new GUIStyle (GUI.skin.box);
 				blue_box.normal.background = blue_background;
 				blue_box.border = new RectOffset (3, 3, 3, 3);
@@ -143,7 +151,7 @@ namespace KerbalX
 				dark_back_offset.margin = new RectOffset (0, 0, 5, 0);
 
 
-
+				//Combobox specific
 				GUIStyle combo_field = new GUIStyle(GUI.skin.textField);
 				combo_field.margin = new RectOffset(0,0,0,0);
 				combo_field.name = "combobox.filter_field";
@@ -165,11 +173,13 @@ namespace KerbalX
 
 				KerbalXWindow.KXskin = Instantiate (GUI.skin);
 				KerbalXWindow.KXskin.customStyles = new GUIStyle[]{ 
-					h1, h2, h3, hyperlink, hyperlink_h2, hyperlink_h3, alert, alert_h2, small, centered, 
+					h1, h2, h3, hyperlink, hyperlink_h2, hyperlink_h3, hyperlink_footer, alert, alert_h2, small, centered, 
 					pic_link, pic_hover, dark_back, dark_back_offset, blue_box, no_style,
 					login_button, upload_button, screenshot_button, screenshot_button_bold, wrapped_button,
 					combo_field, combo_bttn, combo_option, combo_option_hover
 				};
+
+				KerbalXWindow.KXskin.window.padding.bottom = 2;
 			}
 
 		}
