@@ -51,7 +51,7 @@ namespace KerbalX
 		//Window Config variables. Change these in Start() in descendent classes.
 		//public Rect window_pos					= new Rect()			//override in Start() to set window size/pos - default values defined in KerbalXWindowExtension
 		public string window_title 					= "untitled window";	//shockingly enough, this is the window title
-		public bool prevent_editor_click_through 	= false;				//only set to true in editor windows - prevents clicks interacting with elements behind the window
+		public bool prevent_click_through 			= true;					//prevent clicks interacting with elements behind the window
 		protected bool require_login 				= false;				//set to true if the window requires user to be logged into KerbalX
 		protected bool draggable 					= true;					//sets the window as draggable
 		protected bool footer 						= true;					//sets if the set footer content should be draw (see FooterContent method)
@@ -61,7 +61,7 @@ namespace KerbalX
 
 		static int last_window_id = 0;			//static track of the last used window ID, new windows will take the next value and increment this.
 		public static GUISkin KXskin = null;	//static variable to hold the reference to the custom skin. First window created will set it up
-
+		private bool ui_locked = false;
 		protected bool is_dialog = false;
 
 
@@ -157,14 +157,16 @@ namespace KerbalX
 		}
 
 		//prevents mouse actions on the GUI window from affecting things behind it.  Only works in the editors at present.
-		protected void prevent_click_through(string mode){
-			if(mode == "editor"){
-				Vector2 mouse_pos = Input.mousePosition;
-				mouse_pos.y = Screen.height - mouse_pos.y;
-				if(window_pos.Contains (mouse_pos)){
-					EditorLogic.fetch.Lock (true, true, true, window_id.ToString ());
-				}else{
-					EditorLogic.fetch.Unlock (window_id.ToString ());				
+		protected void prevent_ui_click_through(){
+			Vector2 mouse_pos = Input.mousePosition;
+			mouse_pos.y = Screen.height - mouse_pos.y;
+			if(window_pos.Contains (mouse_pos)){
+				InputLockManager.SetControlLock (window_id.ToString ());
+				ui_locked = true;
+			}else{
+				if(ui_locked){
+					InputLockManager.RemoveControlLock (window_id.ToString ());
+					ui_locked = false;
 				}
 			}
 		}
@@ -190,8 +192,8 @@ namespace KerbalX
 		//Callback methods which is passed to GUILayout.Window in OnGUI.  Calls WindowContent and performs common window actions
 		private void DrawWindow(int window_id)
 		{
-			if(prevent_editor_click_through){
-				prevent_click_through ("editor");
+			if(prevent_click_through){
+				prevent_ui_click_through();
 			}
 
 			//if a server error has occured display error in dialog, but don't halt drawing of interface. 

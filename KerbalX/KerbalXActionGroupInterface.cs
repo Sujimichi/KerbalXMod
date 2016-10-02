@@ -16,7 +16,7 @@ namespace KerbalX
 			KerbalX.action_group_gui = this;
 			window_title = "KerbalX::ActionGroups";			
 			window_pos = new Rect(430,50,500,200); //set to be right next to the action group panel edge when it's open.
-			prevent_editor_click_through = true;
+//			prevent_click_through = true;
 			keys = new List<string>(KerbalX.upload_gui.action_groups.Keys);	//Get the names of action groups - used in itterating over action groups
 		}
 

@@ -74,8 +74,6 @@ namespace KerbalX
 				hyperlink_footer.name = "hyperlink.footer";
 
 
-
-
 				GUIStyle alert = new GUIStyle (GUI.skin.label);
 				alert.normal.textColor = Color.red;
 				alert.name = "alert";
@@ -91,6 +89,11 @@ namespace KerbalX
 				GUIStyle centered = new GUIStyle (GUI.skin.label);
 				centered.name = "centered";
 				centered.alignment = TextAnchor.UpperCenter;
+
+				GUIStyle right_align = new GUIStyle (GUI.skin.label);
+				right_align.name = "align.right";
+				right_align.alignment = TextAnchor.UpperRight;
+
 
 				GUIStyle no_style = new GUIStyle (GUI.skin.label);
 				no_style.name = "no_style";
@@ -181,7 +184,7 @@ namespace KerbalX
 
 				KerbalXWindow.KXskin = Instantiate (GUI.skin);
 				KerbalXWindow.KXskin.customStyles = new GUIStyle[]{ 
-					h1, h2, h3, hyperlink, hyperlink_h2, hyperlink_h3, hyperlink_footer, alert, alert_h2, small, centered, 
+					h1, h2, h3, hyperlink, hyperlink_h2, hyperlink_h3, hyperlink_footer, alert, alert_h2, small, centered, right_align,
 					pic_link, pic_hover, dark_back, dark_back_offset, blue_box, no_style,
 					login_button, upload_button, screenshot_button, screenshot_button_bold, wrapped_button, bold_button,
 					combo_field, combo_bttn, combo_option, combo_option_hover

@@ -14,19 +14,25 @@ namespace KerbalX
 	{
 
 		private Dictionary<int, Dictionary<string, string>> craft_list = new Dictionary<int, Dictionary<string, string>>();
-		private string title = "";
+		private string mode = "";
 		private int[] craft_ids;
 		private Vector2 scroll_pos;
 		private float scroll_height;
 		private float win_top = 200f;
-		private float max_scroll_height;
+
+//		private float max_scroll_height;
+		private bool only_version_compatible = true;
+		private string ksp_ver;
+
+		private string craft_file;
 
 		private void Start(){
 			KerbalX.download_gui = this;
 			window_title = "KerbalX::Downloader";
 			window_pos = new Rect (Screen.width / 2 - 500 / 2, win_top, 500, 5);
-			max_scroll_height = Screen.height - (win_top + 200);
+//			max_scroll_height = Screen.height - (win_top + 200);
 			require_login = true;
+			ksp_ver = Versioning.GetVersionString ();
 			enable_request_handler ();
 			fetch_download_queue ();
 		}
@@ -38,69 +44,119 @@ namespace KerbalX
 			fetch_download_queue ();//fetch list of craft to download
 		}
 
+		private long timer = 0; //DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+		private bool readjust_height = false;
 		protected override void WindowContent(int win_id){
+			if(win_top != window_pos.y){
+				timer = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+				win_top = window_pos.y;
+				readjust_height = true;
+			}
+			if(readjust_height && (DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond) - timer > 500){
+				readjust_height = false;
+				adjust_scroll_height ();
+			}
+
 			section (w => {
 				if(GUILayout.Button ("Download Queue", "button.bold", width (w*0.33f))){fetch_download_queue();}
 				if(GUILayout.Button ("Past Downloads", "button.bold", width (w*0.33f))){fetch_past_downloads();}
 				if(GUILayout.Button ("Your Craft", 	   "button.bold", width (w*0.33f))){fetch_users_craft();}
 			});
 
-			GUILayout.Label (title, "h2");
-			scroll_pos = scroll (scroll_pos, 500f, scroll_height, sw => {
-				foreach(int id in craft_ids){
-					style_override = GUI.skin.GetStyle ("background.dark.margin");
-					section (w => {
-						v_section (w2 => {
-							GUILayout.Label (craft_list[id]["name"], "h3");
-							GUILayout.Label (craft_list[id]["type"] + " | made in KSP:" + craft_list[id]["version"]);
-						});
-						v_section (w2 => {
-							if(GUILayout.Button ("download")){
-								download_craft (id);
-							}
-							GUILayout.Label (craft_list[id]["download_status"]);
-						});
-					});
+			GUILayout.Label (mode, "h2");
 
+			only_version_compatible = GUILayout.Toggle (only_version_compatible, " Only show KSP " + ksp_ver + " craft");
+
+			if (GUI.changed) {
+				adjust_scroll_height ();
+			}
+
+			scroll_pos = scroll (scroll_pos, 500f, scroll_height, sw => {
+				if(craft_list.Count > 0){
+					foreach(int id in craft_ids){
+						if(ksp_ver == craft_list[id]["version"] || !only_version_compatible){
+							style_override = GUI.skin.GetStyle ("background.dark.margin");
+							section (w => {
+								v_section (w*0.7f, w2 => {
+									GUILayout.Label (craft_list[id]["name"], "h3");
+									GUILayout.Label (craft_list[id]["type"] + " | made in KSP:" + craft_list[id]["version"]);
+								});
+								v_section (w*0.3f, w2 => {
+									if(GUILayout.Button ("download")){
+										download_craft (id);
+									}
+									GUILayout.Label (craft_list[id]["status"], "align.right");
+								});
+							});
+						}
+					}
+				}else{
+					GUILayout.Label ("No craft do display for \"" + mode + "\"");
 				}
 			});
 		}
 
+		private void adjust_scroll_height(){
+			scroll_height = display_count() * 62;
+			float max_height = Screen.height - (window_pos.y + 200);
+			if(scroll_height > max_height){scroll_height = max_height;}
+			if(scroll_height < 62){scroll_height = 62f;}
+
+			autoheight ();
+		}
+
+		//returns conut of craft taking version filter into account
+		private int display_count(){
+			int count = 0;
+			foreach (int id in craft_ids) {
+				if (ksp_ver == craft_list [id] ["version"] || !only_version_compatible) {
+					count++;
+				}
+			}
+			return count;
+		}
+
+		//Fetch the current download queue
 		private void fetch_download_queue(){
-			title = "Download Queue";
+			mode = "Download Queue";
 			KerbalXAPI.fetch_download_queue ((craft_data) => {
 				craft_list = craft_data;
-				add_paths_to_data();
+				after_fetch_actions();
 			});
 		}
 
+		//Fetch craft the user has downloaded in the past
 		private void fetch_past_downloads(){
-			title = "Past Downloads";
+			mode = "Past Downloads";
 			KerbalXAPI.fetch_past_downloads ((craft_data) => {
 				craft_list = craft_data;
-				add_paths_to_data();
+				after_fetch_actions();
 			});
 		}
 
+		//Fetch craft uploaded by the user
 		private void fetch_users_craft(){
-			title = "Your Craft";
+			mode = "Your Craft";
 			KerbalXAPI.fetch_users_craft ((craft_data) => {
 				craft_list = craft_data;
-				add_paths_to_data();
+				after_fetch_actions();
 			});
 		}
 
-		private void add_paths_to_data(){
+		//called after each fetch, adds additional data to each craft 
+		private void after_fetch_actions(){
 			craft_ids = craft_list.Keys.ToArray ();
-			scroll_height = craft_list.Count * 62;
-			if(scroll_height > max_scroll_height){scroll_height = max_scroll_height;}
 			foreach(int id in craft_ids){
-				craft_list[id].Add ("dir",  dir_for_craft (id));
-				craft_list[id].Add ("path", path_for_craft (id));
-				craft_list[id].Add ("short_path", path_for_craft (id).Replace (Paths.joined (KSPUtil.ApplicationRootPath, "saves"), ""));
-				craft_list[id].Add ("download_status", "");
+				craft_list[id].Add ("dir",  dir_for_craft (id));	//Folder the craft will be downloaded into
+				craft_list[id].Add ("path", path_for_craft (id));	//full path that the craft will be downloaded to
+				craft_list[id].Add ("short_path", path_for_craft (id).Replace (Paths.joined (KSPUtil.ApplicationRootPath, "saves"), "")); //path starting at save folder
+				craft_list[id].Add ("status", "");
+				if (File.Exists (craft_list [id] ["path"])) {
+					craft_list [id] ["status"] = "In folder";
+				}
 			}
-			autoheight ();
+			adjust_scroll_height ();
+			scroll_pos.y = 0;
 		}
 
 
@@ -111,7 +167,7 @@ namespace KerbalX
 			return Paths.joined (KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, "Ships", craft_list [id] ["type"]);
 		}
 
-		private string craft_file;
+
 
 		private void download_craft(int id){
 			KerbalXAPI.download_craft (id, (craft_file_string, code) => {
@@ -120,22 +176,25 @@ namespace KerbalX
 					craft_file = craft_file_string;
 					if(File.Exists (craft_list[id]["path"])){
 						KerbalXDialog dialog = show_dialog (d => {
-							GUILayout.Label ("A craft with this name already exists", "h2");
-							GUILayout.Label ("You have a craft at: " + craft_list[id]["short_path"], "small");
+							style_override = GUI.skin.GetStyle ("background.dark");
+							v_section (w => {
+								GUILayout.Label ("A craft with this name already exists", "h2");
+								GUILayout.Label ("You have a craft at: " + craft_list[id]["short_path"], "small");
+							});
 							section (w => {
 								GUILayout.FlexibleSpace ();
-								if(GUILayout.Button ("Cancel", width (w*0.2f))){
+								if(GUILayout.Button ("Cancel", "button.bold", width (w*0.2f))){
 									close_dialog ();
 								}
-								if(GUILayout.Button ("Replace", width (w*0.2f))){
+								if(GUILayout.Button ("Replace","button.bold", width (w*0.2f))){
 									write_file (id);
 									close_dialog ();
 								}
 							});
-						});					
-						dialog.window_pos.y = Event.current.mousePosition.y;
-						dialog.window_pos.x = window_pos.x + window_pos.width + 10;
+						});	
 						dialog.window_pos.width = 400f;
+						dialog.window_pos.y = Event.current.mousePosition.y - 42; //42 just seemed like the answer, for some reason.
+						dialog.window_pos.x = (window_pos.x + window_pos.width/2) - dialog.window_pos.width/2;
 						dialog.window_title = "Replace Existing?";
 
 					}else{
@@ -147,7 +206,7 @@ namespace KerbalX
 
 		private void write_file(int craft_id){
 			File.WriteAllText(craft_list [craft_id] ["path"], craft_file);
-			craft_list [craft_id]["download_status"] = "Downloaded";
+			craft_list [craft_id]["status"] = "Downloaded";
 		}
 
 

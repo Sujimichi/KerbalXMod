@@ -59,7 +59,7 @@ namespace KerbalX
 			window_title = "KerbalX::Upload";
 			window_pos = new Rect ((Screen.width - win_width - 20), 50, win_width, 5);
 			require_login = true;
-			prevent_editor_click_through = true;
+//			prevent_click_through = true;
 			enable_request_handler ();
 			visible = false;
 
@@ -488,7 +488,6 @@ namespace KerbalX
 
 				});
 			});
-			dialog.prevent_editor_click_through = true;
 			dialog.window_title = "";
 			dialog.window_pos = new Rect((Screen.width/2 - 528f/2), Screen.height/4, 528f, 5);
 		}
