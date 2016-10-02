@@ -41,17 +41,17 @@ namespace KerbalX
                 upload_btn_hover_on, upload_btn_hover_off, 
                 null, null, 
                 ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH, 
-                StyleSheet.assets["editor_btn"]
+                StyleSheet.assets["upload_toolbar_btn"]
             );
         }
 
         public void add_download_gui_button_to_toolbar(){
             KerbalX.download_gui_toolbar_button = ApplicationLauncher.Instance.AddModApplication(
                 toggle_download_interface, toggle_download_interface, 
-                upload_btn_hover_on, upload_btn_hover_off, 
+                download_btn_hover_on, download_btn_hover_off,
                 null, null, 
                 ApplicationLauncher.AppScenes.SPACECENTER,
-                StyleSheet.assets["editor_btn"]
+                StyleSheet.assets["dnload_toolbar_btn"]
             );
         }
 
@@ -72,18 +72,26 @@ namespace KerbalX
             }
         }
 
+  
+        public void upload_btn_hover_on(){
+            KerbalX.upload_gui_toolbar_button.SetTexture(StyleSheet.assets["upload_toolbar_btn_hover"]);
+        }
+        public void upload_btn_hover_off(){
+            KerbalX.upload_gui_toolbar_button.SetTexture(StyleSheet.assets["upload_toolbar_btn"]);
+        }
+        public void download_btn_hover_on(){
+            KerbalX.download_gui_toolbar_button.SetTexture(StyleSheet.assets["dnload_toolbar_btn_hover"]);
+        }
+        public void download_btn_hover_off(){
+            KerbalX.download_gui_toolbar_button.SetTexture(StyleSheet.assets["dnload_toolbar_btn"]);
+        }
+
+
+
         public void toolbar_on_hide(){
             if (KerbalX.upload_gui){
                 GameObject.Destroy(KerbalX.upload_gui);
             }
-        }
-
-        public void upload_btn_hover_on(){
-            KerbalX.upload_gui_toolbar_button.SetTexture(StyleSheet.assets["editor_btn_hover"]);
-        }
-
-        public void upload_btn_hover_off(){
-            KerbalX.upload_gui_toolbar_button.SetTexture(StyleSheet.assets["editor_btn"]);
         }
 
         public void remove_from_toolbar(){
