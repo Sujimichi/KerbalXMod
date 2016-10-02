@@ -72,6 +72,7 @@ namespace KerbalX
                 GUILayout.Label(KerbalX.last_log());
             });
 
+            GUILayout.Label(GUI.skin.label.padding.ToString());
 
             if(GUILayout.Button("update existing craft")){
                 KerbalXAPI.fetch_existing_craft(() =>{});

@@ -74,6 +74,13 @@ namespace KerbalX
                 hyperlink_footer.alignment = TextAnchor.LowerLeft;
                 hyperlink_footer.name = "hyperlink.footer";
 
+                GUIStyle remove_link = new GUIStyle(GUI.skin.label);
+                remove_link.name = "remove_link";
+                remove_link.padding = new RectOffset(0, 0, 0, 0);
+                remove_link.margin = new RectOffset(2, 0, 0, 0);
+                remove_link.normal.textColor = Color.red;
+                remove_link.alignment = TextAnchor.LowerCenter;
+                remove_link.fontSize = 15;
 
                 GUIStyle alert = new GUIStyle(GUI.skin.label);
                 alert.normal.textColor = Color.red;
@@ -184,7 +191,7 @@ namespace KerbalX
 
                 KerbalXWindow.KXskin = Instantiate(GUI.skin);
                 KerbalXWindow.KXskin.customStyles = new GUIStyle[] { 
-                    h1, h2, h3, hyperlink, hyperlink_h2, hyperlink_h3, hyperlink_footer, alert, alert_h2, small, centered, right_align, 
+                    h1, h2, h3, hyperlink, hyperlink_h2, hyperlink_h3, hyperlink_footer, remove_link, alert, alert_h2, small, centered, right_align, 
                     pic_link, pic_hover, dark_back, dark_back_offset, blue_box, no_style, 
                     login_button, upload_button, screenshot_button, screenshot_button_bold, wrapped_button, bold_button, 
                     combo_field, combo_bttn, combo_option, combo_option_hover 

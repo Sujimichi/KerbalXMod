@@ -30,7 +30,7 @@ namespace KerbalX
             window_title = "KerbalX::Downloader";
             window_pos = new Rect(Screen.width / 2 - 500 / 2, win_top, 500, 5);
             require_login = true;
-            visible = false;
+            visible = true;
             ksp_ver = Versioning.GetVersionString();
             enable_request_handler();
             fetch_download_queue();
@@ -44,6 +44,7 @@ namespace KerbalX
 
         private long timer = 0;
         private bool readjust_height = false;
+
 
         protected override void WindowContent(int win_id){
             if(win_top != window_pos.y){
@@ -79,6 +80,8 @@ namespace KerbalX
             scroll_pos = scroll(scroll_pos, 500f, scroll_height, sw =>{
                 if(craft_list.Count > 0){
                     foreach(int id in craft_ids){
+                        
+                        GUI.enabled = !(mode == "Download Queue" && (craft_list[id]["status"] == "removed" || craft_list[id]["status"] == "Downloaded"));
                         if(ksp_ver == craft_list[id]["version"] || !only_version_compatible){
                             style_override = GUI.skin.GetStyle("background.dark.margin");
                             section(w =>{
@@ -87,13 +90,22 @@ namespace KerbalX
                                     GUILayout.Label(craft_list[id]["type"] + " | made in KSP:" + craft_list[id]["version"]);
                                 });
                                 v_section(w * 0.3f, w2 =>{
-                                    if(GUILayout.Button("download")){
-                                        download_craft(id);
-                                    }
+                                    section(w2, w3 => {
+                                        if(GUILayout.Button("download", "button.bold")){
+                                            download_craft(id);
+                                        }
+                                        if(mode == "Download Queue"){
+                                            if(GUILayout.Button("X", "remove_link", width(10f), height(25f))){
+                                                KerbalXAPI.remove_from_queue(id);
+                                                craft_list[id]["status"] = "removed";
+                                            }
+                                        }
+                                    });
                                     GUILayout.Label(craft_list[id]["status"], "align.right");
                                 });
                             });
                         }
+                        GUI.enabled = true;
                     }
                 } else{
                     GUILayout.Label("No craft do display for \"" + mode + "\"");
@@ -102,13 +114,13 @@ namespace KerbalX
         }
 
         private void adjust_scroll_height(){
-            scroll_height = display_count() * 62;
+            scroll_height = display_count() * 67;
             float max_height = Screen.height - (window_pos.y + 200);
             if(scroll_height > max_height){
                 scroll_height = max_height;
             }
-            if(scroll_height < 62){
-                scroll_height = 62f;
+            if(scroll_height < 67){
+                scroll_height = 67f;
             }
 
             autoheight();

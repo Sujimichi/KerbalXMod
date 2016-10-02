@@ -384,6 +384,7 @@ namespace KerbalX
             return section_width; //width to pass back into the lambda
         }
 
+
         protected void begin_group(Rect container, ContentNoArgs content){
             GUI.BeginGroup(container);
             content();

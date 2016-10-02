@@ -169,6 +169,12 @@ namespace KerbalX
             });
         }
 
+        public static void remove_from_queue(int craft_id){
+            HTTP.get(url_to("api/remove_from_queue/" + craft_id)).set_header("token", KerbalXAPI.token).send((resp, code) =>{
+                KerbalX.log("craft " + craft_id + " removed from download queue");
+            });
+        }
+
         public static void download_craft(int id, RequestCallback callback){
             HTTP.get(url_to("api/craft/" + id)).set_header("token", KerbalXAPI.token).send(callback);
         }
