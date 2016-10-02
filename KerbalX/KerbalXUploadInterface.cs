@@ -128,11 +128,11 @@ namespace KerbalX
 
         protected override void OnDestroy(){
             base.OnDestroy(); //releases any UI locks on the editor
-            GameEvents.onEditorLoad.Remove(this.on_editor_load);//unbind editor events
+            GameEvents.onEditorLoad.Remove(this.on_editor_load);    //unbind editor events
             GameEvents.onEditorRestart.Remove(this.on_editor_new);
-            KerbalXActionGroupInterface.close();					//destroy action group interface (if it is open)
-            KerbalXImageSelector.close();							//destroy image selector (if it is open)
-            KerbalXDialog.close();									//destroy dialog (if one is open)
+            KerbalXActionGroupInterface.close();                    //destroy action group interface (if it is open)
+            KerbalXImageSelector.close();                           //destroy image selector (if it is open)
+            KerbalXDialog.close();                                  //destroy dialog (if one is open)
         }
 
         //Main Upload/Update interface!
@@ -189,8 +189,8 @@ namespace KerbalX
                             GUILayout.Label("Craft name:", width(80f));
                             craft_name = GUILayout.TextField(craft_name, 255, width(w - 80));
                             if(craft_name != current_craft_name){
-                                check_for_matching_craft_name();
-                            } //check for matching existing craft
+                                check_for_matching_craft_name();//check for matching existing craft
+                            } 
                         });
 						
                         //drop down select for craft type
@@ -354,17 +354,14 @@ namespace KerbalX
         //Any reasons to stop are added to errors and displayed
         private bool ok_to_send(){
             bool go_no_go = true;
-
             if(mode == "upload" && pictures.Count == 0){ 
                 errors.Add("You need to add at least 1 picture.");
                 go_no_go = false;
             }
-
             if(mode == "update" && selected_craft_id == 0){
                 errors.Add("You need to select a craft to update");
                 go_no_go = false;
             }
-
             if(!craft_is_saved()){
                 errors.Add("This craft has unsaved changes");
                 go_no_go = false;
@@ -399,17 +396,17 @@ namespace KerbalX
         public void reset(){
             KerbalX.log("Resetting UploadInterface");
             check_for_matching_craft_name();
-            KerbalXActionGroupInterface.close();		//destroy action group interface (if it is open)
-            KerbalXImageSelector.close();				//destroy image selector (if it is open)
-            KerbalXDialog.close();						//destroy dialog (if one is open)
-            pictures.Clear();							//remove all selected pictures
-            selected_style_index = 0;					//reset selected craft style to default (Ship)
-            selected_craft_id = 0;						//reset selected_craft_id (0 is non-value Database ID)
+            KerbalXActionGroupInterface.close();        //destroy action group interface (if it is open)
+            KerbalXImageSelector.close();               //destroy image selector (if it is open)
+            KerbalXDialog.close();                      //destroy dialog (if one is open)
+            pictures.Clear();                           //remove all selected pictures
+            selected_style_index = 0;                   //reset selected craft style to default (Ship)
+            selected_craft_id = 0;                      //reset selected_craft_id (0 is non-value Database ID)
             List<string> keys = new List<string>(action_groups.Keys);
-            foreach(string key in keys){				//revert all values for action groups back to empty string
+            foreach(string key in keys){                //revert all values for action groups back to empty string
                 action_groups[key] = "";
             }
-            clear_errors();							//remove all errors (will also call autoheight, which is why this is called last)
+            clear_errors();                             //remove all errors (will also call autoheight, which is why this is called last)
         }
 
 
@@ -530,7 +527,7 @@ namespace KerbalX
         public void add_picture(PicData picture){
             errors.Clear();
             int pic_count = 0;
-            foreach(PicData pic in pictures){					//count up how many pictures with file data have been added
+            foreach(PicData pic in pictures){       //count up how many pictures with file data have been added
                 if(pic.file != null){
                     pic_count++;
                 }
@@ -538,7 +535,7 @@ namespace KerbalX
             if(pic_count < max_pics || picture.file == null){ 	//if the count is under max_pics or the pic doesn't have a file (ie it's url) then add it.
                 pictures.Add(picture);
             } else{
-                errors = new List<string>() { }; 					//Otherwise show error message. "You can only add " + max_pics + " pictures for upload, (bandwidth limitations, sorry!)", "You can add as many image urls as you like though." };
+                errors = new List<string>() { };    //Otherwise show error message. "You can only add " + max_pics + " pictures for upload, (bandwidth limitations, sorry!)", "You can add as many image urls as you like though." };
             }
         }
 
@@ -657,9 +654,9 @@ namespace KerbalX
             section(w2 =>{
                 if(millisecs() - time_counter > interval){
                     upload_ticker_pos++;
-                    if(upload_ticker_pos > box_count + 20){
+                    if(upload_ticker_pos > box_count + 20){ //+20 for delay after each phase
                         upload_ticker_pos = 0;
-                    } //+20 for delay after each phase
+                    } 
                     time_counter = millisecs();
                 }
                 for(int i = 0; i < box_count; i++){

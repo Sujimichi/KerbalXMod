@@ -26,8 +26,7 @@ namespace KerbalX
     public class KerbalXAPI
     {
         private static string token = null;
-        private static string kx_username = null;
-        //not used for any authentication, just for being friendly!
+        private static string kx_username = null; //not used for any authentication, just for being friendly!
 
         public static bool logged_out(){
             return token == null;
@@ -44,7 +43,7 @@ namespace KerbalX
         private static void save_token(string token){
             File.WriteAllText(KerbalX.token_path, token);
         }
-		
+        
         //takes partial url and returns full url to site; ie url_to("some/place") -> "http://whatever_domain_site_url_defines.com/some/place"
         public static string url_to(string path){
             if(!path.StartsWith("/")){
@@ -52,7 +51,7 @@ namespace KerbalX
             }
             return KerbalX.site_url + path;
         }
-		
+        
         //Check if Token file exists and if so authenticate it with KerbalX. Otherwise instruct login window to display login fields.
         public static void load_and_authenticate_token(){
             KerbalX.login_gui.enable_login = false;
@@ -182,7 +181,7 @@ namespace KerbalX
                 int id = int.Parse((string)c["id"]);
                 Dictionary<string,string> cd = new Dictionary<string,string>();
                 foreach(string attr in attrs){
-                    cd.Add(attr, c[attr]);							
+                    cd.Add(attr, c[attr]);                            
                 }
                 craft_list.Add(id, cd);
             }
@@ -283,7 +282,7 @@ namespace KerbalX
         private UnityWebRequest last_request = null;
         private RequestCallback last_callback = null;
 
-        public void try_again(){		
+        public void try_again(){        
             send_request(last_request, last_callback);
         }
 
@@ -296,7 +295,7 @@ namespace KerbalX
         public void send_request(UnityWebRequest request, ImageUrlCheck callback){
             StartCoroutine(transmit(request, callback));
         }
-		
+        
         //Used in all requests to KerablX
         public void send_request(UnityWebRequest request, RequestCallback callback){
             StartCoroutine(transmit(request, callback));
@@ -322,50 +321,49 @@ namespace KerbalX
             yield return request.Send();
 
 
-            if(request.isError){															//Request Failed, most likely due to being unable to get a response, therefore no status code
+            if(request.isError){                                                            //Request Failed, most likely due to being unable to get a response, therefore no status code
                 KerbalX.failed_to_connect = true;
                 KerbalX.log("request failed: " + request.error);
-				
-                last_request = new UnityWebRequest(request.url, request.method);					//  \ create a copy of the request which is about to be sent
-                if(request.method != "GET"){														//  | if the request fails because of inability to connect to site
-                    last_request.uploadHandler = new UploadHandlerRaw(request.uploadHandler.data);
-                    ;// <  then try_again() can be used to fire the copied request
-                }																					//  | and the user can carry on from where they were when connection was lost.
-                last_request.downloadHandler = request.downloadHandler;								//  | upload and download handlers have to be duplicated too
-                last_callback = callback;															// /  and the callback is also stuffed into a var for reuse.
-				
+                
+                last_request = new UnityWebRequest(request.url, request.method);                    //  \ create a copy of the request which is about to be sent
+                if(request.method != "GET"){                                                        //  | if the request fails because of inability to connect to site
+                    last_request.uploadHandler = new UploadHandlerRaw(request.uploadHandler.data);  // <  then try_again() can be used to fire the copied request
+                }                                                                                   //  | and the user can carry on from where they were when connection was lost.
+                last_request.downloadHandler = request.downloadHandler;                             //  | upload and download handlers have to be duplicated too
+                last_callback = callback;                                                           // /  and the callback is also stuffed into a var for reuse.
+                
             } else{
-                int status_code = (int)request.responseCode;								//server responded - get status code
-                KerbalX.log("request returned " + status_code + status_codes[status_code.ToString()]); 						
-				
-                if(status_code == 500){													//KerbalX server error
-                    string error_message = "KerbalX server error!!\n" + //default error message incase server doesn't come back with something more helpful
+                int status_code = (int)request.responseCode;                                //server responded - get status code
+                KerbalX.log("request returned " + status_code + status_codes[status_code.ToString()]);                         
+                
+                if(status_code == 500){                                                     //KerbalX server error
+                    string error_message = "KerbalX server error!!\n" +                     //default error message incase server doesn't come back with something more helpful
                             "An error has occurred on KerbalX (it was probably Jebs fault)";
-                    var resp_data = JSON.Parse(request.downloadHandler.text);				//read response message and assuming there is one change the error_message
+                    var resp_data = JSON.Parse(request.downloadHandler.text);               //read response message and assuming there is one change the error_message
                     if(!(resp_data["error"] == null || resp_data["error"] == "")){
                         error_message = "KerbalX server error!!\n" + resp_data["error"];
                     }
                     KerbalX.log(error_message);
-                    KerbalX.server_error_message = error_message;							//Set the error_message on KerbalX, any open window will pick this up and render error dialog
-                    callback(request.downloadHandler.text, status_code);					//Still call the callback, assumption is all callbacks will test status code for 200 before proceeding, this allows for further handling if needed
-					
-                } else if(status_code == 426){												//426 - Upgrade Required, only for a major version change that makes past versions incompatible with the site's API
+                    KerbalX.server_error_message = error_message;                           //Set the error_message on KerbalX, any open window will pick this up and render error dialog
+                    callback(request.downloadHandler.text, status_code);                    //Still call the callback, assumption is all callbacks will test status code for 200 before proceeding, this allows for further handling if needed
+                    
+                } else if(status_code == 426){                                              //426 - Upgrade Required, only for a major version change that makes past versions incompatible with the site's API
                     KerbalX.upgrade_required = true;
-                    var resp_data = JSON.Parse(request.downloadHandler.text);	
+                    var resp_data = JSON.Parse(request.downloadHandler.text);    
                     KerbalX.upgrade_required_message = resp_data["upgrade_message"];
-					
-                } else if(status_code == 401){												//401s (Unauthorized) - response to the user's token not being recognized.
-                    if(RequestHandler.show_401_message == true){							//In the case of login/authenticate steps the 401 message is not shown (handled by login dialog)
+                    
+                } else if(status_code == 401){                                              //401s (Unauthorized) - response to the user's token not being recognized.
+                    if(RequestHandler.show_401_message == true){                            //In the case of login/authenticate steps the 401 message is not shown (handled by login dialog)
                         KerbalX.server_error_message = "Authorization Failed\nKerbalX did not recognize your authorization token, perhaps you were logged out.";
                         KerbalXAPI.log_out();
                     } else{
                         callback(request.downloadHandler.text, status_code);
                     }
 
-                } else if(status_code == 200 || status_code == 400 || status_code == 422){	//Error codes returned for OK and failed validations which are handled by the requesting method
-                    callback(request.downloadHandler.text, status_code);					
-					
-                } else{																		//Unhandled error codes - All other error codes. 
+                } else if(status_code == 200 || status_code == 400 || status_code == 422){  //Error codes returned for OK and failed validations which are handled by the requesting method
+                    callback(request.downloadHandler.text, status_code);                    
+                    
+                } else{                                                                     //Unhandled error codes - All other error codes. 
                     KerbalX.server_error_message = "Unknown Error!!\n" + request.downloadHandler.text;
                     callback(request.downloadHandler.text, status_code);
                 }
@@ -376,9 +374,9 @@ namespace KerbalX
     }
 
 }
-//				KerbalX.log ("response headers:");
-//				Dictionary<string, string> t = request.GetResponseHeaders ();
-//				foreach(KeyValuePair<string, string> r in t){
-//					KerbalX.log ("header: " + r.Key + " value " + r.Value);
-//				}
+//KerbalX.log ("response headers:");
+//Dictionary<string, string> t = request.GetResponseHeaders ();
+//foreach(KeyValuePair<string, string> r in t){
+//    KerbalX.log ("header: " + r.Key + " value " + r.Value);
+//}
 

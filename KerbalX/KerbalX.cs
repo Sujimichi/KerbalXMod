@@ -13,7 +13,7 @@ namespace KerbalX
 {
     public class KerbalX
     {
-        //		public static string site_url = "http://localhost:3000";
+        //public static string site_url = "http://localhost:3000";
         public static string site_url = "http://192.168.1.2:3000";
 
         public static string token_path = Paths.joined(KSPUtil.ApplicationRootPath, "KerbalX.key");
