@@ -13,7 +13,7 @@ namespace KerbalX
 
 		private void Awake(){
 			instance = this;
-			button_texture = GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "button"), false); 
+			button_texture = StyleSheet.assets ["editor_btn"];
 			GameEvents.onGUIApplicationLauncherReady.Add (this.app_launcher_ready);
 			GameEvents.onGUIApplicationLauncherDestroyed.Add (this.remove_from_toolbar);
 		}

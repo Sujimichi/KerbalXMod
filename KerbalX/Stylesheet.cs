@@ -16,8 +16,8 @@ namespace KerbalX
 		public static Dictionary<string, Texture> assets = new Dictionary<string, Texture> (){
 			{"logo_small", 		GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo_small"), false)}, 	//166x30
 			{"logo large", 		GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "KXlogo"), false)}, 		//664x120
-			{"editor_btn", 		GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "button"), false)},
-			{"editor_btn_hover",GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "button_hover"), false)}
+			{"editor_btn", 		GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "button_upload"), false)},
+			{"editor_btn_hover",GameDatabase.Instance.GetTexture (Paths.joined ("KerbalX", "Assets", "button_upload_hover"), false)}
 
 		};
 

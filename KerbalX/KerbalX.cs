@@ -18,9 +18,9 @@ namespace KerbalX
 		public static string screenshot_dir = Paths.joined (KSPUtil.ApplicationRootPath, "Screenshots"); //TODO make this a setting, oh and make settings.
 		public static string version = "0.0.2";
 
-		public static bool 	 failed_to_connect 			= false;
+		public static bool failed_to_connect 			= false;
 		public static string server_error_message 		= null;
-		public static bool 	 upgrade_required 			= false;
+		public static bool upgrade_required 			= false;
 		public static string upgrade_required_message 	= null;
 
 		public static List<string> log_data = new List<string>();
@@ -29,7 +29,7 @@ namespace KerbalX
 
 
 		//window handles (cos a window without a handle is just a pane)
-		public static KerbalXConsole console 						= null;
+		public static KerbalXConsole console                        = null;
 		public static KerbalXLoginWindow login_gui 					= null;
 		public static KerbalXUploadInterface upload_gui 			= null;
 		public static KerbalXDownloadInterface download_gui			= null;
