@@ -17,7 +17,7 @@ namespace KerbalX
 
         //Trigger the creation of custom Skin (copy of default GUI.skin with various custom styles added to it)
         public void OnGUI(){
-            if (KerbalXWindow.KXskin == null){
+            if(KerbalXWindow.KXskin == null){
                 StyleSheet.prepare();
             }
         }
@@ -26,10 +26,10 @@ namespace KerbalX
         public void app_launcher_ready(){
             GameEvents.onGUIApplicationLauncherReady.Remove(this.app_launcher_ready); //remove the listener to prevent multiple calls to this method
             ApplicationLauncher.Instance.AddOnHideCallback(this.toolbar_on_hide);     //bind events to close guis when toolbar hides
-            if (!KerbalX.upload_gui_toolbar_button){
+            if(!KerbalX.upload_gui_toolbar_button){
                 add_upload_gui_button_to_toolbar();
             }
-            if (!KerbalX.download_gui_toolbar_button){
+            if(!KerbalX.download_gui_toolbar_button){
                 add_download_gui_button_to_toolbar();
             }
         }
@@ -57,7 +57,7 @@ namespace KerbalX
 
 
         public void toggle_upload_interface(){
-            if (KerbalX.upload_gui){
+            if(KerbalX.upload_gui){
                 KerbalX.upload_gui.toggle();
             } else{
                 KerbalX.log("UploadInterface has not been started");
@@ -65,7 +65,7 @@ namespace KerbalX
         }
 
         public void toggle_download_interface(){
-            if (KerbalX.download_gui){
+            if(KerbalX.download_gui){
                 KerbalX.download_gui.toggle();
             } else{
                 KerbalX.log("DownloadInterface has not been started");
@@ -76,12 +76,15 @@ namespace KerbalX
         public void upload_btn_hover_on(){
             KerbalX.upload_gui_toolbar_button.SetTexture(StyleSheet.assets["upload_toolbar_btn_hover"]);
         }
+
         public void upload_btn_hover_off(){
             KerbalX.upload_gui_toolbar_button.SetTexture(StyleSheet.assets["upload_toolbar_btn"]);
         }
+
         public void download_btn_hover_on(){
             KerbalX.download_gui_toolbar_button.SetTexture(StyleSheet.assets["dnload_toolbar_btn_hover"]);
         }
+
         public void download_btn_hover_off(){
             KerbalX.download_gui_toolbar_button.SetTexture(StyleSheet.assets["dnload_toolbar_btn"]);
         }
@@ -89,7 +92,7 @@ namespace KerbalX
 
 
         public void toolbar_on_hide(){
-            if (KerbalX.upload_gui){
+            if(KerbalX.upload_gui){
                 GameObject.Destroy(KerbalX.upload_gui);
             }
             if(KerbalX.download_gui){
