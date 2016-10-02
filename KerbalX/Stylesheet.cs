@@ -135,6 +135,14 @@ namespace KerbalX
 				wrapped_button.name = "button.wrapped";
 				wrapped_button.wordWrap = true;
 
+				GUIStyle bold_button = new GUIStyle (GUI.skin.button);
+				bold_button.name = "button.bold";
+				bold_button.fontStyle = FontStyle.Bold;
+				bold_button.padding = new RectOffset (0, 0, 3, 3);
+				bold_button.fontSize = 15;
+
+
+
 
 				//Background (Box) Styles
 				GUIStyle blue_box = new GUIStyle (GUI.skin.box);
@@ -175,7 +183,7 @@ namespace KerbalX
 				KerbalXWindow.KXskin.customStyles = new GUIStyle[]{ 
 					h1, h2, h3, hyperlink, hyperlink_h2, hyperlink_h3, hyperlink_footer, alert, alert_h2, small, centered, 
 					pic_link, pic_hover, dark_back, dark_back_offset, blue_box, no_style,
-					login_button, upload_button, screenshot_button, screenshot_button_bold, wrapped_button,
+					login_button, upload_button, screenshot_button, screenshot_button_bold, wrapped_button, bold_button,
 					combo_field, combo_bttn, combo_option, combo_option_hover
 				};
 

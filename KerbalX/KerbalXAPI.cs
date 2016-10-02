@@ -19,6 +19,8 @@ namespace KerbalX
 	public delegate void RequestCallback(string data, int status_code);
 	public delegate void ImageUrlCheck(string content_type);
 	public delegate void ActionCallback();
+	public delegate void CraftListCallback(Dictionary<int, Dictionary<string, string>> craft_data);
+
 
 	public class KerbalXAPI
 	{
@@ -61,6 +63,8 @@ namespace KerbalX
 				KerbalX.login_gui.enable_login = true;
 			}
 		}
+
+		//Authentication POST requests
 
 		//make request to site to authenticate token. If token authentication fails, no error message is shown, it just sets the login window to show u-name/password fields.
 		public static void authenticate_token(string current_token){
@@ -116,29 +120,8 @@ namespace KerbalX
 			//TODO delete token file.
 		}
 
-		//Fetches data on the users current craft on the site.  This is kept in a Dictionary of craft_id => Dict of key value pairs....here let me explain it in Ruby;
-		//{craft_id => {:id => craft.id, :name => craft.name, :version => craft.ksp_version, :url => craft.unique_url}, ...}
-		public static void fetch_existing_craft(ActionCallback callback){
-			HTTP.get (url_to ("api/existing_craft.json")).set_header ("token", KerbalXAPI.token).send ((resp, code) => {
-				if(code==200){
-					JSONNode craft_data = JSON.Parse (resp);
-					Dictionary<int, Dictionary<string, string>> craft_list = new Dictionary<int, Dictionary<string, string>>();
-					for(int i=0; i<craft_data.Count; i++ ){
-						var c = craft_data[i];
-						int id = int.Parse((string)c["id"]);
-						Dictionary<string,string> cd = new Dictionary<string,string>(){
-							{"id", c["id"]},
-							{"name", c["name"]},
-							{"version", c["version"]},
-							{"url", c["url"]}
-						};
-						craft_list.Add (id, cd);
-					}
-					KerbalX.existing_craft = craft_list;
-					callback();
-				}
-			});
-		}
+
+		//Settings POST requests
 
 		public static void dismiss_current_update_notification(){
 			HTTP http = HTTP.get (url_to ("api/dismiss_update_notification"));
@@ -146,6 +129,60 @@ namespace KerbalX
 			http.set_header ("token", KerbalXAPI.token);
 			http.send ((resp,code) => {});
 		}
+
+
+		//Craft GET requests
+
+		//Fetches data on the users current craft on the site.  This is kept in a Dictionary of craft_id => Dict of key value pairs....here let me explain it in Ruby;
+		//{craft_id => {:id => craft.id, :name => craft.name, :version => craft.ksp_version, :url => craft.unique_url}, ...}
+		public static void fetch_existing_craft(ActionCallback callback){
+			HTTP.get (url_to ("api/existing_craft.json")).set_header ("token", KerbalXAPI.token).send ((resp, code) => {
+				if(code==200){
+					KerbalX.existing_craft = process_craft_data (resp, new string[]{"id", "name", "version", "url"});
+					callback();
+				}
+			});
+		}
+
+		public static void fetch_download_queue(CraftListCallback callback){
+			fetch_craft ("api/download_queue.json", callback);
+		}
+		public static void fetch_past_downloads(CraftListCallback callback){
+			fetch_craft ("api/past_downloads.json", callback);
+		}
+		public static void fetch_users_craft(CraftListCallback callback){
+			fetch_craft ("api/user_craft.json", callback);
+		}
+
+		private static void fetch_craft(string path, CraftListCallback callback){
+			HTTP.get (url_to (path)).set_header ("token", KerbalXAPI.token).send ((resp, code) => {
+				if(code==200){
+					callback(process_craft_data (resp, new string[]{"id", "name", "version", "type"} ));
+				}
+			});
+		}
+
+		public static void download_craft(int id, RequestCallback callback){
+			HTTP.get (url_to ("api/craft/" + id)).set_header ("token", KerbalXAPI.token).send (callback);
+		}
+
+		public static Dictionary<int, Dictionary<string, string>> process_craft_data(string craft_data_json, string[] attrs){
+			JSONNode craft_data = JSON.Parse (craft_data_json);
+			Dictionary<int, Dictionary<string, string>> craft_list = new Dictionary<int, Dictionary<string, string>>();
+			for(int i=0; i<craft_data.Count; i++ ){
+				var c = craft_data[i];
+				int id = int.Parse((string)c["id"]);
+				Dictionary<string,string> cd = new Dictionary<string,string>();
+				foreach(string attr in attrs){
+					cd.Add (attr, c[attr]);							
+				}
+				craft_list.Add (id, cd);
+			}
+			return craft_list;
+		}
+
+
+		//Craft POST and PUT requests
 
 		//Send new craft to Mun....or KerbalX.com as a POST request
 		public static void upload_craft(WWWForm craft_data, RequestCallback callback){
@@ -158,7 +195,7 @@ namespace KerbalX
 		//Update existing craft on KerbalX as a PUT request with the KerbalX database ID of the craft to be updated
 		public static void update_craft(int id, WWWForm craft_data, RequestCallback callback){
 			HTTP http = HTTP.post (url_to ("api/craft/" + id), craft_data);
-			http.request.method = "PUT"; //because unity's PUT method doesn't take a form, so we create a POST and then change the verb.
+			http.request.method = "PUT"; //because unity's PUT method doesn't take a form, so we create a POST with the form and then change the verb.
 			http.set_header ("token", KerbalXAPI.token);
 			http.set_header ("Content-Type", "multipart/form-data");
 			http.send (callback);

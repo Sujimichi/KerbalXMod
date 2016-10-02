@@ -65,6 +65,7 @@
     <Compile Include="KerbalXActionGroupInterface.cs" />
     <Compile Include="KerbalXDevTools.cs" />
     <Compile Include="KerbalXInitializer.cs" />
+    <Compile Include="KerbalXDownloadInterface.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

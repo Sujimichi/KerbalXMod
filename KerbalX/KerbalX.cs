@@ -32,6 +32,7 @@ namespace KerbalX
 		public static KerbalXConsole console 						= null;
 		public static KerbalXLoginWindow login_gui 					= null;
 		public static KerbalXUploadInterface upload_gui 			= null;
+		public static KerbalXDownloadInterface download_gui			= null;
 		public static KerbalXImageSelector image_selector 			= null;
 		public static KerbalXActionGroupInterface action_group_gui 	= null;
 
