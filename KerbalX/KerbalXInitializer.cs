@@ -92,6 +92,9 @@ namespace KerbalX
             if (KerbalX.upload_gui){
                 GameObject.Destroy(KerbalX.upload_gui);
             }
+            if(KerbalX.download_gui){
+                GameObject.Destroy(KerbalX.download_gui);
+            }
         }
 
         public void remove_from_toolbar(){
