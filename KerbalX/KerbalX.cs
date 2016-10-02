@@ -37,7 +37,8 @@ namespace KerbalX
 		public static KerbalXActionGroupInterface action_group_gui 	= null;
 
 		//Toolbar Buttons
-		public static ApplicationLauncherButton editor_toolbar_button = null;
+		public static ApplicationLauncherButton upload_gui_toolbar_button   = null;
+        public static ApplicationLauncherButton download_gui_toolbar_button = null;
 
 
 		//logging stuf, not suitable for lumberjacks

@@ -70,9 +70,6 @@ namespace KerbalX
 		protected override void WindowContent(int win_id){
 			section (300f, e => { GUILayout.Label (KerbalX.last_log ());	});
 
-			if(KerbalXInitializer.instance){
-				GUILayout.Label ("initializer is active");
-			}
 
 			if (GUILayout.Button ("update existing craft")) {
 				KerbalXAPI.fetch_existing_craft (() => {});

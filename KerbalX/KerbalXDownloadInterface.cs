@@ -32,6 +32,7 @@ namespace KerbalX
 			window_pos = new Rect (Screen.width / 2 - 500 / 2, win_top, 500, 5);
 //			max_scroll_height = Screen.height - (win_top + 200);
 			require_login = true;
+            visible = false;
 			ksp_ver = Versioning.GetVersionString ();
 			enable_request_handler ();
 			fetch_download_queue ();
