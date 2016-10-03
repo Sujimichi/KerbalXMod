@@ -9,6 +9,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
 
+//Building Against
+//build id = 01564
+//2016-10-03_12-33-40
+//Branch: prerelease
+
 namespace KerbalX
 {
     public class KerbalX

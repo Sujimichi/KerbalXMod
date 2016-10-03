@@ -535,7 +535,10 @@ namespace KerbalX
             if(pic_count < max_pics || picture.file == null){ 	//if the count is under max_pics or the pic doesn't have a file (ie it's url) then add it.
                 pictures.Add(picture);
             } else{
-                errors = new List<string>() { };    //Otherwise show error message. "You can only add " + max_pics + " pictures for upload, (bandwidth limitations, sorry!)", "You can add as many image urls as you like though." };
+                errors = new List<string>() {                   //Otherwise show error message
+                    "You can only add " + max_pics + " pictures for upload, (bandwidth limitations, sorry!)", 
+                    "You can add as many image urls as you like though."
+                };    
             }
         }
 

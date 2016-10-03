@@ -339,50 +339,50 @@ namespace KerbalX
 				// GUILayout.Label ("some nonsense", GUILayout.Width (w*0.5f)); //use w to get the inner width of the section, window_pos.width in this case
 			});	
 		*/
-        protected void section(Content content){section(-1, content);} //alias (overload) for section when used without a width float, just a lambda.
+        protected void section(Content content){
+            GUILayout.BeginHorizontal(get_section_style()); 
+            content(win_width_without_padding());
+            GUILayout.EndHorizontal();                  
+        } 
         protected void section(float section_width, Content content){
-            //Call BeginHorizontal giving the style as either default GUIStyle or style_override and any GUILayoutOptions
-            GUILayout.BeginHorizontal(style_override == null ? section_style : style_override, section_options(section_width)); 
-            style_override = null;						//style_override is set back to null so it doesn't effect any other sections.
-            content(callback_width(section_width));	//call the lambda and pass a width (either given width or window.pos.width)
-            GUILayout.EndHorizontal();					//ze END!
+            GUILayout.BeginHorizontal(get_section_style(), GUILayout.Width(section_width), GUILayout.MaxWidth(section_width)); 
+            content(section_width);
+            GUILayout.EndHorizontal();
         }
 
-        //Works in the same way as section but wraps the lambda in Begin/End Vertical instead.
-        protected void v_section(Content content){v_section(-1, content);}//alias (overload) for v_section when used without a width float, just a lambda.
+
+        //Works in the just the same way as section() but wraps the lambda in Begin/End Vertical instead.
+        protected void v_section(Content content){
+            GUILayout.BeginVertical(get_section_style()); 
+            content(win_width_without_padding());
+            GUILayout.EndVertical();
+        }
         protected void v_section(float section_width, Content content){
-            //Call BeginHorizontal giving the style as either default GUIStyle or style_override and any GUILayoutOptions
-            GUILayout.BeginVertical(style_override == null ? section_style : style_override, section_options(section_width)); 
-            style_override = null;						//style_override is set back to null so it doesn't effect any other sections.
-            content(callback_width(section_width));	//call the lambda and pass a width (either given width or window.pos.width)
-            GUILayout.EndVertical();					//ze END!
+            GUILayout.BeginVertical(get_section_style(), GUILayout.Width(section_width), GUILayout.MaxWidth(section_width));
+            content(section_width);
+            GUILayout.EndVertical();
         }
 
+        //Very similar to section() and v_section(), but requires a Vector2 to track scroll position and two floats for width and height as well as the content lamnbda
+        //Essentially just the same as section() it wraps the call to the lamba in BeginScrollView/EndScrollView calls.
+        //The Vector2 is also returned so it can be passed back in in the next pass of OnGUI
         protected Vector2 scroll(Vector2 scroll_pos, float scroll_width, float scroll_height, Content content){
-            GUILayoutOption[] opts = new GUILayoutOption[] { GUILayout.Width(scroll_width), GUILayout.MaxWidth(scroll_width), GUILayout.Height(scroll_height) };
-            scroll_pos = GUILayout.BeginScrollView(scroll_pos, (style_override == null ? section_style : style_override), opts);
-            style_override = null;	//style_override is set back to null so it doesn't effect any other sections.
+            scroll_pos = GUILayout.BeginScrollView(scroll_pos, get_section_style(), GUILayout.Width(scroll_width), GUILayout.MaxWidth(scroll_width), GUILayout.Height(scroll_height));
             content(scroll_width);
             GUILayout.EndScrollView();
             return scroll_pos;
         }
 
-        //Helpers for section, v_section and scroll
-        //section_options returns GUILayoutOptions to pass into Begin(Horizontal/Vertical). either returns empty set of options (if width is given as -1)
-        //or a set of options defining Width and MaxWidth.
-        private GUILayoutOption[] section_options(float section_width){
-            GUILayoutOption[] opts = new GUILayoutOption[] { };	//GUILayoutOptions to pass onto BeginHorizontal
-            if(section_width != -1){							//if width is given a -1 then no GUILayoutOptions are used
-                opts = new GUILayoutOption[] { GUILayout.Width(section_width), GUILayout.MaxWidth(section_width) };
-            }
-            return opts;
+        //Helper for above section(), v_section() and scroll() methods.  Returns a GUIStyle, either a default GUIStyle() or if section_override has been
+        //set then it returns that.  It also sets section_override back to null 
+        private GUIStyle get_section_style(){
+            GUIStyle style = style_override == null ? section_style : style_override;
+            style_override = null;
+            return style;
         }
-        //either simply returns the given width, unless it's given as -1 in which case it returns the window width (minus padding and margin)
-        private float callback_width(float section_width){
-            if(section_width == -1){				//if width was given as -1 then the with of the window (minus its padding and margins) is used instead
-                section_width = window_pos.width - GUI.skin.window.padding.horizontal - GUI.skin.window.border.horizontal;
-            }
-            return section_width; //width to pass back into the lambda
+        //Get the window width minus horizontal padding and border (used in above section(), v_section() and scroll() methods when they're not supplied a width)
+        private float win_width_without_padding(){
+            return window_pos.width - GUI.skin.window.padding.horizontal - GUI.skin.window.border.horizontal;
         }
 
 
@@ -393,6 +393,7 @@ namespace KerbalX
         }
 
 
+        //Uses the ComboBox class to setup a drop down menu.
         protected void combobox(string combo_name, Dictionary<int, string> select_options, int selected_id, float list_width, float list_height, KerbalXWindow win, ComboResponse resp){
             section(list_width, w =>{
                 float h = 22f + select_options.Count * 17;
