@@ -284,7 +284,8 @@ namespace KerbalX
         }
 
         protected virtual void OnDestroy(){
-            EditorLogic.fetch.Unlock(window_id.ToString());
+//            EditorLogic.fetch.Unlock(window_id.ToString());
+            InputLockManager.RemoveControlLock(window_id.ToString());
         }
     }
 

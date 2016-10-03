@@ -32,6 +32,9 @@ namespace KerbalX
             if(!KerbalX.download_gui_toolbar_button){
                 add_download_gui_button_to_toolbar();
             }
+            if(!KerbalX.console){
+                add_console_button_to_toolbar();
+            }
         }
 
         public void add_upload_gui_button_to_toolbar(){
@@ -55,6 +58,15 @@ namespace KerbalX
             );
         }
 
+        public void add_console_button_to_toolbar(){
+            ApplicationLauncher.Instance.AddModApplication(
+                toggle_console, toggle_console, 
+                null, null,
+                null, null, 
+                ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH, 
+                GameDatabase.Instance.GetTexture(Paths.joined("KerbalX", "Assets", "console_button"), false)
+            );
+        }
 
         public void toggle_upload_interface(){
             if(KerbalX.upload_gui){
@@ -69,6 +81,11 @@ namespace KerbalX
                 KerbalX.download_gui.toggle();
             } else{
                 KerbalX.log("DownloadInterface has not been started");
+            }
+        }
+        public void toggle_console(){
+            if(KerbalX.console){
+                KerbalX.console.toggle();
             }
         }
 

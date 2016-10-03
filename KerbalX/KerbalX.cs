@@ -15,6 +15,7 @@ namespace KerbalX
     {
         //public static string site_url = "http://localhost:3000";
         public static string site_url = "http://192.168.1.2:3000";
+        //public static string site_url = "http://kerbalx-stage.herokuapp.com";
 
         public static string token_path = Paths.joined(KSPUtil.ApplicationRootPath, "KerbalX.key");
         public static string screenshot_dir = Paths.joined(KSPUtil.ApplicationRootPath, "Screenshots");//TODO make this a setting, oh and make settings.
