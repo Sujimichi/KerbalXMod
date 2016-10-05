@@ -85,7 +85,7 @@ namespace KerbalX
             is_dialog = true;
         }
 
-        protected override void WindowContent(int win_id) {
+        protected override void WindowContent(int win_id) {            
             content(this);
         }
 

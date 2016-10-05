@@ -54,7 +54,7 @@ namespace KerbalX
         public bool prevent_click_through   = true;     //prevent clicks interacting with elements behind the window
         protected bool require_login        = false;    //set to true if the window requires user to be logged into KerbalX
         protected bool draggable            = true;     //sets the window as draggable
-        protected bool footer               = true;     //sets if the set footer content should be draw (see FooterContent method)
+        public bool footer                  = true;     //sets if the set footer content should be draw (see FooterContent method)
         public bool visible                 = true;     //sets if the window is visible to start with (see show(), hide(), toggle(), on_show(), on_hide())
         protected bool gui_locked           = false;    //if true will disable interaction with the window (without changing its appearance) (see lock_ui() and unlock_ui())
         protected int window_id             = 0;        //can be set to override automatic ID assignment. If left at 0 it will be auto-assigned
@@ -95,8 +95,10 @@ namespace KerbalX
             yield return true;	//doesn't seem to matter what this returns
             Thread.Sleep(100);
             if(interface_locked){
-                EditorLogic.fetch.Unlock(window_id.ToString()); //ensure any locks on the editor interface are release when hiding.
+//                    EditorLogic.fetch.Unlock(window_id.ToString()); //ensure any locks on the editor interface are release when hiding.
+                InputLockManager.RemoveControlLock(window_id.ToString());
             }
+
         }
 
         //overridable methods for class which inherit this class to define actions which are called on hide and show

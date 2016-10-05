@@ -17,9 +17,9 @@ namespace KerbalX
     public class JumpStart : MonoBehaviour
     {
         public bool autostart = true;
-        public string save_name = "t1";
-        public string mode = "spacecenter";
-//        public string mode = "editor";
+        public string save_name = "default";
+//        public string mode = "spacecenter";
+        public string mode = "editor";
         public string craft_name = "testy";
 
         public void Start(){
@@ -72,97 +72,14 @@ namespace KerbalX
             visible = false;
         }
 
-        private Dictionary<string, Dictionary<string, int>> part_map = new Dictionary<string, Dictionary<string, int>>();
-        private Dictionary<string, AvailablePart> part_lookup = new Dictionary<string, AvailablePart>();
-
-        private void map_parts(){
-            foreach(AvailablePart part in PartLoader.LoadedPartsList){
-                part_lookup.Add(part.name, part);
-                Dictionary<string, int> tags = new Dictionary<string, int>();
-                foreach(string tag in Regex.Split(part.title, @"/\W/")){
-                    if(!string.IsNullOrEmpty(tag)){
-                        tags.Add(tag.ToLower().Trim(), 12);                    
-                    }
-                }
-                foreach(string tag in Regex.Split(part.name, @"/\W/")){
-                    if(!string.IsNullOrEmpty(tag)){
-                        tags.Add(tag.ToLower().Trim(), 6);                    
-                    }
-                }
-                foreach(string tag in Regex.Split(part.description, @"/\W/")){
-                    if(!string.IsNullOrEmpty(tag)){
-                        tags.Add(tag.ToLower().Trim(), 2);                    
-                    }
-                }
-                part_map.Add(part.name, tags);
-            }
-        }
-
-        private List<KeyValuePair<string, int>> search(string search_str){
-            search_str = search_str.ToLower().Trim();
-            Dictionary<string, int> r = new Dictionary<string, int>();
-
-            foreach(KeyValuePair<string, Dictionary<string, int>> part_tags  in part_map){
-                int score = 0;
-                foreach(KeyValuePair<string, int> tag in part_tags.Value){
-                    if(tag.Key == search_str){ 
-                        score += tag.Value;
-                    }else if(tag.Key.Contains(search_str)){ 
-                        score += tag.Value / 2;
-                    }
-                    foreach(string p in Regex.Split(search_str, @"/\W/")){
-                        if(tag.Key == p){
-                            score += tag.Value;
-                        }else if(tag.Key.Contains(p)){
-                            score += tag.Value / 2;
-                        }
-                    }
-                }
-                r.Add(part_tags.Key, score);
-            }
-            List<KeyValuePair<string, int>> sorted_list = r.ToList();
-            sorted_list.Sort((pair1,pair2) => pair2.Value.CompareTo(pair1.Value));
-            return sorted_list;
-        }
-
-        private string search_str = "";
-        private List<KeyValuePair<string, int>> results = new List<KeyValuePair<string, int>>();
 
         protected override void WindowContent(int win_id){
             section(300f, e =>{
                 GUILayout.Label(KerbalX.last_log());
             });
 
-
-
-            search_str = GUILayout.TextField(search_str);
-            if(GUILayout.Button("search")){
-                results = search(search_str);
-            }
-            if(GUILayout.Button("make map")){
-                map_parts();
-            }
-            foreach(KeyValuePair<string, int> r in results){
-                if(r.Value > 0){
-                    GUILayout.Label(part_lookup[r.Key].title + " - " + r.Value);
-                }
-            }
-
-
             if(GUILayout.Button("test")){
-                Debug.Log(PartLoader.LoadedPartsList.Count);
-                Debug.Log(PartLoader.LoadedPartsList.First().name);
-                Debug.Log(PartLoader.LoadedPartsList.First().title);
-                Debug.Log(PartLoader.LoadedPartsList.First().description);
-
-                foreach(AvailablePart part in PartLoader.LoadedPartsList){
-                    Debug.Log(part.name);
-                    Debug.Log(part.title);
-                    Debug.Log(part.description);
-                }
             }
-
-
 
             if(GUILayout.Button("update existing craft")){
                 KerbalXAPI.fetch_existing_craft(() =>{});

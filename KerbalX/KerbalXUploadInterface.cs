@@ -490,14 +490,17 @@ namespace KerbalX
                         Application.OpenURL(craft_url);
                         close_dialog();
                     }
-                    if(GUILayout.Button(StyleSheet.assets["logo large"], "no_style", width(500f), height(90.36f))){
-                        Application.OpenURL(craft_url);
-                        close_dialog();
-                    }
-                    GUILayout.Label("Click the link (or logo) to view your craft.\nIf you want to the page layout click the \"Edit Craft\" link at the top of the page.", "small");
-                    section(w2 =>{
+                    section(w2 => {
+                        GUILayout.Space(60f);
+                        if(GUILayout.Button(StyleSheet.assets["logo large"], "no_style", width(450f), height(81.32f))){
+                            Application.OpenURL(craft_url);
+                            close_dialog();
+                        }
+                    });
+                    GUILayout.Label("Click the link (or logo) to view your craft.\nIf you want to change the page layout click the \"Edit Craft\" link at the top of the page.", "centered");
+                    section(w3 =>{
                         GUILayout.FlexibleSpace();
-                        if(GUILayout.Button("close", width(50f))){
+                        if(GUILayout.Button("close", "button.bold", width(50f), height(20f))){
                             close_dialog();
                         }
                     });
@@ -505,7 +508,7 @@ namespace KerbalX
                 });
             });
             dialog.window_title = "";
-            dialog.window_pos = new Rect((Screen.width / 2 - 528f / 2), Screen.height / 4, 528f, 5);
+            dialog.window_pos = new Rect((Screen.width / 2 - 600f / 2), Screen.height / 4, 600f, 5);
         }
 
         //Makes a GET to KerbalX to return info about the users uploaded craft.  Full craft data is stored on KerbalX.existing_craft

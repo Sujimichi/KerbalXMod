@@ -29,7 +29,6 @@ namespace KerbalX
             instance = this;
             fetch_download_queue();
             GameEvents.OnAppFocus.Add(app_focus);
-
         }
 
         //returns current KerbalXDownloadInterface instance or creates and returns one if none exists.
@@ -72,21 +71,19 @@ namespace KerbalX
             download_gui().set_craft_list(update_craft_data(download_queue), "Download Queue");
         }
 
-        //Fetch list of craft the user has downloaded in the past and push it to the download interface
+        //Fetch list of craft the user has downloaded in the past, add in path info and push it to the download interface
         public void fetch_past_downloads(){
             KerbalXAPI.fetch_past_downloads((craft_data) =>{
                 download_gui().set_craft_list(update_craft_data(craft_data), "Past Downloads");
             });
         }
 
-        //Fetch list of craft uploaded by the user and push it to the download interface
+        //Fetch list of craft uploaded by the user, add in path info and push it to the download interface
         public void fetch_users_craft(){
             KerbalXAPI.fetch_users_craft((craft_data) =>{
                 download_gui().set_craft_list(update_craft_data(craft_data), "Your Craft");
             });
         }
-
-
 
 
         //takes craft data hot off the site and adds in path information based on the craft's type and name
@@ -145,18 +142,16 @@ namespace KerbalX
             return count == 0;
         }
 
-
+        //Fetches users craft list and then downloads all their craft which are from the same KSP version as the current game.
+        //Warning - no overwrite confirmation on this, as this method is only be used when populating a new save.
         public void auto_load_users_craft(){
             string ksp_version = Versioning.GetVersionString();
             List<int> loaded_craft_ids = new List<int>();
             KerbalXAPI.fetch_users_craft((craft_data) =>{
                 var user_craft_data = update_craft_data(craft_data);
-                KerbalX.log("updated craft data");
                 int[] craft_ids = user_craft_data.Keys.ToArray();
                 foreach(int id in craft_ids){
-                    KerbalX.log("checking version for " + id.ToString());
                     if(user_craft_data[id]["version"] == ksp_version){
-                        KerbalX.log("downloading....");
                         download_craft(id, craft_data[id]);
                         loaded_craft_ids.Add(id);
                     }
@@ -209,8 +204,6 @@ namespace KerbalX
     }
 
 
-
-//    [KSPAddon(KSPAddon.Startup.SpaceCentre, false)]
     public class KerbalXDownloadInterface : KerbalXWindow
     {
 
@@ -245,13 +238,24 @@ namespace KerbalX
 
         //Takes craft data from the DownloadController and a mode name to display. Ensures the gui is visible and adjusts height of window and scroller according to craft count
         public void set_craft_list(Dictionary<int, Dictionary<string, string>> craft_data, string mode_name){
-            visible = true;
+            this.show();
             mode = mode_name;
             craft_list = new Dictionary<int, Dictionary<string, string>>();
             foreach(KeyValuePair<int, Dictionary<string, string>> data in craft_data){
                 craft_list.Add(data.Key, new Dictionary<string, string>(data.Value));
             }
             craft_ids = craft_list.Keys.ToArray();
+            if(mode == "Download Queue"){
+                bool all_current = true;
+                foreach(int id in craft_ids){
+                    if(craft_list[id]["version"] != ksp_ver){
+                        all_current = false;
+                    }
+                }
+                only_version_compatible = all_current;
+            }else{
+                only_version_compatible = true;
+            }
             adjust_scroll_height();
             scroll_pos.y = 0;
         }
@@ -347,6 +351,14 @@ namespace KerbalX
                     GUILayout.Label("No craft do display for \"" + mode + "\"");
                 }
             });
+            section(w =>{
+                GUILayout.FlexibleSpace();
+                if(GUILayout.Button("Close")){
+                    hide();
+                }
+            
+            });
+
         }
 
 
@@ -408,25 +420,32 @@ namespace KerbalX
             dialog.window_title = "Populate new save?";
         }
 
+        private Vector2 dl_scroll_pos;
+        private float dl_scroll_height = 372f;
         public void show_bulk_download_complete_dialog(List<int> loaded_ids, Dictionary<int, Dictionary<string, string>> craft_data){
             KerbalXDialog dialog = show_dialog(d => {
+                d.footer = true;
                 GUILayout.Label("You craft have been downloaded", "h2");
                 GUILayout.Label("these ones to be precise:", "small");
-
-                foreach(int id in loaded_ids){
-                    style_override = GUI.skin.GetStyle("background.dark.margin");
-                    v_section(w => {
-                        GUILayout.Label(craft_data[id]["name"], "h3");
-                        GUILayout.Label("saved to: " + craft_data[id]["short_path"]);
-                    });
+                dl_scroll_height = 62 * loaded_ids.Count;
+                if(dl_scroll_height > 372f){
+                    dl_scroll_height = 372f;
                 }
+                dl_scroll_pos = scroll(dl_scroll_pos, 500f, dl_scroll_height, sw => {
+                    foreach(int id in loaded_ids){
+                        style_override = GUI.skin.GetStyle("background.dark.margin");
+                        v_section(w => {
+                            GUILayout.Label(craft_data[id]["name"], "h3");
+                            GUILayout.Label("saved to: " + craft_data[id]["short_path"]);
+                        });
+                    }
+                });
                 section(w => {
                     GUILayout.FlexibleSpace();
-                    if(GUILayout.Button("OK")){
+                    if(GUILayout.Button("Done", "button.bold", width((150f)))){
                         close_dialog();
                     }
                 });
-
             });
             dialog.window_title = "Download Summary";
         }
