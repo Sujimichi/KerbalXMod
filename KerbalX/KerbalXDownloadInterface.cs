@@ -74,16 +74,20 @@ namespace KerbalX
 
         //Fetch craft the user has downloaded in the past
         private void fetch_past_downloads(){
-            KerbalXAPI.fetch_past_downloads((craft_data) =>{
-                KerbalX.download_gui.set_list(craft_data, "Past Downloads");
-            });
+            if(KerbalXAPI.logged_in()){
+                KerbalXAPI.fetch_past_downloads((craft_data) =>{
+                    KerbalX.download_gui.set_list(craft_data, "Past Downloads");
+                });
+            }
         }
 
         //Fetch craft uploaded by the user
         private void fetch_users_craft(){
-            KerbalXAPI.fetch_users_craft((craft_data) =>{
-                KerbalX.download_gui.set_list(craft_data, "Your Craft");
-            });
+            if(KerbalXAPI.logged_in()){
+                KerbalXAPI.fetch_users_craft((craft_data) =>{
+                    KerbalX.download_gui.set_list(craft_data, "Your Craft");
+                });
+            }
         }
 
 
