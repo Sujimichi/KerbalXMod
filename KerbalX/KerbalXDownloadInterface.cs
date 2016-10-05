@@ -13,9 +13,9 @@ namespace KerbalX
     public class KerbalXDownloadController : KerbalXWindowExtension
     {
         public static KerbalXDownloadController instance = null;
-//        public int download_queue_count = 0;
-        private  Dictionary<int, Dictionary<string, string>> download_queue = new Dictionary<int, Dictionary<string, string>>();
+        public static bool query_new_save = true;
 
+        private  Dictionary<int, Dictionary<string, string>> download_queue = new Dictionary<int, Dictionary<string, string>>();
         private Rect container = new Rect(Screen.width/2 - 500/2, -90, 500, 80);
         private int disable_link = 0;
         private long start_time = 0;
@@ -24,71 +24,147 @@ namespace KerbalX
 
         private void Start(){
             enable_request_handler();
+            download_gui();
             start_time = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             instance = this;
-            GameEvents.OnAppFocus.Add(app_focus);
             fetch_download_queue();
+            GameEvents.OnAppFocus.Add(app_focus);
+
+        }
+
+        //returns current KerbalXDownloadInterface instance or creates and returns one if none exists.
+        private KerbalXDownloadInterface download_gui(){
+            if(!KerbalX.download_gui){
+                return gameObject.AddOrGetComponent<KerbalXDownloadInterface>();
+            }
+            return KerbalX.download_gui;
         }
 
         private void OnDestroy(){
             GameEvents.OnAppFocus.Remove(app_focus);
         }
 
-        public void app_focus(bool e){
-            KerbalX.log("app focus " + e.ToString());
-            fetch_download_queue((KerbalX.download_gui && KerbalX.download_gui.visible && KerbalX.download_gui.mode == "Download Queue"));
+        //triggered when the game gets or loses focus. When it gets focus this fetches an update of the download queue.
+        //ie if user tabs out of game, downloads a craft on the site and tabs back, this will trigger the download notification to appear right away.
+        public void app_focus(bool focus_on){
+            if(focus_on){
+                fetch_download_queue((KerbalX.download_gui && KerbalX.download_gui.visible && KerbalX.download_gui.mode == "Download Queue"));
+            }
         }
 
 
+        //fetch list of craft tagged to download. if optional second argument is given as true, show_download_list will be called once list is fetched
         public void fetch_download_queue(){
             fetch_download_queue(false);
         }
         public void fetch_download_queue(bool show_list){
-            if(KerbalXAPI.logged_in()){
-                KerbalXAPI.fetch_download_queue((craft_data) =>{
-                    download_queue.Clear();
-                    download_queue = craft_data;
-                    if(show_list){
-                        show_download_list();
-                    }
-                });
-            }
+            KerbalXAPI.fetch_download_queue((craft_data) =>{
+                download_queue.Clear();
+                download_queue = craft_data;
+                if(show_list){
+                    show_download_list();
+                }
+            });
         }
 
+        //push the download queue list to the download interface and ensure it's visible
         public void show_download_list(){
-            KerbalX.download_gui.visible = true;
-            if(KerbalX.download_gui.visible){
-                KerbalX.download_gui.set_list(download_queue, "Download Queue");
+            download_gui().set_craft_list(update_craft_data(download_queue), "Download Queue");
+        }
+
+        //Fetch list of craft the user has downloaded in the past and push it to the download interface
+        public void fetch_past_downloads(){
+            KerbalXAPI.fetch_past_downloads((craft_data) =>{
+                download_gui().set_craft_list(update_craft_data(craft_data), "Past Downloads");
+            });
+        }
+
+        //Fetch list of craft uploaded by the user and push it to the download interface
+        public void fetch_users_craft(){
+            KerbalXAPI.fetch_users_craft((craft_data) =>{
+                download_gui().set_craft_list(update_craft_data(craft_data), "Your Craft");
+            });
+        }
+
+
+
+
+        //takes craft data hot off the site and adds in path information based on the craft's type and name
+        private Dictionary<int, Dictionary<string, string>> update_craft_data(Dictionary<int, Dictionary<string, string>> craft_data){
+            int[] craft_ids = craft_data.Keys.ToArray();
+            foreach(int id in craft_ids){
+                string type_dir = craft_data[id]["type"] == "Subassembly" ? "Subassemblies" : Paths.joined("Ships", craft_data[id]["type"]);
+                craft_data[id].Add("dir",       Paths.joined(KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, type_dir));
+                craft_data[id].Add("path",      Paths.joined(KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, type_dir, craft_data[id]["name"] + ".craft"));
+                craft_data[id].Add("short_path",Paths.joined(HighLogic.SaveFolder, type_dir, craft_data[id]["name"] + ".craft"));
+                craft_data[id].Add("status", "");
+                if(File.Exists(craft_data[id]["path"])){
+                    craft_data[id]["status"] = "In folder";
+                }
+            }
+            return craft_data;
+        }
+
+
+        //fetch craft of given ID from KerbalX and write it to file.  no confirmation for overwrite is given by this method.
+        //this will be called from the download interface once overwrite confirmation has been given.
+        public void download_craft(int id, Dictionary<string, string> craft_info){
+            KerbalXAPI.download_craft(id, (craft_file_string, code) =>{
+                if(code == 200){
+                    write_file(id, craft_info, craft_file_string);
+                    if(download_gui().mode == "Download Queue"){
+                        fetch_download_queue();
+                    }
+                }
+            });
+        }
+
+        private void write_file(int craft_id, Dictionary<string, string> craft_info, string craft_file){
+            Directory.CreateDirectory(craft_info["dir"]); //ensure directorys exist (usually just subassembly folder which is missing). 
+            File.WriteAllText(craft_info["path"], craft_file);
+            craft_info["status"] = "Downloaded";
+            if(download_gui().craft_list.ContainsKey(craft_id)){
+                download_gui().craft_list[craft_id]["status"] = "Downloaded";
             }
         }
 
-        public static void get(string type){
-            if(type == "download_queue"){
-                KerbalXDownloadController.instance.fetch_download_queue(true);
-            }else if(type == "past_downloads"){
-                KerbalXDownloadController.instance.fetch_past_downloads();
-            }else if(type == "users_craft"){
-                KerbalXDownloadController.instance.fetch_users_craft();
+
+        //checks to see if there are any craft in the current save, returns true if no craft are present.
+        public bool save_is_empty(){
+            int count = 0;
+            string path;
+            string[] sub_folders = new string[] { Paths.joined("Ships", "VAB"), Paths.joined("Ships", "SPH"), "Subassembly" };
+            DirectoryInfo dir;
+            foreach(string sub_folder in sub_folders){
+                path = Paths.joined(KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, sub_folder);
+                if(Directory.Exists(path)){
+                    dir = new DirectoryInfo(path);
+                    count += dir.GetFiles("*.craft").Count();
+                }
             }
+            return count == 0;
         }
 
-        //Fetch craft the user has downloaded in the past
-        private void fetch_past_downloads(){
-            if(KerbalXAPI.logged_in()){
-                KerbalXAPI.fetch_past_downloads((craft_data) =>{
-                    KerbalX.download_gui.set_list(craft_data, "Past Downloads");
-                });
-            }
+
+        public void auto_load_users_craft(){
+            string ksp_version = Versioning.GetVersionString();
+            List<int> loaded_craft_ids = new List<int>();
+            KerbalXAPI.fetch_users_craft((craft_data) =>{
+                var user_craft_data = update_craft_data(craft_data);
+                KerbalX.log("updated craft data");
+                int[] craft_ids = user_craft_data.Keys.ToArray();
+                foreach(int id in craft_ids){
+                    KerbalX.log("checking version for " + id.ToString());
+                    if(user_craft_data[id]["version"] == ksp_version){
+                        KerbalX.log("downloading....");
+                        download_craft(id, craft_data[id]);
+                        loaded_craft_ids.Add(id);
+                    }
+                }
+                download_gui().show_bulk_download_complete_dialog(loaded_craft_ids, user_craft_data);
+            });
         }
 
-        //Fetch craft uploaded by the user
-        private void fetch_users_craft(){
-            if(KerbalXAPI.logged_in()){
-                KerbalXAPI.fetch_users_craft((craft_data) =>{
-                    KerbalX.download_gui.set_list(craft_data, "Your Craft");
-                });
-            }
-        }
 
 
         private long millisecs(){
@@ -96,46 +172,49 @@ namespace KerbalX
         }
 
         private void OnGUI(){
-            GUI.skin = KerbalXWindow.KXskin;
             if(KerbalXAPI.logged_in()){
-                
-                if(millisecs() - start_time > startup_delay){
-                    if(download_queue.Count > 0){
-                        if(container.y < -10){
-                            container.y+=5;
-                        }
-                        style_override = new GUIStyle(GUI.skin.window);
-                        begin_group(container, () =>{
-                            v_section(500, w =>{
-                                GUILayout.Space(20);
-                                GUILayout.Label("You have " + download_queue.Count + " craft to download", "h2.centered");
-                                GUILayout.Label("(click to view)", "centered");
-                            });
-                        });
-                        if(disable_link <= 0 && container.Contains(Event.current.mousePosition) && Input.GetKeyDown(KeyCode.Mouse0) && Input.GetMouseButtonDown(0)){
-                            show_download_list();
-                            disable_link = 5;
-                        }
-                        disable_link--;
-                    } else{
-                        if(container.y > -10){
-                            container.y-=1;
-                        }
-                    }
-                    
+                GUI.skin = KerbalXWindow.KXskin;
+                if(query_new_save && save_is_empty()){
+                    query_new_save = false;
+                    KerbalX.download_gui.show_new_save_dialog();
                 }
+                if(millisecs() - start_time > startup_delay){
+
+                    if(download_queue.Count > 0){               //show/hide the notification bar, gracefully, based on No. craft avail to download
+                        if(container.y < -10){container.y+=5;}
+                    } else{
+                        if(container.y > -90){container.y-=3;}
+                    }
+
+                    style_override = new GUIStyle(GUI.skin.window);
+                    begin_group(container, () =>{
+                        v_section(500, w =>{
+                            GUILayout.Space(20);
+                            GUILayout.Label("You have " + download_queue.Count + " craft to download", "h2.centered");
+                            GUILayout.Label("(click to view)", "centered");
+                        });
+                    });
+                    if(disable_link <= 0 && container.Contains(Event.current.mousePosition) && Input.GetKeyDown(KeyCode.Mouse0) && Input.GetMouseButtonDown(0)){
+                        show_download_list();
+                        disable_link = 5;   //disable link prevents another click being registered right away. without it a single click was registering twice.
+                    }
+                    if(disable_link > 0){
+                        disable_link--;
+                    }
+                }
+                GUI.skin = null;
             }
-            GUI.skin = null;
         }
+
     }
 
 
 
-    [KSPAddon(KSPAddon.Startup.SpaceCentre, false)]
+//    [KSPAddon(KSPAddon.Startup.SpaceCentre, false)]
     public class KerbalXDownloadInterface : KerbalXWindow
     {
 
-        private Dictionary<int, Dictionary<string, string>> craft_list = new Dictionary<int, Dictionary<string, string>>();
+        public Dictionary<int, Dictionary<string, string>> craft_list = new Dictionary<int, Dictionary<string, string>>();
 
         public string mode = "";
         private int[] craft_ids;
@@ -145,7 +224,9 @@ namespace KerbalX
 
         private bool only_version_compatible = true;
         private string ksp_ver;
-
+       
+        private long timer = 0;
+        private bool readjust_height = false;
 
         private void Start(){
             KerbalX.download_gui = this;
@@ -154,7 +235,6 @@ namespace KerbalX
             require_login = true;
             visible = false;
             ksp_ver = Versioning.GetVersionString();
-
         }
 
         //Called after a succsessful login, if the login dialog was opened from this window.
@@ -163,8 +243,43 @@ namespace KerbalX
             KerbalXDownloadController.instance.fetch_download_queue(true);
         }
 
-        private long timer = 0;
-        private bool readjust_height = false;
+        //Takes craft data from the DownloadController and a mode name to display. Ensures the gui is visible and adjusts height of window and scroller according to craft count
+        public void set_craft_list(Dictionary<int, Dictionary<string, string>> craft_data, string mode_name){
+            visible = true;
+            mode = mode_name;
+            craft_list = new Dictionary<int, Dictionary<string, string>>();
+            foreach(KeyValuePair<int, Dictionary<string, string>> data in craft_data){
+                craft_list.Add(data.Key, new Dictionary<string, string>(data.Value));
+            }
+            craft_ids = craft_list.Keys.ToArray();
+            adjust_scroll_height();
+            scroll_pos.y = 0;
+        }
+
+
+        //set scroll height according to number of craft and window position relative to bottom of the screen.
+        private void adjust_scroll_height(){
+            scroll_height = display_count() * 67;
+            float max_height = Screen.height - (window_pos.y + 200);
+            if(scroll_height > max_height){
+                scroll_height = max_height;
+            }
+            if(scroll_height < 67){
+                scroll_height = 67f;
+            }
+            autoheight();
+        }
+
+        //returns count of craft taking version filter into account
+        private int display_count(){
+            int count = 0;
+            foreach(int id in craft_ids){
+                if(ksp_ver == craft_list[id]["version"] || !only_version_compatible){
+                    count++;
+                }
+            }
+            return count;
+        }
 
 
         protected override void WindowContent(int win_id){
@@ -180,13 +295,13 @@ namespace KerbalX
 
             section(w =>{
                 if(GUILayout.Button("Download Queue", "button.bold", width(w * 0.33f))){
-                    KerbalXDownloadController.get("download_queue");
+                    KerbalXDownloadController.instance.fetch_download_queue(true);
                 }
                 if(GUILayout.Button("Past Downloads", "button.bold", width(w * 0.33f))){
-                    KerbalXDownloadController.get("past_downloads");
+                    KerbalXDownloadController.instance.fetch_past_downloads();
                 }
                 if(GUILayout.Button("Your Craft", "button.bold", width(w * 0.33f))){
-                    KerbalXDownloadController.get("users_craft");
+                    KerbalXDownloadController.instance.fetch_users_craft();
                 }
             });
 
@@ -235,75 +350,13 @@ namespace KerbalX
         }
 
 
-        public void set_list(Dictionary<int, Dictionary<string, string>> craft_data, string mode_name){
-            mode = mode_name;
-            craft_list = new Dictionary<int, Dictionary<string, string>>();
-            foreach(KeyValuePair<int, Dictionary<string, string>> data in craft_data){
-                craft_list.Add(data.Key, new Dictionary<string, string>(data.Value));
-            }
-            craft_ids = craft_list.Keys.ToArray();
-            foreach(int id in craft_ids){
-                craft_list[id].Add("dir", path_for_craft(id, "dir"));           //Folder the craft will be downloaded into
-                craft_list[id].Add("path", path_for_craft(id));                 //full path that the craft will be downloaded to
-                craft_list[id].Add("short_path", path_for_craft(id, "short"));  //path from saves folder
-                craft_list[id].Add("status", "");
-                if(File.Exists(craft_list[id]["path"])){
-                    craft_list[id]["status"] = "In folder";
-                }
-            }
-            adjust_scroll_height();
-            scroll_pos.y = 0;
-        }
-
-
-        //set scroll height according to number of craft and window position relative to bottom of the screen.
-        private void adjust_scroll_height(){
-            scroll_height = display_count() * 67;
-            float max_height = Screen.height - (window_pos.y + 200);
-            if(scroll_height > max_height){
-                scroll_height = max_height;
-            }
-            if(scroll_height < 67){
-                scroll_height = 67f;
-            }
-            autoheight();
-        }
-
-        //returns count of craft taking version filter into account
-        private int display_count(){
-            int count = 0;
-            foreach(int id in craft_ids){
-                if(ksp_ver == craft_list[id]["version"] || !only_version_compatible){
-                    count++;
-                }
-            }
-            return count;
-        }
-
-
-
-
-        private string path_for_craft(int id){
-            return path_for_craft(id, "");
-        }
-        private string path_for_craft(int id, string type){
-            if(type == "short"){
-                return Paths.joined(HighLogic.SaveFolder, "Ships", craft_list[id]["type"], craft_list[id]["name"] + ".craft");
-            }
-            if(type == "dir"){
-                return Paths.joined(KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, "Ships", craft_list[id]["type"]);
-            }
-            return Paths.joined(KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, "Ships", craft_list[id]["type"], craft_list[id]["name"] + ".craft");
-        }
-
-
         private void download_craft(int id){
             download_craft(id, false);
         }
         private void download_craft(int id, bool force_download){
 
             if(force_download){
-                get_craft_file(id);
+                KerbalXDownloadController.instance.download_craft(id, craft_list[id]);
             }else{
                 if(File.Exists(craft_list[id]["path"])){
                     KerbalXDialog dialog = show_dialog(d =>{
@@ -318,7 +371,7 @@ namespace KerbalX
                                 close_dialog();
                             }
                             if(GUILayout.Button("Replace", "button.bold", width(w * 0.2f))){
-                                get_craft_file(id);
+                                KerbalXDownloadController.instance.download_craft(id, craft_list[id]);
                                 close_dialog();
                             }
                         });
@@ -329,27 +382,54 @@ namespace KerbalX
                     dialog.window_title = "Replace Existing?";
                     
                 } else{
-                    get_craft_file(id);
+                    KerbalXDownloadController.instance.download_craft(id, craft_list[id]);
                 }
             }
-
         }
 
-        private void get_craft_file(int id){
-            KerbalXAPI.download_craft(id, (craft_file_string, code) =>{
-                if(code == 200){
-                    write_file(id, craft_file_string);
-                    KerbalXDownloadController.instance.fetch_download_queue();
-                }
+        public void show_new_save_dialog(){
+            KerbalXDialog dialog = show_dialog(d => {
+                GUILayout.Label("This looks like a new save", "h2");
+                GUILayout.Label("Would you like to fetch your craft from KerbalX for version " + ksp_ver, "h3");
+                section(w => {
+                    if(GUILayout.Button("No", "button.bold")){
+                        close_dialog();
+                    }
+                    if(GUILayout.Button("Let me pick", "button.bold")){
+                        close_dialog();
+                        KerbalXDownloadController.instance.fetch_users_craft();
+                    }
+                    if(GUILayout.Button("Yep, fetch all my " + ksp_ver + " craft", "button.bold")){
+                        close_dialog();
+                        KerbalXDownloadController.instance.auto_load_users_craft();
+                    }
+                });
             });
+            dialog.window_title = "Populate new save?";
         }
 
-        private void write_file(int craft_id, string craft_file){
-            Directory.CreateDirectory(craft_list[craft_id]["dir"]); //ensure directorys exist (usually just subassembly folder which is missing). 
-            File.WriteAllText(craft_list[craft_id]["path"], craft_file);
-            craft_list[craft_id]["status"] = "Downloaded";
-        }
+        public void show_bulk_download_complete_dialog(List<int> loaded_ids, Dictionary<int, Dictionary<string, string>> craft_data){
+            KerbalXDialog dialog = show_dialog(d => {
+                GUILayout.Label("You craft have been downloaded", "h2");
+                GUILayout.Label("these ones to be precise:", "small");
 
+                foreach(int id in loaded_ids){
+                    style_override = GUI.skin.GetStyle("background.dark.margin");
+                    v_section(w => {
+                        GUILayout.Label(craft_data[id]["name"], "h3");
+                        GUILayout.Label("saved to: " + craft_data[id]["short_path"]);
+                    });
+                }
+                section(w => {
+                    GUILayout.FlexibleSpace();
+                    if(GUILayout.Button("OK")){
+                        close_dialog();
+                    }
+                });
+
+            });
+            dialog.window_title = "Download Summary";
+        }
 
     }
 }

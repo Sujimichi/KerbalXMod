@@ -13,6 +13,7 @@ namespace KerbalX
         private void Awake(){
             GameEvents.onGUIApplicationLauncherReady.Add(this.app_launcher_ready);
             GameEvents.onGUIApplicationLauncherDestroyed.Add(this.remove_from_toolbar);
+            KerbalXDownloadController.query_new_save = true;
         }
 
         //Trigger the creation of custom Skin (copy of default GUI.skin with various custom styles added to it)

@@ -143,7 +143,7 @@ namespace KerbalX
         public static void fetch_existing_craft(ActionCallback callback){
             HTTP.get(url_to("api/existing_craft.json")).set_header("token", KerbalXAPI.token).send((resp, code) =>{
                 if(code == 200){
-                    KerbalX.existing_craft = process_craft_data(resp, new string[] { "id", "name", "version", "url" });
+                    KerbalX.existing_craft = process_craft_data(resp, "id", "name", "version", "url");
                     callback();
                 }
             });
@@ -164,13 +164,13 @@ namespace KerbalX
         private static void fetch_craft_list(string path, CraftListCallback callback){
             HTTP.get(url_to(path)).set_header("token", KerbalXAPI.token).send((resp, code) =>{
                 if(code == 200){
-                    callback(process_craft_data(resp, new string[] { "id", "name", "version", "type" }));
+                    callback(process_craft_data(resp, "id", "name", "version", "type"));
                 }
             });
         }
 
         public static void remove_from_queue(int craft_id){
-            HTTP.get(url_to("api/remove_from_queue" + craft_id)).set_header("token", KerbalXAPI.token).send((resp, code) =>{
+            HTTP.get(url_to("api/remove_from_queue/" + craft_id)).set_header("token", KerbalXAPI.token).send((resp, code) =>{
                 KerbalXDownloadController.instance.fetch_download_queue();
             });
         }
@@ -179,7 +179,9 @@ namespace KerbalX
             HTTP.get(url_to("api/craft/" + id)).set_header("token", KerbalXAPI.token).send(callback);
         }
 
-        public static Dictionary<int, Dictionary<string, string>> process_craft_data(string craft_data_json, string[] attrs){
+        //Takes craft list JSON data from the site and converts it into a nested Dictionary of craft.id => { various craft attrs }
+        //which attrs it reads out of the JSON from the site is determined by the strings passed in after the JSON.
+        public static Dictionary<int, Dictionary<string, string>> process_craft_data(string craft_data_json, params string[] attrs){
             JSONNode craft_data = JSON.Parse(craft_data_json);
             Dictionary<int, Dictionary<string, string>> craft_list = new Dictionary<int, Dictionary<string, string>>();
             for(int i = 0; i < craft_data.Count; i++){
@@ -255,6 +257,9 @@ namespace KerbalX
 
 
         public HTTP set_header(string key, string value){
+            if(key == "token" && String.IsNullOrEmpty(value)){
+                throw new Exception("[KerbalX] Unable to make request - User not logged in");
+            }
             request.SetRequestHeader(key, value);
             return this;
         }
