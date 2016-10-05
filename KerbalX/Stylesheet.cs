@@ -55,6 +55,11 @@ namespace KerbalX
                 h3.fontSize = 15;
                 h3.name = "h3";
 
+                GUIStyle h2_centered = new GUIStyle(h1);
+                h2_centered.fontSize = 20;
+                h2_centered.alignment = TextAnchor.LowerCenter;
+                h2_centered.name = "h2.centered";
+
                 GUIStyle hyperlink = new GUIStyle(GUI.skin.label);
                 hyperlink.normal.textColor = new Color(0.4f, 0.5f, 0.9f, 1); //roughly KerbalX Blue - #6E91EB
                 hyperlink.hover.textColor = Color.red; //can't seem to make this work
@@ -191,7 +196,7 @@ namespace KerbalX
 
                 KerbalXWindow.KXskin = Instantiate(GUI.skin);
                 KerbalXWindow.KXskin.customStyles = new GUIStyle[] { 
-                    h1, h2, h3, hyperlink, hyperlink_h2, hyperlink_h3, hyperlink_footer, remove_link, alert, alert_h2, small, centered, right_align, 
+                    h1, h2, h3, h2_centered, hyperlink, hyperlink_h2, hyperlink_h3, hyperlink_footer, remove_link, alert, alert_h2, small, centered, right_align, 
                     pic_link, pic_hover, dark_back, dark_back_offset, blue_box, no_style, 
                     login_button, upload_button, screenshot_button, screenshot_button_bold, wrapped_button, bold_button, 
                     combo_field, combo_bttn, combo_option, combo_option_hover 

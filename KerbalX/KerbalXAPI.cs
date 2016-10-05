@@ -150,18 +150,18 @@ namespace KerbalX
         }
 
         public static void fetch_download_queue(CraftListCallback callback){
-            fetch_craft("api/download_queue.json", callback);
+            fetch_craft_list("api/download_queue.json", callback);
         }
 
         public static void fetch_past_downloads(CraftListCallback callback){
-            fetch_craft("api/past_downloads.json", callback);
+            fetch_craft_list("api/past_downloads.json", callback);
         }
 
         public static void fetch_users_craft(CraftListCallback callback){
-            fetch_craft("api/user_craft.json", callback);
+            fetch_craft_list("api/user_craft.json", callback);
         }
 
-        private static void fetch_craft(string path, CraftListCallback callback){
+        private static void fetch_craft_list(string path, CraftListCallback callback){
             HTTP.get(url_to(path)).set_header("token", KerbalXAPI.token).send((resp, code) =>{
                 if(code == 200){
                     callback(process_craft_data(resp, new string[] { "id", "name", "version", "type" }));
@@ -170,8 +170,8 @@ namespace KerbalX
         }
 
         public static void remove_from_queue(int craft_id){
-            HTTP.get(url_to("api/remove_from_queue/" + craft_id)).set_header("token", KerbalXAPI.token).send((resp, code) =>{
-                KerbalX.log("craft " + craft_id + " removed from download queue");
+            HTTP.get(url_to("api/remove_from_queue" + craft_id)).set_header("token", KerbalXAPI.token).send((resp, code) =>{
+                KerbalXDownloadController.instance.fetch_download_queue();
             });
         }
 
@@ -280,7 +280,9 @@ namespace KerbalX
     public class RequestHandler : MonoBehaviour
     {
         public static RequestHandler instance = null;
-        private static NameValueCollection status_codes = new NameValueCollection() { { "200", "OK" }, { "401", "Unauthorized" }, { "404", "Not Found" }, { "500", "Server Error!" } };
+        private static NameValueCollection status_codes = new NameValueCollection(){ 
+            { "200", "OK" }, { "401", "Unauthorized" }, { "404", "Not Found" }, { "500", "Server Error!" } 
+        };
 
 
         public static bool show_401_message = true;
@@ -340,7 +342,7 @@ namespace KerbalX
                 
             } else{
                 int status_code = (int)request.responseCode;                                //server responded - get status code
-                KerbalX.log("request returned " + status_code + status_codes[status_code.ToString()]);                         
+                KerbalX.log("request returned " + status_code + " " + status_codes[status_code.ToString()]);                         
                 
                 if(status_code == 500){                                                     //KerbalX server error
                     string error_message = "KerbalX server error!!\n" +                     //default error message incase server doesn't come back with something more helpful

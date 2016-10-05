@@ -32,7 +32,7 @@ namespace KerbalX
             if(!KerbalX.download_gui_toolbar_button){
                 add_download_gui_button_to_toolbar();
             }
-            if(!KerbalX.console){
+            if(!KerbalX.console_button){
                 add_console_button_to_toolbar();
             }
         }
@@ -53,13 +53,13 @@ namespace KerbalX
                 toggle_download_interface, toggle_download_interface, 
                 download_btn_hover_on, download_btn_hover_off,
                 null, null, 
-                ApplicationLauncher.AppScenes.SPACECENTER,
+                ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH,
                 StyleSheet.assets["dnload_toolbar_btn"]
             );
         }
 
         public void add_console_button_to_toolbar(){
-            ApplicationLauncher.Instance.AddModApplication(
+            KerbalX.console_button = ApplicationLauncher.Instance.AddModApplication(
                 toggle_console, toggle_console, 
                 null, null,
                 null, null, 
@@ -78,7 +78,11 @@ namespace KerbalX
 
         public void toggle_download_interface(){
             if(KerbalX.download_gui){
-                KerbalX.download_gui.toggle();
+                if(KerbalX.download_gui.visible){
+                    KerbalX.download_gui.hide();
+                }else{
+                    KerbalXDownloadController.instance.fetch_download_queue(true);
+                }
             } else{
                 KerbalX.log("DownloadInterface has not been started");
             }

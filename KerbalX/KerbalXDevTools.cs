@@ -7,13 +7,13 @@ using UnityEngine;
 namespace KerbalX
 {
 	
-    [KSPAddon(KSPAddon.Startup.MainMenu, false)]
+    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
     public class JumpStart : MonoBehaviour
     {
         public bool autostart = true;
         public string save_name = "default";
-        public string mode = "editor";
-//        public string mode = "spacecenter";
+//        public string mode = "editor";
+        public string mode = "spacecenter";
         public string craft_name = "testy";
 
         public void Start(){
@@ -73,7 +73,10 @@ namespace KerbalX
                 GUILayout.Label(KerbalX.last_log());
             });
 
-            GUILayout.Label(GUI.skin.label.padding.ToString());
+
+
+            GUILayout.Label(Event.current.mousePosition.y + "/" + Event.current.mousePosition.x);
+            GUILayout.Label(Input.mousePosition.y + "/" + Input.mousePosition.x);
 
             if(GUILayout.Button("update existing craft")){
                 KerbalXAPI.fetch_existing_craft(() =>{});

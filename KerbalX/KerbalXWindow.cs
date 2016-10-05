@@ -62,7 +62,7 @@ namespace KerbalX
 
         public static GUISkin KXskin = null;//static variable to hold the reference to the custom skin. First window created will set it up
 
-        private bool ui_locked = false;
+        private bool interface_locked = false;
         protected bool is_dialog = false;
 
 
@@ -94,7 +94,9 @@ namespace KerbalX
         public IEnumerator unlock_delay(){
             yield return true;	//doesn't seem to matter what this returns
             Thread.Sleep(100);
-            EditorLogic.fetch.Unlock(window_id.ToString()); //ensure any locks on the editor interface are release when hiding.
+            if(interface_locked){
+                EditorLogic.fetch.Unlock(window_id.ToString()); //ensure any locks on the editor interface are release when hiding.
+            }
         }
 
         //overridable methods for class which inherit this class to define actions which are called on hide and show
@@ -125,16 +127,7 @@ namespace KerbalX
         }
 
 
-        //Essential for any window which needs to make web requests.  If a window is going to trigger web requests then it needs to call this method on its Start() method
-        //The Request handler handles sending requests asynchronously (so delays in response time don't lag the interface).  In order to do that it
-        //uses Coroutines which are a MonoBehaviour concept, hence this calls in a decendent of MonoBehaviour can't be started by the static methods on the API class.
-        protected void enable_request_handler(){
-            if(RequestHandler.instance == null){
-                KerbalX.log("starting web request handler");
-                RequestHandler request_handler = gameObject.AddOrGetComponent<RequestHandler>();
-                RequestHandler.instance = request_handler;
-            }
-        }
+
 
         //opens a dialog window which is populated by the lambda statement passed to show_dialog ie:
         //show_dialog((d) => {
@@ -166,11 +159,11 @@ namespace KerbalX
             mouse_pos.y = Screen.height - mouse_pos.y;
             if(window_pos.Contains(mouse_pos)){
                 InputLockManager.SetControlLock(window_id.ToString());
-                ui_locked = true;
+                interface_locked = true;
             } else{
-                if(ui_locked){
+                if(interface_locked){
                     InputLockManager.RemoveControlLock(window_id.ToString());
-                    ui_locked = false;
+                    interface_locked = false;
                 }
             }
         }
@@ -229,7 +222,7 @@ namespace KerbalX
                 if(GUILayout.Button("try again")){
                     RequestHandler.instance.try_again();
                 }
-                //If user is not logged in halt drawing interface and show login button (unless the window is a dialog window)"
+            //If user is not logged in halt drawing interface and show login button (unless the window is a dialog window)"
             } else if(!is_dialog && require_login && KerbalXAPI.logged_out()){
                 GUILayout.Label("You are not logged in.");
                 if(GUILayout.Button("Login")){
@@ -239,13 +232,13 @@ namespace KerbalX
                     };
                 }
 
-                //If an upgrade is required, halt drawing interface and show message;
+            //If an upgrade is required, halt drawing interface and show message;
             } else if(KerbalX.upgrade_required){
                 GUILayout.Label("Upgrade Required", "h3");
                 GUILayout.Label("This version of the KerbalX mod is no longer compatible with KerbalX.com\nYou need to get the latest version.");
                 GUILayout.Label(KerbalX.upgrade_required_message);
                 on_error();
-                //otherwse all is good, draw the main content of the window as defined by WindowContent
+            //otherwse all is good, draw the main content of the window as defined by WindowContent
             } else{
                 if(gui_locked){
                     GUI.enabled = false;
@@ -300,6 +293,20 @@ namespace KerbalX
 
         //anchors are used by the ComboBox. Each anchor is a named reference to a Rect obtained from GetLastRect
         public Dictionary<string, Rect> anchors = new Dictionary<string, Rect>();
+
+
+
+        //Essential for any window which needs to make web requests.  If a window is going to trigger web requests then it needs to call this method on its Start() method
+        //The Request handler handles sending requests asynchronously (so delays in response time don't lag the interface).  In order to do that it
+        //uses Coroutines which are a MonoBehaviour concept, hence this calls in a decendent of MonoBehaviour can't be started by the static methods on the API class.
+        protected void enable_request_handler(){
+            if(RequestHandler.instance == null){
+                KerbalX.log("starting web request handler");
+                RequestHandler request_handler = gameObject.AddOrGetComponent<RequestHandler>();
+                RequestHandler.instance = request_handler;
+            }
+        }
+
 
 
         //shorthand for GUILayout.width()
@@ -362,6 +369,11 @@ namespace KerbalX
             content(section_width);
             GUILayout.EndVertical();
         }
+        protected void v_section(float section_width, float section_height, Content content){
+            GUILayout.BeginVertical(get_section_style(), GUILayout.Width(section_width), GUILayout.MaxWidth(section_width), GUILayout.Height(section_height));
+            content(section_width);
+            GUILayout.EndVertical();
+        }
 
         //Very similar to section() and v_section(), but requires a Vector2 to track scroll position and two floats for width and height as well as the content lamnbda
         //Essentially just the same as section() it wraps the call to the lamba in BeginScrollView/EndScrollView calls.
@@ -387,7 +399,7 @@ namespace KerbalX
 
 
         protected void begin_group(Rect container, ContentNoArgs content){
-            GUI.BeginGroup(container);
+            GUI.BeginGroup(container, get_section_style());
             content();
             GUI.EndGroup();
         }

@@ -47,6 +47,7 @@ namespace KerbalX
         //Toolbar Buttons
         public static ApplicationLauncherButton upload_gui_toolbar_button   = null;
         public static ApplicationLauncherButton download_gui_toolbar_button = null;
+        public static ApplicationLauncherButton console_button              = null;
 
 
         //logging stuf, not suitable for lumberjacks
