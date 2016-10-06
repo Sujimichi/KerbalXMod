@@ -30,6 +30,7 @@ namespace KerbalX
     {
         //takes any number of strings and returns them joined together with OS specific path divider, ie:
         //Paths.joined("follow", "the", "yellow", "brick", "road") -> "follow/the/yellow/brick/road or follow\the\yellow\brick\road
+        //actually, not true, now it just joins them with /, as it seems mono sorts out path dividers anyway and using \ just messes things up here. (I mean, what kinda os uses \ anyway, madness).
         static public string joined(params string[] paths){
             string path = paths[0];
             for(int i = 1; i < paths.Length; i++){
@@ -95,7 +96,7 @@ namespace KerbalX
 
             //Poor man's String.join becuase I couldn't get the line below to function in unity
             //string json_string = "{" + String.Join (",", objects) + "}";
-            //also adds in spaces and new lines of do_indent is true.
+            //also adds in spaces and new lines if do_indent is true.
             string json_string = "{";
             foreach(string obj in objects){	
                 if(do_indent){

@@ -7,6 +7,55 @@ namespace KerbalX
 {
     public delegate void ComboResponse(int selected);
 
+    //The Combobox...actually it's a filterable dropdown menu, is a GUI helper to add in a textfield with a button that acts as a drop down menu.
+    //actually, the textfield is a lie, it's a button too, just styled to look like a textfield, but when the menu content opens it overlays a real 
+    //textfield onto of it.  The real text field an be typed into to filter the content of the menu, moving the mouse over the items in the menu 
+    //highlight them and populate the text field and clicking on any of the items closes the menu and populates the fake textfield with the value of the item.
+    //It requires a bit of extra setup in the GUI where it is to be used; One key aspect is the anchor.  The anchor is a Rect which defines the position 
+    //where the menu needs to open at and they are set by calls to GetLastRect, but as multiple comboboxs might exist in the same GUI, the rects returned 
+    //have to be tracked (and named) 
+    //This needs to be added to a window class in which you want to use a combobox.
+    //
+    //public Dictionary<string, Rect> anchors = new Dictionary<string, Rect>();
+    //
+    //protected void combobox(string combo_name, Dictionary<int, string> select_options, int selected_id, float list_width, float list_height, KerbalXWindow win, ComboResponse resp){
+    //    section(list_width, w =>{
+    //        float h = 22f + select_options.Count * 17;
+    //        if(h > list_height){
+    //            h = list_height;
+    //        }
+    //        if(GUILayout.Button(select_options[selected_id], GUI.skin.textField, width(w - 20f))){
+    //            gameObject.AddOrGetComponent<ComboBox>().open(combo_name, select_options, anchors[combo_name], h, win, resp);
+    //        }
+    //        track_rect(combo_name, GUILayoutUtility.GetLastRect());
+    //        if(GUILayout.Button("\\/", width(20f))){
+    //            gameObject.AddOrGetComponent<ComboBox>().open(combo_name, select_options, anchors[combo_name], h, win, resp);
+    //        }
+    //    });     
+    //}
+    //
+    //protected void track_rect(string name, Rect rect){
+    //    if(rect.x != 0 && rect.y != 0){
+    //        if(!anchors.ContainsKey(name)){
+    //            anchors[name] = rect;
+    //        }
+    //    }
+    //}
+    //
+    //Then it can be used like this;
+    //
+    //combobox("combo_name", list_content, selected_item_id, width, height, parent_window, id =>{
+    //  selected_item_id = id;
+    //});
+    //
+    //The 1st string arg is used as the name for the anchor for this combobox, so needs to be uniq.
+    //list_content is a Dictionary<int, string> the value component is the content for each menu item, and the key it's id, which is returned once a item is selected
+    //The 3rd arg is an int, the id of the currently selected menu item.
+    //4th and 5th args are floats to define the width and height of the drop down menu.  
+    //6th argument is the parent window which contains the combobox and it needs to response to window_pos with a Rect that defines its position.
+    //7th arg is a lambda statement which takes an int arg. This is used to return the selected menu item id back to the scope of the window it is called from.
+    //simple right!
+    //
     public class ComboBox : KerbalXWindowExtension
     {
         public static ComboBox instance;
