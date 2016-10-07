@@ -114,23 +114,16 @@ namespace KerbalX
                                 }
                             });
                         }
-                        ;	
+                        ;    
                     });
-                    if(GUILayout.Button("check image", width(100f))){
-                        HTTP.verify_image(pic_url, (content_type) =>{
-                            Debug.Log("resp: " + content_type.StartsWith("image/"));
-                        });
-                    }
 
                     if(show_content_type_error){
                         GUILayout.Label("The entered URL does not return the content-type for an image", "alert");
                     }
 
-
                     if(GUILayout.Button("or pic a pic from your pics, erm.", height(40f))){
                         change_mode("pic_selector");
                     }
-                    ;
                 });
 
             } else{
@@ -149,7 +142,7 @@ namespace KerbalX
                             }
                         });
                     });
-					
+                    
                 }
 
                 section(w =>{
@@ -176,6 +169,10 @@ namespace KerbalX
                 //picture files will have already been selected and sorted (by prepare_pics()) and then grouped into rows of 4 pics per row (by group_pics())
                 //but the files won't have been read yet, so the picture textures haven't been set.  Trying to load all picture textures on load is very time consuming.
                 //so instead pictures are loaded and have their texture set row by row, on demand as the user scrolls down.
+                if(pictures.Count == 0 && !minimized){
+                    GUILayout.Label("You don't have a screen shots in your screen shots folder", "h3");
+                    GUILayout.Label("Click Take Screenshot to take one now");
+                }
                 if(pictures.Count > 0 && !minimized){
                     int n = 0;
                     foreach(bool p in loaded_pics){
@@ -188,6 +185,8 @@ namespace KerbalX
                         }
                     });
 
+                    pics_scroll_height = pictures.Count <= 4 ? 150f : 300f; //adjust image selector height if 4 or less images
+
                     scroll_pos = scroll(scroll_pos, 620f, pics_scroll_height, w =>{
                         int row_n = 1;
                         foreach(List<PicData> row in groups){
@@ -195,10 +194,10 @@ namespace KerbalX
                             //On demand loading of textures.  As each row comes into focus it's picture's textures are loaded
                             //row_n * 150 (the height of each row) defines it's bottom offset. when that value minus the current scroll pos is less than
                             //the threshold (height of scroll container 300, plus 100 so images load before their in full view), then load the pictures on this row.
-                            if((row_n * 150) - scroll_pos.y <= 400){	
+                            if((row_n * 150) - scroll_pos.y <= 400){    
                                 foreach(PicData pic in row){
                                     if(loaded_pics[pic.id] != true){
-                                        loaded_pics[pic.id] = true;		//bool array used to track which pictures have been loaded. checking the texture isn't good enough because of the coroutine
+                                        loaded_pics[pic.id] = true;        //bool array used to track which pictures have been loaded. checking the texture isn't good enough because of the coroutine
                                         StartCoroutine(load_image(pic.file.FullName, pic.texture));  //Use a Coroutine to load the picture texture with as little interface lag as possible.
                                     }
                                 }
@@ -207,7 +206,7 @@ namespace KerbalX
 
                             //Draw each row, regardless of wheter picture textures have been loaded (will prob add a 'not yet loaded' texture in at some point TODO)
                             style_override = GUI.skin.GetStyle("background.dark");
-                            section(600f, sw =>{	//horizontal section....sorry, BeginHorizontal container for the row (slightly narrower than outter container to account for scroll bar)
+                            section(600f, sw =>{    //horizontal section....sorry, BeginHorizontal container for the row (slightly narrower than outter container to account for scroll bar)
                                 foreach(PicData pic in row){
                                     v_section(150f, w2 =>{  //vertical section, ahem, BeginVertical container for each pic.  Contains two restyled buttons, each will call select_pic.
                                         var style = (hover_ele == pic.file.FullName ? "pic.hover" : "pic.link"); //flip-flop style depending on hover_ele, being == to file name (because I can't figure out how to make style.hover work yet)
@@ -219,8 +218,8 @@ namespace KerbalX
                                             select_pic(pic);
                                         }
                                     });
-                                    if(GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition)){ //detect of mouse is over the last vertical section 
-                                        hover_ele = pic.file.FullName;											//and hover_ele to that pics filename. used to set on hover style
+                                    if(GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition)){ //detect if mouse is over the last vertical section 
+                                        hover_ele = pic.file.FullName;                                        //and hover_ele to that pics filename. used to set on hover style
                                     }
                                 }
                             });
@@ -254,20 +253,20 @@ namespace KerbalX
 
             maximize();
             Application.CaptureScreenshot(filename);
-            StartCoroutine(shutter(filename));		//shutter re-opens the windows. well, it's kinda the exact opposite of what a shutter does, but yeah....whatever
+            StartCoroutine(shutter(filename));        //shutter re-opens the windows. well, it's kinda the exact opposite of what a shutter does, but yeah....whatever
         }
 
-        public IEnumerator shutter(string filename){
-            yield return true;							//doesn't seem to matter what this returns
-            Thread.Sleep(100);							//delay before re-opening windows
+        public IEnumerator shutter(string filename){    
+            yield return true;                          //doesn't seem to matter what this returns
+            Thread.Sleep(50);                           //delay before re-opening windows
             //Application.CaptureScreenshot seems insistant on plonking the picture in KSP_Data, so this next bit relocates the pic to join it's friends in the screenshot folder
-            string origin_path = Paths.joined(KSPUtil.ApplicationRootPath, "KSP_Data", filename);		//location where screenshot is created (as a png)
-            string png_path = Paths.joined(KerbalX.screenshot_dir, filename);						//location where it will be moved to
+            string origin_path = Paths.joined(KSPUtil.ApplicationRootPath, "KSP_Data", filename);    //location where screenshot is created (as a png)
+            string png_path = Paths.joined(KerbalX.screenshot_dir, filename);                        //location where it will be moved to
             if(File.Exists((origin_path))){
                 KerbalX.log("moving file: " + origin_path + " to: " + png_path);
                 File.Move(origin_path, png_path);
-            } else{																						//TODO find less hacky way of solving which Data folder to look in
-                origin_path = Paths.joined(KSPUtil.ApplicationRootPath, "KSP_x64_Data", filename);		//location where screenshot is created (as a png)
+            } else{                                                                                       //TODO find less hacky way of solving which Data folder to look in
+                origin_path = Paths.joined(KSPUtil.ApplicationRootPath, "KSP_x64_Data", filename);        //location where screenshot is created (as a png)
                 if(File.Exists((origin_path))){
                     KerbalX.log("moving file: " + origin_path + " to: " + png_path);
                     File.Move(origin_path, png_path);
@@ -296,6 +295,7 @@ namespace KerbalX
 
         private void change_mode(string new_mode){
             mode = new_mode;
+            show_content_type_error = false;
             autoheight();
         }
 
@@ -325,18 +325,17 @@ namespace KerbalX
             Array.Sort(sorted_files, delegate(FileInfo f1, FileInfo f2){
                 return f2.CreationTime.CompareTo(f1.CreationTime);
             });
-				
+                
             pictures.Clear();
             loaded_pics = new bool[files.Count];
-
+            Texture2D placeholder = (Texture2D)StyleSheet.assets["image_placeholder"];
             scroll_pos.y = 0;
             int i = 0;
             foreach(FileInfo file in sorted_files){
-                Texture2D tex = new Texture2D(2, 2); //prepare the texture for the image //TODO try this without creating a new texture each time
                 //add a PicData struct for each picture into pictures (struct defines name, file, texture and id) 
                 //id is used as index in loaded_pics, used for tracking which have had textures loaded 
                 PicData data = new PicData();
-                data.initialize(file.Name, file, tex, i);
+                data.initialize(file.Name, file, Instantiate(placeholder), i);
                 pictures.Add(data);
                 i++;
             }
@@ -350,6 +349,7 @@ namespace KerbalX
             byte[] pic_data = File.ReadAllBytes(path);  //read image file
             texture.LoadImage(pic_data);                //wop it all upside the texture.
         }
+
 
         //constructs a List of Lists containing PicData.  Divides pictures into 'rows' of x pics_per_row
         private void group_pics(){
