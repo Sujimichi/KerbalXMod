@@ -614,8 +614,7 @@ namespace KerbalX
             }
         }
 
-        //returns a unique set of the craft's parts and data about each part;
-        //{"partname1" => {"mod" => "mod_name"}, "partname2" => {"mod" => "mod_name"}, ....} #yeah, explained in Ruby hash notation, cos...it's terse
+        //returns a unique set of the craft's parts and data about each part
         private Dictionary<string, object> part_info(){
             Dictionary<string, object> part_data = new Dictionary<string, object>();
             var part_list = EditorLogic.fetch.ship.parts;
@@ -623,7 +622,18 @@ namespace KerbalX
                 if(!part_data.ContainsKey(part.name)){
                     Dictionary<string, object> part_detail = new Dictionary<string, object>();
                     part_detail.Add("mod", part.partInfo.partUrl.Split('/')[0]);
-                    //part.partInfo.partConfig
+                    part_detail.Add("mass", part.mass);
+                    part_detail.Add("cost", part.partInfo.cost);
+                    part_detail.Add("category", part.partInfo.category.ToString());
+                    if(part.CrewCapacity > 0){
+                        part_detail.Add("CrewCapacity", part.CrewCapacity);
+                    }
+                    part_detail.Add("TechRequired", part.partInfo.TechRequired);
+                    Dictionary<string, object> part_resources = new Dictionary<string, object>();
+                    foreach(PartResource r in part.Resources){
+                        part_resources.Add(r.resourceName, r.maxAmount);
+                    }
+                    part_detail.Add("resources", part_resources);
                     part_data.Add(part.name, part_detail);
                 }
             }
