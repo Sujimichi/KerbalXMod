@@ -9,10 +9,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
 
-//Building Against
-//build id = 01564
-//2016-10-03_12-33-40
-//Branch: prerelease
+//Building Against KSP 1.2
+//build id = 01586
+//2016-10-11_12-44-44
+//Branch: master
 
 namespace KerbalX
 {
