@@ -49,8 +49,6 @@ namespace KerbalX
     public class KerbalXWindow : KerbalXWindowExtension
     {
         //Window Config variables. Change these in Start() in descendent classes.
-        //public Rect window_pos			= new Rect()			//override in Start() to set window size/pos - default values defined in KerbalXWindowExtension
-        public string window_title          = "untitled window";    //shockingly enough, this is the window title
         public bool prevent_click_through   = true;     //prevent clicks interacting with elements behind the window
         protected bool require_login        = false;    //set to true if the window requires user to be logged into KerbalX
         protected bool draggable            = true;     //sets the window as draggable
@@ -59,6 +57,8 @@ namespace KerbalX
         protected bool gui_locked           = false;    //if true will disable interaction with the window (without changing its appearance) (see lock_ui() and unlock_ui())
         protected int window_id             = 0;        //can be set to override automatic ID assignment. If left at 0 it will be auto-assigned
         static int last_window_id           = 0;        //static track of the last used window ID, new windows will take the next value and increment this.
+        public string window_title          = "untitled window";    //shockingly enough, this is the window title
+        //public Rect window_pos            = new Rect()            //override in Start() to set window size/pos - default values defined in KerbalXWindowExtension
 
         public static GUISkin KXskin = null;//static variable to hold the reference to the custom skin. First window created will set it up
 
