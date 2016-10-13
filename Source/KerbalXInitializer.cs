@@ -141,54 +141,6 @@ namespace KerbalX
             KerbalX.download_gui_toolbar_button.SetTexture(StyleSheet.assets["dnload_toolbar_btn"]);
         }
 
-
     }
-
-    //	[KSPAddon(KSPAddon.Startup.MainMenu, false)]
-    //	public class ToolBarTest : MonoBehaviour
-    //	{
-    //		public Texture button_texture = new Texture();
-    //		public static ApplicationLauncherButton button;
-    //
-    //		private void Awake(){
-    //			button_texture = GameDatabase.Instance.GetTexture ("KerbalX/Assets/button", false);
-    //			Debug.Log ("Adding App launcher event callbacks");
-    //			GameEvents.onGUIApplicationLauncherReady.Add (this.app_launcher_ready);
-    //			GameEvents.onGUIApplicationLauncherDestroyed.Add (this.app_launcher_destroyed);
-    //		}
-    //
-    //		public void app_launcher_ready(){
-    //			GameEvents.onGUIApplicationLauncherReady.Remove (this.app_launcher_ready);
-    //			Debug.Log ("app launcher is ready");
-    //			add_to_toolbar ();
-    //		}
-    //
-    //		public void app_launcher_destroyed(){
-    //			Debug.Log ("app launcher destroyed");
-    //		}
-    //
-    //		public void add_to_toolbar(){
-    //			Debug.Log ("Adding button to toolbar");
-    //			ToolBarTest.button = ApplicationLauncher.Instance.AddModApplication (
-    //				button_action, button_action,
-    //				null, null,
-    //				null, null,
-    //				ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH,
-    //				button_texture
-    //			);
-    //		}
-    //		public void remove_from_toolbar(){
-    //			Debug.Log ("removing button from toolbar");
-    //			ApplicationLauncher.Instance.RemoveModApplication (button);
-    //		}
-    //
-    //		public void button_action(){
-    //			Debug.Log ("Oi! someone clicked me.");
-    //		}
-    //	}
-
-
-
-
 }
 
