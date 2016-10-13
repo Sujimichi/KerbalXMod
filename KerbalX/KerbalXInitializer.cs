@@ -54,7 +54,7 @@ namespace KerbalX
                 toggle_download_interface, toggle_download_interface, 
                 download_btn_hover_on, download_btn_hover_off,
                 null, null, 
-                ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH,
+                ApplicationLauncher.AppScenes.SPACECENTER,
                 StyleSheet.assets["dnload_toolbar_btn"]
             );
         }

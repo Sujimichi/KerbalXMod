@@ -74,9 +74,6 @@ namespace KerbalX
 
 
         protected override void WindowContent(int win_id){
-            section(300f, e =>{
-                GUILayout.Label(KerbalX.last_log());
-            });
 
             if(GUILayout.Button("test")){
             }
@@ -115,9 +112,6 @@ namespace KerbalX
                 }
             }
 
-            if(GUILayout.Button("print log to console")){
-                KerbalX.show_log();
-            }
         }
 
         protected override void on_login(){

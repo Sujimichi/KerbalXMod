@@ -35,7 +35,6 @@ namespace KerbalX
         public static Dictionary<int, Dictionary<string, string>> existing_craft;//container for listing of user's craft already on KX and some details about them.
 
 
-
         //window handles (cos a window without a handle is just a pane)
         public static KerbalXConsole console                        = null;
         public static KerbalXLoginWindow login_gui                  = null;
@@ -50,27 +49,11 @@ namespace KerbalX
         public static ApplicationLauncherButton console_button              = null;
 
 
-        //logging stuf, not suitable for lumberjacks
+        //logging, not suitable for lumberjacks
         public static void log(string s) { 
             s = "[KerbalX] " + s;
             log_data.Add(s); 
             Debug.Log(s);
-        }
-
-        public static string last_log() {
-            if (log_data.Count != 0) {
-                return log_data[log_data.Count - 1];
-            } else {
-                return "nothing logged yet";
-            }
-        }
-
-
-
-        public static void show_log() {
-            foreach (string l in log_data) {
-                Debug.Log(l);
-            }
         }
 
     }
