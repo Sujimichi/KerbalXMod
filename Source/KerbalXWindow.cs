@@ -58,12 +58,12 @@ namespace KerbalX
         protected int window_id             = 0;        //can be set to override automatic ID assignment. If left at 0 it will be auto-assigned
         static int last_window_id           = 0;        //static track of the last used window ID, new windows will take the next value and increment this.
         public string window_title          = "untitled window";    //shockingly enough, this is the window title
-        //public Rect window_pos            = new Rect()            //override in Start() to set window size/pos - default values defined in KerbalXWindowExtension
+        //public Rect window_pos            = new Rect()            //override in Start() to set window size/pos - default values are defined in KerbalXWindowExtension
 
-        public static GUISkin KXskin = null;//static variable to hold the reference to the custom skin. First window created will set it up
+        private bool interface_locked       = false; //not to be confused with gui_locked. interface_lock is set to true when ControlLocks are set on the KSP interface
+        protected bool is_dialog            = false; //set to true in dialog windows.
 
-        private bool interface_locked = false;
-        protected bool is_dialog = false;
+        public static GUISkin KXskin        = null;  //static variable to hold the reference to the custom skin. First window created will set it up
 
 
         //show, hide and toggle - basically just change the value of the bool visible which defines whether or not OnGUI will draw the window.
@@ -72,13 +72,11 @@ namespace KerbalX
             visible = true;
             on_show();
         }
-
         public void hide(){
             visible = false;
             on_hide();
             StartCoroutine(unlock_delay()); //remove any locks on the editor interface, after a slight delay.
         }
-
         public void toggle(){
             if(visible){
                 hide();	
@@ -87,21 +85,18 @@ namespace KerbalX
             }
         }
 
-
         //unlock delay just adds a slight delay between an action and unlocking the editor.
-        //incases where a click on the window also result in closing the window (ie a close button) then the click would also get registered by whatever is behind the window
+        //in cases where a click on the window also results in closing the window (ie a close button) then the click would also get registered by whatever is behind the window
         //adding this short delay prevents that from happening.
         public IEnumerator unlock_delay(){
             yield return true;	//doesn't seem to matter what this returns
             Thread.Sleep(100);
             if(interface_locked){
-//                    EditorLogic.fetch.Unlock(window_id.ToString()); //ensure any locks on the editor interface are release when hiding.
                 InputLockManager.RemoveControlLock(window_id.ToString());
             }
-
         }
 
-        //overridable methods for class which inherit this class to define actions which are called on hide and show
+        //overridable methods for gui classes to define actions which are called on hide and show
         protected virtual void on_hide(){}
         protected virtual void on_show(){}
         protected virtual void on_error(){}
@@ -111,24 +106,22 @@ namespace KerbalX
         public void lock_ui(){
             gui_locked = true;
         }
-
         public void unlock_ui(){
             gui_locked = false;
         }
 
-        //called after successful login IF the login was initiated from a KerbalXWindow. Windows which inherit from KerbalXWindow can override this
-        //method to have specific actions performed after login (ie: UploadInterface will request a fetch of existing craft).
+        //called after successful login IF the login was initiated from a KerbalXWindow with require_login set to true. 
+        //Windows which inherit from KerbalXWindow can override this method to have specific actions performed after login
+        //(ie: UploadInterface will request a fetch of existing craft).
         protected virtual void on_login(){
             GameObject.Destroy(KerbalX.login_gui);
         }
 		
-        //As window will have been drawn with GUILayout.ExpandHeight(true) setting the height to a small value will cause the
-        //window to readjust its height.  Only call after actions which reduce the height of the content, don't call it constantly OnGUI (unless Epilepsy is something you enjoy)
+        //As windows will have been drawn with GUILayout.ExpandHeight(true) setting the height to a small value will cause the window to readjust its height.
+        //Only call after actions which reduce the height of the content, don't call it constantly OnGUI (unless Epilepsy is something you enjoy)
         public void autoheight(){
             window_pos.height = 5;
         }
-
-
 
 
         //opens a dialog window which is populated by the lambda statement passed to show_dialog ie:
@@ -142,8 +135,9 @@ namespace KerbalX
             return dialog;
         }
 
+        //close instance of dialog if it exists.
         protected void close_dialog(){
-            KerbalXDialog.close();		//close instance of dialog if it exists.
+            KerbalXDialog.close();		
         }
 
         //basically just syntax sugar for a call to AddOrGetComponent for specific named windows. (unfortunatly has nothing to do with launching rockets)
@@ -155,13 +149,15 @@ namespace KerbalX
             }
         }
 
-        //prevents mouse actions on the GUI window from affecting things behind it.  Only works in the editors at present.
+        //prevents mouse actions on the GUI window from affecting things behind it.
         protected void prevent_ui_click_through(){
             Vector2 mouse_pos = Input.mousePosition;
             mouse_pos.y = Screen.height - mouse_pos.y;
             if(window_pos.Contains(mouse_pos)){
-                InputLockManager.SetControlLock(window_id.ToString());
-                interface_locked = true;
+                if(!interface_locked){
+                    InputLockManager.SetControlLock(window_id.ToString());
+                    interface_locked = true;
+                }
             } else{
                 if(interface_locked){
                     InputLockManager.RemoveControlLock(window_id.ToString());
@@ -187,36 +183,30 @@ namespace KerbalX
             }
         }
 
-        //Callback methods which is passed to GUILayout.Window in OnGUI.  Calls WindowContent and performs common window actions
+        //Callback method which is passed to GUILayout.Window in OnGUI.  Calls WindowContent and performs common window actions
         private void DrawWindow(int window_id){
             if(prevent_click_through){
                 prevent_ui_click_through();
             }
 
-            //if a server error has occured display error in dialog, but don't halt drawing of interface. 
+            //if a server error has occured display an error dialog, but don't halt drawing of interface. 
             if(KerbalX.server_error_message != null){
                 List<string> messages = KerbalX.server_error_message.Split(new string[] { Environment.NewLine }, StringSplitOptions.None).ToList();
                 KerbalX.server_error_message = null;
                 string title = messages[0];
                 messages[0] = "";
-
                 KerbalXDialog dialog = show_dialog((d) =>{
                     v_section(w =>{
                         GUILayout.Label(title, "alert.h2");
                         foreach(string message in messages){
-                            if(message != ""){
-                                GUILayout.Label(message);
-                            }
+                            if(message != ""){ GUILayout.Label(message);}
                         }
-                        if(GUILayout.Button("OK", height(30))){
-                            close_dialog();
-                        }
+                        if(GUILayout.Button("OK", height(30))){ close_dialog();}
                     });
                 });
                 dialog.window_title = title;
                 on_error();
             }
-
 
             //If unable to connect to KerbalX halt drawing interface and replace with "try again" button"
             if(KerbalX.failed_to_connect){
@@ -224,16 +214,13 @@ namespace KerbalX
                 if(GUILayout.Button("try again")){
                     RequestHandler.instance.try_again();
                 }
-            //If user is not logged in halt drawing interface and show login button (unless the window is a dialog window)"
+            //If user is not logged in, halt drawing interface and show login button (unless the window is a dialog window)"
             } else if(!is_dialog && require_login && KerbalXAPI.logged_out()){
                 GUILayout.Label("You are not logged in.");
                 if(GUILayout.Button("Login")){
                     KerbalXLoginWindow login_window = gameObject.AddOrGetComponent<KerbalXLoginWindow>();
-                    login_window.after_login_action = () =>{
-                        on_login();
-                    };
+                    login_window.after_login_action = () =>{ on_login(); };
                 }
-
             //If an upgrade is required, halt drawing interface and show message;
             } else if(KerbalX.upgrade_required){
                 GUILayout.Label("Upgrade Required", "h3");
@@ -246,7 +233,7 @@ namespace KerbalX
                     GUI.enabled = false;
                     GUI.color = new Color(1, 1, 1, 2); //This enables the GUI to be locked from input, but without changing it's appearance. 
                 }
-                WindowContent(window_id);	
+                WindowContent(window_id);	//oh hey, finally, actually drawing the window content. 
                 GUI.enabled = true;
                 GUI.color = Color.white;
             }
@@ -256,6 +243,7 @@ namespace KerbalX
                 FooterContent(window_id);
             }
 
+            //enable draggable window if draggable == true.
             if(draggable){
                 GUI.DragWindow();
             }
@@ -279,14 +267,14 @@ namespace KerbalX
         }
 
         protected virtual void OnDestroy(){
-//            EditorLogic.fetch.Unlock(window_id.ToString());
-            InputLockManager.RemoveControlLock(window_id.ToString());
+            InputLockManager.RemoveControlLock(window_id.ToString()); //ensure control locks are released when GUI is destroyed
         }
     }
 
 
 
-
+    //Base class used in KX GUIs.  Provides a set of helper methods for GUILayout calls. these helpers take lambda statements and wraps
+    //them in calls to GUILayout methods.
     public class KerbalXWindowExtension : MonoBehaviour
     {
         public Rect window_pos = new Rect((Screen.width / 2 - 500f / 2), 200, 500f, 5);
@@ -295,20 +283,6 @@ namespace KerbalX
 
         //anchors are used by the ComboBox. Each anchor is a named reference to a Rect obtained from GetLastRect
         public Dictionary<string, Rect> anchors = new Dictionary<string, Rect>();
-
-
-
-        //Essential for any window which needs to make web requests.  If a window is going to trigger web requests then it needs to call this method on its Start() method
-        //The Request handler handles sending requests asynchronously (so delays in response time don't lag the interface).  In order to do that it
-        //uses Coroutines which are a MonoBehaviour concept, hence this calls in a decendent of MonoBehaviour can't be started by the static methods on the API class.
-        protected void enable_request_handler(){
-            if(RequestHandler.instance == null){
-                KerbalX.log("starting web request handler");
-                RequestHandler request_handler = gameObject.AddOrGetComponent<RequestHandler>();
-                RequestHandler.instance = request_handler;
-            }
-        }
-
 
 
         //shorthand for GUILayout.width()
@@ -321,30 +295,39 @@ namespace KerbalX
         }
 
 
+        //Essential for any window which needs to make web requests.  If a window is going to trigger web requests then it needs to call this method on its Start() method
+        //The RequestHandler handles sending requests asynchronously (so delays in response time don't lag the interface).  In order to do that it uses Coroutines 
+        //which are inherited from MonoBehaviour (and therefore can't be triggered by the static methods in KerbalXAPI).
+        protected void enable_request_handler(){
+            if(RequestHandler.instance == null){
+                KerbalX.log("starting web request handler");
+                RequestHandler request_handler = gameObject.AddOrGetComponent<RequestHandler>();
+                RequestHandler.instance = request_handler;
+            }
+        }
+
+
         //Definition of delegate to be passed into the section, v_section and scroll methods
         protected delegate void Content(float width);
         protected delegate void ContentNoArgs();
 
 
-        /* Essentially wraps the actions of a delegate (lambda) in calls to BeginHorizontal and EndHorizontal
+        /* section essentially wraps the actions of a delegate (lambda) in calls to BeginHorizontal and EndHorizontal
 		 * Can take an optional width float which if given will be passed to BeginHorizontal as GUILayoutOption params for Width and MaxWidth
 		 * Takes a lambda statement as the delegate Content which is called inbetween calls to Begin/End Horizontal
 		 * The lambda will be passed a float which is either the width supplied or is the width of the windown (minus padding and margins)
 		 * Usage:
 			section (400f, w => {
-				// Calls to draw GUI elements inside a BeginHorizontal group ie;
 				// GUILayout.Label ("some nonsense", GUILayout.Width (w*0.5f)); //use w to get the inner width of the section, 400f in this case
 			});	
 			OR without defining a width
 			section (w => {
-				// Calls to draw GUI elements inside a BeginHorizontal group ie;
-				// GUILayout.Label ("some nonsense", GUILayout.Width (w*0.5f)); //use w to get the inner width of the section, window_pos.width in this case
+				// GUILayout.Label ("some nonsense", GUILayout.Width (w*0.5f)); //use w to get the inner width of the section, in this case the window width
 			});	
 		* In a slightly crazy approach, you can also define a GUIStyle to pass to BeginHorizontal by setting style_override before calling section, ie:
 			style_override = new GUIStyle();
 			style_override.padding = new RectOffset (20, 20, 10, 10);
 			section (w => {
-				// Calls to draw GUI elements inside a BeginHorizontal group ie;
 				// GUILayout.Label ("some nonsense", GUILayout.Width (w*0.5f)); //use w to get the inner width of the section, window_pos.width in this case
 			});	
 		*/
@@ -432,53 +415,6 @@ namespace KerbalX
             }
         }
 
-
-        //		public struct DropdownData{
-        //			public int id;
-        //			public bool show_select;
-        //			public Vector2 scroll_pos;
-        //			public void selected(int set_id){
-        //				id = set_id;
-        //			}
-        //		}
-        //		protected DropdownData dropdown(Dictionary<int, string> collection, DropdownData drop_data, float outer_width, float menu_height){
-        //			GUIStyle dropdown_field = new GUIStyle (GUI.skin.textField);
-        //			GUIStyle dropdown_menu_item = new GUIStyle (GUI.skin.label);
-        //			//dropdown_menu_item.normal.textColor = Color.magenta;
-        //			dropdown_menu_item.onHover.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
-        //			dropdown_menu_item.hover.textColor = new Color (0.4f,0.5f,0.9f,1); //color also known as KerbalX Blue - #6E91EB
-        //			dropdown_menu_item.padding = new RectOffset (0, 0, 0, 0);
-        //
-        //			string selected;
-        //			collection.TryGetValue (drop_data.id, out selected);
-        //
-        //			v_section (outer_width, (inner_width) => {
-        //				section (inner_width, w2 => {
-        //					if (GUILayout.Button (selected, dropdown_field, GUILayout.Width (inner_width - 20) )) {
-        //						drop_data.show_select = !drop_data.show_select;
-        //						autoheight ();
-        //					}
-        //					if (GUILayout.Button ("\\/", GUILayout.Width (20f) )) {
-        //						drop_data.show_select = !drop_data.show_select;
-        //						autoheight ();
-        //					}
-        //				});
-        //				section (inner_width, w2 => {
-        //					if(drop_data.show_select){
-        //						drop_data.scroll_pos = scroll (drop_data.scroll_pos, w2, menu_height, (w3) => {
-        //							foreach(KeyValuePair<int, string> item in collection){
-        //								if(GUILayout.Button (item.Value, dropdown_menu_item, GUILayout.Width (w3-25))){
-        //									drop_data.selected (item.Key);
-        //									drop_data.show_select = false;
-        //									autoheight ();
-        //								}
-        //							}
-        //						});
-        //					}
-        //				});
-        //			});
-        //			return drop_data;
-        //		}
     }
 }
 

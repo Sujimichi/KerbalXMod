@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace KerbalX
 {
-
+    //Main GUI for uploading craft
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
     public class KerbalXUploadInterface : KerbalXWindow
     {
@@ -26,24 +26,18 @@ namespace KerbalX
         private string transfer_activity= null; //message to display while uploaded/updating
         private List<string> errors = new List<string>();//container for an errors which occur and need displaying to the user
 
-        private int upload_ticker_pos = 0;//used in upload progress ticker
-        private long time_counter = 0;
+        //used in upload progress ticker
+        private int upload_ticker_pos = 0;
+        private long time_counter     = 0;
 
         private int max_pics = 3;//the max number of pics that can be uploaded
-
-
         public List<PicData> pictures = new List<PicData>();//container to hold the selected pictures to be uploaded
-
-
 
         private int selected_craft_id    = 0;//holds the KX database id of a craft selected in the select craft drop down (or autoselected by check_for_matching_craft_name)
         private int selected_style_index = 0;//holds the index for a selected craft style
 
-
-
         private Dictionary<int, string> remote_craft = new Dictionary<int, string>();//used to contain a mapping of KX database-ID to craft name
         List<int> matching_craft_ids = new List<int>();//used to hold any matching craft ids
-
 
         //list of craft styles used on KerbalX (might make this populate from the site at some point)
         private Dictionary<int, string> craft_styles = new Dictionary<int, string>() { 
@@ -57,6 +51,8 @@ namespace KerbalX
         };
 
         private List<KerbalXWindow> open_windows = new List<KerbalXWindow>();
+
+
 
         private void Start(){
             KerbalX.upload_gui = this;
