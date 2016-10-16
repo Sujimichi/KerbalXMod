@@ -15,6 +15,7 @@ namespace KerbalX
         public static KerbalXDownloadController instance = null;
         public static bool query_new_save = true;
 
+        internal bool deferred_downloads_enabled = false;
         private  Dictionary<int, Dictionary<string, string>> download_queue = new Dictionary<int, Dictionary<string, string>>();
         private Rect container = new Rect(Screen.width/2 - 500/2, -90, 500, 80);
         private int disable_link = 0;
@@ -27,6 +28,11 @@ namespace KerbalX
             download_gui();
             start_time = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             instance = this;
+            KerbalXAPI.deferred_downloads_enabled((resp, code) =>{
+                if(code == 200 && resp == "enabled"){
+                    deferred_downloads_enabled = true;
+                }
+            });
             fetch_download_queue();
             GameEvents.OnAppFocus.Add(app_focus);
         }
@@ -51,6 +57,13 @@ namespace KerbalX
             }
         }
 
+        internal void enable_deferred_downloads(){
+            KerbalXAPI.enable_deferred_downloads((resp, code) =>{
+                if(code == 200){
+                    deferred_downloads_enabled = true;
+                }
+            });
+        }
 
         //fetch list of craft tagged to download. if optional second argument is given as true, show_download_list will be called once list is fetched
         public void fetch_download_queue(){
@@ -90,11 +103,16 @@ namespace KerbalX
         private Dictionary<int, Dictionary<string, string>> update_craft_data(Dictionary<int, Dictionary<string, string>> craft_data){
             int[] craft_ids = craft_data.Keys.ToArray();
             foreach(int id in craft_ids){
-                string type_dir = craft_data[id]["type"] == "Subassembly" ? "Subassemblies" : Paths.joined("Ships", craft_data[id]["type"]);
-                craft_data[id].Add("dir",       Paths.joined(KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, type_dir));
-                craft_data[id].Add("path",      Paths.joined(KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, type_dir, craft_data[id]["name"] + ".craft"));
-                craft_data[id].Add("short_path",Paths.joined(HighLogic.SaveFolder, type_dir, craft_data[id]["name"] + ".craft"));
-                craft_data[id].Add("status", "");
+                try{
+                    string type_dir = craft_data[id]["type"] == "Subassembly" ? "Subassemblies" : Paths.joined("Ships", craft_data[id]["type"]);
+                    craft_data[id].Add("dir",       Paths.joined(KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, type_dir));
+                    craft_data[id].Add("path",      Paths.joined(KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, type_dir, craft_data[id]["name"] + ".craft"));
+                    craft_data[id].Add("short_path",Paths.joined(HighLogic.SaveFolder, type_dir, craft_data[id]["name"] + ".craft"));
+                    craft_data[id].Add("status", "");
+                }
+                catch{
+                    //no need to handle anything, catch gets triggered if dir, path etc data has already been added to craft_data so we can just skip if it's already there.    
+                }
                 if(File.Exists(craft_data[id]["path"])){
                     craft_data[id]["status"] = "In folder";
                 }
@@ -348,12 +366,31 @@ namespace KerbalX
                         GUI.enabled = true;
                     }
                 } else{
-                    GUILayout.Label("No craft do display for \"" + mode + "\"");
+                    GUILayout.Label("No craft do display for \"" + mode + "\"", "h3");
+                    if(mode == "Download Queue" && !KerbalXDownloadController.instance.deferred_downloads_enabled){
+                        scroll_height = 120;
+                        GUILayout.Label("To use the download queue you need to enable \"Deferred Downloads\" in your settings on KerbalX");
+                        style_override = GUI.skin.GetStyle("background.dark.margin");
+                        section(w => {
+                            if(GUILayout.Button("view your settings on KerbalX.com", "hyperlink")){
+                                Application.OpenURL(KerbalXAPI.url_to("/settings?tab=kx_mod"));
+                            }
+                            if(GUILayout.Button("Or Click to enable it")){
+                                KerbalXDownloadController.instance.enable_deferred_downloads();
+                            }
+                        });
+                    }else{
+                        scroll_height = 120;
+                        GUILayout.Label("To get craft to appear here, browse KerbalX.com on any device and click download on craft you want and they will appear here.");
+                        if(GUILayout.Button("refresh list")){
+                            KerbalXDownloadController.instance.fetch_download_queue(true);
+                        }
+                    }
                 }
             });
             section(w =>{
                 GUILayout.FlexibleSpace();
-                if(GUILayout.Button("Close")){
+                if(GUILayout.Button("Close", "button.bold", GUILayout.Width(50), GUILayout.Height(30))){
                     hide();
                 }
             

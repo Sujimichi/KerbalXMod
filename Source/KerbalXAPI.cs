@@ -125,14 +125,19 @@ namespace KerbalX
 
 
 
-        //Settings POST requests
+        //Settings requests
 
         //Tells KerbalX not to bug this user about the current minor/patch version update available
         //There is no callback for this request.
         internal static void dismiss_current_update_notification(){
-            HTTP http = HTTP.get(url_to("api/dismiss_update_notification")).set_header("token", KerbalXAPI.token);
-            http.request.method = "POST";
-            http.send((resp, code) => { });
+            HTTP.post(url_to("api/dismiss_update_notification")).set_header("token", KerbalXAPI.token).send((resp, code) => { });
+        }
+
+        internal static void deferred_downloads_enabled(RequestCallback callback){
+            HTTP.get(url_to("api/deferred_downloads_enabled")).set_header("token", KerbalXAPI.token).send(callback);
+        }
+        internal static void enable_deferred_downloads(RequestCallback callback){
+            HTTP.post(url_to("api/enable_deferred_downloads")).set_header("token", KerbalXAPI.token).send(callback);
         }
 
 
@@ -248,6 +253,15 @@ namespace KerbalX
         internal static HTTP get(string url){
             HTTP http = new HTTP();
             http.request = UnityWebRequest.Get(url);
+            return http;
+        }
+
+        //used for making a post request without any form data. Contructs a GET request (as UnityWebRequest's POST doesn't enable creating a POST without
+        //form data and then change the method to POST.
+        internal static HTTP post(string url){
+            HTTP http = new HTTP();
+            http.request = UnityWebRequest.Get(url);
+            http.request.method = "POST";
             return http;
         }
 

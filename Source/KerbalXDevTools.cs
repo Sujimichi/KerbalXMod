@@ -16,10 +16,10 @@ namespace KerbalX
     [KSPAddon(KSPAddon.Startup.MainMenu, true)]
     public class JumpStart : MonoBehaviour
     {
-        public bool autostart = false;
+        public bool autostart = true;
         public string save_name = "default";
-//        public string mode = "spacecenter";
-        public string mode = "editor";
+        public string mode = "spacecenter";
+//        public string mode = "editor";
         public string craft_name = "testy";
 
         public void Start(){
