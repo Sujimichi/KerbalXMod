@@ -242,9 +242,6 @@ namespace KerbalX
             if(KerbalX.action_group_gui && KerbalX.action_group_gui.visible){
                 open_windows.Add(KerbalX.action_group_gui);
             }
-            if(KerbalX.console && KerbalX.console.visible){
-                open_windows.Add(KerbalX.console);
-            }
             open_windows.Add(this);
             //hide all the open windows
             foreach(KerbalXWindow win in open_windows){
