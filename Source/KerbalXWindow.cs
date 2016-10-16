@@ -218,7 +218,7 @@ namespace KerbalX
             } else if(!is_dialog && require_login && KerbalXAPI.logged_out()){
                 GUILayout.Label("You are not logged in.");
                 if(GUILayout.Button("Login")){
-                    KerbalXLoginWindow login_window = gameObject.AddOrGetComponent<KerbalXLoginWindow>();
+                    KerbalXLoginInterface login_window = gameObject.AddOrGetComponent<KerbalXLoginInterface>();
                     login_window.after_login_action = () =>{ on_login(); };
                 }
             //If an upgrade is required, halt drawing interface and show message;

@@ -72,6 +72,7 @@
     <Compile Include="Source\KerbalXUploadInterface.cs" />
     <Compile Include="Source\KerbalXWindow.cs" />
     <Compile Include="Source\Stylesheet.cs" />
+    <Compile Include="Source\KerbalXLoginInterface.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

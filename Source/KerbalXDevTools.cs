@@ -100,7 +100,7 @@ namespace KerbalX
 
 
             if(GUILayout.Button("show Login")){
-                KerbalXLoginWindow login_window = gameObject.AddOrGetComponent<KerbalXLoginWindow>();
+                KerbalXLoginInterface login_window = gameObject.AddOrGetComponent<KerbalXLoginInterface>();
                 login_window.after_login_action = () =>{
                     on_login();
                 };

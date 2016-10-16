@@ -16,7 +16,7 @@ using SimpleJSON;
 
 namespace KerbalX
 {
-    //define delegates to be used to pass lambda statement as callbacks in request methods.
+    //define delegates to be used as callbacks in request methods.
     public delegate void RequestCallback(string data,int status_code);
     public delegate void ImageUrlCheck(string content_type);
     public delegate void ActionCallback();
