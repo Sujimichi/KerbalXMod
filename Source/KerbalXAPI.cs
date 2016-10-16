@@ -17,35 +17,35 @@ using SimpleJSON;
 namespace KerbalX
 {
     //define delegates to be used as callbacks in request methods.
-    public delegate void RequestCallback(string data,int status_code);
-    public delegate void ImageUrlCheck(string content_type);
-    public delegate void ActionCallback();
-    public delegate void CraftListCallback(Dictionary<int, Dictionary<string, string>> craft_data);
+    internal delegate void RequestCallback(string data,int status_code);
+    internal delegate void ImageUrlCheck(string content_type);
+    internal delegate void ActionCallback();
+    internal delegate void CraftListCallback(Dictionary<int, Dictionary<string, string>> craft_data);
 
 
-    public class KerbalXAPI
+    internal class KerbalXAPI
     {
         private static string token = null;
         private static string kx_username = null; //not used for any authentication, just for being friendly!
 
-        public static bool logged_out(){
+        internal static bool logged_out(){
             return token == null;
         }
 
-        public static bool logged_in(){
+        internal static bool logged_in(){
             return token != null;
         }
 
-        public static string logged_in_as(){
+        internal static string logged_in_as(){
             return kx_username;
         }
 
-        private static void save_token(string token){
+        internal static void save_token(string token){
             File.WriteAllText(KerbalX.token_path, token);
         }
         
         //takes partial url and returns full url to site; ie url_to("some/place") -> "http://whatever_domain_site_url_defines.com/some/place"
-        public static string url_to(string path){
+        internal static string url_to(string path){
             if(!path.StartsWith("/")){
                 path = "/" + path;
             }
@@ -53,7 +53,7 @@ namespace KerbalX
         }
         
         //Check if Token file exists and if so authenticate it with KerbalX. Otherwise instruct login window to display login fields.
-        public static void load_and_authenticate_token(){
+        internal static void load_and_authenticate_token(){
             KerbalX.login_gui.enable_login = false;
             try{
                 if(File.Exists(KerbalX.token_path)){
@@ -71,7 +71,7 @@ namespace KerbalX
         //Authentication POST requests
 
         //make request to site to authenticate token. If token authentication fails, no error message is shown, it just sets the login window to show u-name/password fields.
-        public static void authenticate_token(string current_token){
+        internal static void authenticate_token(string current_token){
             KerbalX.log("Authenticating with KerbalX.com...");
             NameValueCollection data = new NameValueCollection() { { "token", current_token } };
             RequestHandler.show_401_message = false; //don't show standard 401 error dialog
@@ -91,7 +91,7 @@ namespace KerbalX
         }
 
         //make request to site to authenticate username and password and get token back
-        public static void login(string username, string password){
+        internal static void login(string username, string password){
             KerbalX.login_gui.enable_login = false; //disable interface while logging in to prevent multiple login clicks
             KerbalX.login_gui.login_failed = false;
             KerbalX.log("loging into KerbalX.com...");
@@ -115,19 +115,19 @@ namespace KerbalX
             });
         }
 
-        public static void log_out(){
+        internal static void log_out(){
+            File.Delete(KerbalX.token_path);
             token = null; 
             kx_username = null;
             KerbalX.login_gui.enable_login = true;
             KerbalX.login_gui.login_successful = false;
             KerbalX.log("logged out");
-            //TODO delete token file.
         }
 
 
         //Settings POST requests
 
-        public static void dismiss_current_update_notification(){
+        internal static void dismiss_current_update_notification(){
             HTTP http = HTTP.get(url_to("api/dismiss_update_notification"));
             http.request.method = "POST";
             http.set_header("token", KerbalXAPI.token);
@@ -140,7 +140,7 @@ namespace KerbalX
 
         //Fetches data on the users current craft on the site.  This is kept in a Dictionary of craft_id => Dict of key value pairs....here let me explain it in Ruby;
         //{craft_id => {:id => craft.id, :name => craft.name, :version => craft.ksp_version, :url => craft.unique_url}, ...}
-        public static void fetch_existing_craft(ActionCallback callback){
+        internal static void fetch_existing_craft(ActionCallback callback){
             HTTP.get(url_to("api/existing_craft.json")).set_header("token", KerbalXAPI.token).send((resp, code) =>{
                 if(code == 200){
                     KerbalX.existing_craft = process_craft_data(resp, "id", "name", "version", "url");
@@ -149,15 +149,15 @@ namespace KerbalX
             });
         }
 
-        public static void fetch_download_queue(CraftListCallback callback){
+        internal static void fetch_download_queue(CraftListCallback callback){
             fetch_craft_list("api/download_queue.json", callback);
         }
 
-        public static void fetch_past_downloads(CraftListCallback callback){
+        internal static void fetch_past_downloads(CraftListCallback callback){
             fetch_craft_list("api/past_downloads.json", callback);
         }
 
-        public static void fetch_users_craft(CraftListCallback callback){
+        internal static void fetch_users_craft(CraftListCallback callback){
             fetch_craft_list("api/user_craft.json", callback);
         }
 
@@ -169,19 +169,19 @@ namespace KerbalX
             });
         }
 
-        public static void remove_from_queue(int craft_id){
+        internal static void remove_from_queue(int craft_id){
             HTTP.get(url_to("api/remove_from_queue/" + craft_id)).set_header("token", KerbalXAPI.token).send((resp, code) =>{
                 KerbalXDownloadController.instance.fetch_download_queue();
             });
         }
 
-        public static void download_craft(int id, RequestCallback callback){
+        internal static void download_craft(int id, RequestCallback callback){
             HTTP.get(url_to("api/craft/" + id)).set_header("token", KerbalXAPI.token).send(callback);
         }
 
         //Takes craft list JSON data from the site and converts it into a nested Dictionary of craft.id => { various craft attrs }
         //which attrs it reads out of the JSON from the site is determined by the strings passed in after the JSON.
-        public static Dictionary<int, Dictionary<string, string>> process_craft_data(string craft_data_json, params string[] attrs){
+        private static Dictionary<int, Dictionary<string, string>> process_craft_data(string craft_data_json, params string[] attrs){
             JSONNode craft_data = JSON.Parse(craft_data_json);
             Dictionary<int, Dictionary<string, string>> craft_list = new Dictionary<int, Dictionary<string, string>>();
             for(int i = 0; i < craft_data.Count; i++){
@@ -200,7 +200,7 @@ namespace KerbalX
         //Craft POST and PUT requests
 
         //Send new craft to Mun....or KerbalX.com as a POST request
-        public static void upload_craft(WWWForm craft_data, RequestCallback callback){
+        internal static void upload_craft(WWWForm craft_data, RequestCallback callback){
             HTTP http = HTTP.post(url_to("api/craft"), craft_data);
             http.set_header("token", KerbalXAPI.token);
             http.set_header("Content-Type", "multipart/form-data");
@@ -208,7 +208,7 @@ namespace KerbalX
         }
 
         //Update existing craft on KerbalX as a PUT request with the KerbalX database ID of the craft to be updated
-        public static void update_craft(int id, WWWForm craft_data, RequestCallback callback){
+        internal static void update_craft(int id, WWWForm craft_data, RequestCallback callback){
             HTTP http = HTTP.post(url_to("api/craft/" + id), craft_data);
             http.request.method = "PUT"; //because unity's PUT method doesn't take a form, so we create a POST with the form and then change the verb.
             http.set_header("token", KerbalXAPI.token);
@@ -218,7 +218,7 @@ namespace KerbalX
     }
 
 
-    public class HTTP
+    internal class HTTP
     {
         public UnityWebRequest request;
 
@@ -282,47 +282,47 @@ namespace KerbalX
 
 
     //[KSPAddon(KSPAddon.Startup.EveryScene, false)]
-    public class RequestHandler : MonoBehaviour
+    internal class RequestHandler : MonoBehaviour
     {
-        public static RequestHandler instance = null;
+        internal static RequestHandler instance = null;
         private static NameValueCollection status_codes = new NameValueCollection(){ 
             { "200", "OK" }, { "401", "Unauthorized" }, { "404", "Not Found" }, { "500", "Server Error!" } 
         };
 
 
-        public static bool show_401_message = true;
+        internal static bool show_401_message = true;
 
         private UnityWebRequest last_request = null;
         private RequestCallback last_callback = null;
 
-        public void try_again(){        
+        internal void try_again(){        
             send_request(last_request, last_callback);
         }
 
-        public bool can_retry(){
+        internal bool can_retry(){
             return last_request != null;
         }
 
 
         //Used to fetch Content-Type Header info for urls entered by user for an image (to check if image is an image)
-        public void send_request(UnityWebRequest request, ImageUrlCheck callback){
+        internal void send_request(UnityWebRequest request, ImageUrlCheck callback){
             StartCoroutine(transmit(request, callback));
         }
         
         //Used in all requests to KerablX
-        public void send_request(UnityWebRequest request, RequestCallback callback){
+        internal void send_request(UnityWebRequest request, RequestCallback callback){
             StartCoroutine(transmit(request, callback));
         }
 
         //Used in request to url entered by user for image, returns just the content type header info
-        public IEnumerator transmit(UnityWebRequest request, ImageUrlCheck callback){
+        internal IEnumerator transmit(UnityWebRequest request, ImageUrlCheck callback){
             KerbalX.log("sending request to: " + request.url);
             yield return request.Send();
             callback(request.GetResponseHeaders()["Content-Type"]);
         }
 
         //Used in all interacton with KerbalX, called from a Coroutine and handles the response error codes from the site
-        public IEnumerator transmit(UnityWebRequest request, RequestCallback callback){
+        internal IEnumerator transmit(UnityWebRequest request, RequestCallback callback){
 
             last_request = null;
             last_callback = null;

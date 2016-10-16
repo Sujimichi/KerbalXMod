@@ -51,7 +51,7 @@ namespace KerbalX
 
 
         //window handles (cos a window without a handle is just a pane)
-        public static KerbalXConsole console                        = null;
+        public static KerbalXWindow console                        = null;
         public static KerbalXLoginInterface login_gui               = null;
         public static KerbalXUploadInterface upload_gui             = null;
         public static KerbalXDownloadInterface download_gui         = null;
