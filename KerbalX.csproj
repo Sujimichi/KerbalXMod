@@ -68,7 +68,6 @@
     <Compile Include="Source\KerbalXDevTools.cs" />
     <Compile Include="Source\KerbalXDownloadInterface.cs" />
     <Compile Include="Source\KerbalXImageSelector.cs" />
-    <Compile Include="Source\KerbalXInitializer.cs" />
     <Compile Include="Source\KerbalXUploadInterface.cs" />
     <Compile Include="Source\KerbalXWindow.cs" />
     <Compile Include="Source\Stylesheet.cs" />

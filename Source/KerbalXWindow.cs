@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
-
-//using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,6 +8,33 @@ using UnityEngine;
 namespace KerbalX
 {
 
+    //KerbalXDialog is lightweight popup (well, dialog) window that takes a lambda statement to define its content.
+    //created by the show_dialog method in the KerbalXWindow class. ie:
+    //show_dialog((d) => {
+    //  <GUILayout content stuff>
+    //}
+    public delegate void DialogContent(KerbalXWindow dialog);
+    public class KerbalXDialog : KerbalXWindow
+    {
+        public static KerbalXDialog instance = null;
+        public DialogContent content;
+
+        private void Start() {
+            KerbalXDialog.instance = this;
+            footer = false;
+            is_dialog = true;
+        }
+
+        protected override void WindowContent(int win_id) {            
+            content(this);
+        }
+
+        public static void close() {
+            if (KerbalXDialog.instance) {
+                GameObject.Destroy(KerbalXDialog.instance);
+            }
+        }
+    }
 
 
     /* KerbalXWindow is a base class to be inherited by classes which draw GUI windows. It inherits from KerbalXWindowExtension which in turn inherits from MonoBehaviour
