@@ -15,8 +15,8 @@
               __/ |                                                                       
              |___/                                                                      
 
-The KerbalX Mod enables interaction with KerbalX.com from with the game Kerbal Space Program.    
-With it you can upload your craft to KerbalX.com from within the game as well as fetching your own craft from the site.
+The KerbalX Mod enables interaction with KerbalX.com from within the game Kerbal Space Program.    
+With it you can upload your craft to KerbalX.com as well as downloading craft from the site.
 
 
 #Installation
