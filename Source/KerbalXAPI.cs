@@ -232,6 +232,8 @@ namespace KerbalX
     }
 
 
+
+
     //The HTTP class is basically a wrapper around UnityWebRequest and enables chaining calls ie:
     //HTTP.get("http://some_url.com").send((resp, code) =>{ } );
     //OR
@@ -305,7 +307,14 @@ namespace KerbalX
     }
 
 
-    //[KSPAddon(KSPAddon.Startup.EveryScene, false)]
+
+
+    //The RequestHandler is used to handel sending and receiving requests.  It does this inside a Coroutine so delays in response 
+    //don't lag the interface.  As such it has to inherit MonoBehaviour and needs to be an instance (can't be used as static).
+    //It provides a send_request method which take a UnityWebRequest object and a Callback.  In most cases the callback is a RequestCallback
+    //except for the special case using a ImageUrlCheck callback.  
+    //When using the RequestCallback (as all interaction with KerbalX does) the RequestHandler will perform different actions based on 
+    //the status code returned by the request.
     internal class RequestHandler : MonoBehaviour
     {
         internal static RequestHandler instance = null;
@@ -332,21 +341,21 @@ namespace KerbalX
         internal void send_request(UnityWebRequest request, ImageUrlCheck callback){
             StartCoroutine(transmit(request, callback));
         }
+        //Used in request to url entered by user for image, returns just the content type header info
+        private IEnumerator transmit(UnityWebRequest request, ImageUrlCheck callback){
+            KerbalX.log("sending request to: " + request.url);
+            yield return request.Send();
+            callback(request.GetResponseHeaders()["Content-Type"]);
+        }
         
+
         //Used in all requests to KerablX
         internal void send_request(UnityWebRequest request, RequestCallback callback){
             StartCoroutine(transmit(request, callback));
         }
 
-        //Used in request to url entered by user for image, returns just the content type header info
-        internal IEnumerator transmit(UnityWebRequest request, ImageUrlCheck callback){
-            KerbalX.log("sending request to: " + request.url);
-            yield return request.Send();
-            callback(request.GetResponseHeaders()["Content-Type"]);
-        }
-
         //Used in all interacton with KerbalX, called from a Coroutine and handles the response error codes from the site
-        internal IEnumerator transmit(UnityWebRequest request, RequestCallback callback){
+        private IEnumerator transmit(UnityWebRequest request, RequestCallback callback){
 
             last_request = null;
             last_callback = null;
