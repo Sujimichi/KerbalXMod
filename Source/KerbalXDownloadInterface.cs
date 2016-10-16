@@ -28,11 +28,7 @@ namespace KerbalX
             download_gui();
             start_time = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             instance = this;
-            KerbalXAPI.deferred_downloads_enabled((resp, code) =>{
-                if(code == 200 && resp == "enabled"){
-                    deferred_downloads_enabled = true;
-                }
-            });
+            check_deferred_downloads_setting();
             fetch_download_queue();
             GameEvents.OnAppFocus.Add(app_focus);
         }
@@ -57,6 +53,14 @@ namespace KerbalX
             }
         }
 
+        internal void check_deferred_downloads_setting(){
+            KerbalXAPI.deferred_downloads_enabled((resp, code) =>{
+                if(code == 200 && resp == "enabled"){
+                    deferred_downloads_enabled = true;
+                }
+            });
+        }
+
         internal void enable_deferred_downloads(){
             KerbalXAPI.enable_deferred_downloads((resp, code) =>{
                 if(code == 200){
@@ -69,14 +73,21 @@ namespace KerbalX
         public void fetch_download_queue(){
             fetch_download_queue(false);
         }
+
         public void fetch_download_queue(bool show_list){
-            KerbalXAPI.fetch_download_queue((craft_data) =>{
-                download_queue.Clear();
-                download_queue = craft_data;
-                if(show_list){
-                    show_download_list();
-                }
-            });
+            if(KerbalXAPI.logged_in()){
+                
+                KerbalXAPI.fetch_download_queue((craft_data) =>{
+                    download_queue.Clear();
+                    download_queue = craft_data;
+                    if(show_list){
+                        show_download_list();
+                    }
+                });
+                
+            }else{
+                show_download_list();
+            }
         }
 
         //push the download queue list to the download interface and ensure it's visible
@@ -251,6 +262,7 @@ namespace KerbalX
         //Called after a succsessful login, if the login dialog was opened from this window.
         protected override void on_login(){
             base.on_login();        //inherits call to hide login window
+            KerbalXDownloadController.instance.check_deferred_downloads_setting();
             KerbalXDownloadController.instance.fetch_download_queue(true);
         }
 
