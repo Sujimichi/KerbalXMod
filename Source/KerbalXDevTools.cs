@@ -45,6 +45,7 @@ namespace KerbalX
         }
     }
 
+
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
     public class KerbalXConsoleReposition : MonoBehaviour
     {
