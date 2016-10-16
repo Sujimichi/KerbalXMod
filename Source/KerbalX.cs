@@ -37,9 +37,9 @@ namespace KerbalX
 
         //Static Variables
 
-        internal static string site_url = "http://localhost:3000";
+//        internal static string site_url = "http://localhost:3000";
 //        internal static string site_url = "http://192.168.1.2:3000";
-        //internal static string site_url = "http://kerbalx-stage.herokuapp.com";
+        internal static string site_url = "http://kerbalx-stage.herokuapp.com";
 
         internal static string token_path = Paths.joined(KSPUtil.ApplicationRootPath, "KerbalX.key");
         internal static string screenshot_dir = Paths.joined(KSPUtil.ApplicationRootPath, "Screenshots");//TODO make this a setting, oh and make settings.
@@ -119,15 +119,15 @@ namespace KerbalX
                     StyleSheet.assets["dnload_toolbar_btn"]
                 );
             }
-            if(!KerbalX.console_button){
-                KerbalX.console_button = ApplicationLauncher.Instance.AddModApplication(
-                    toggle_console, toggle_console, 
-                    null, null,
-                    null, null, 
-                    ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH, 
-                    GameDatabase.Instance.GetTexture(Paths.joined("KerbalX", "Assets", "console_button"), false)
-                );
-            }
+//            if(!KerbalX.console_button){
+//                KerbalX.console_button = ApplicationLauncher.Instance.AddModApplication(
+//                    toggle_console, toggle_console, 
+//                    null, null,
+//                    null, null, 
+//                    ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH, 
+//                    GameDatabase.Instance.GetTexture(Paths.joined("KerbalX", "Assets", "console_button"), false)
+//                );
+//            }
         }
 
         //remove any existing KX buttons from the toolbar
