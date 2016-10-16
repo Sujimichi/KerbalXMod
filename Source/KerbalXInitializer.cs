@@ -26,7 +26,6 @@ namespace KerbalX
 
         //Bind events to add buttons to the toolbar
         void add_to_toolbar(){
-//            GameEvents.onGUIApplicationLauncherReady.Remove(this.app_launcher_ready); //remove the listener to prevent multiple calls to this method
             ApplicationLauncher.Instance.AddOnHideCallback(this.toolbar_on_hide);     //bind events to close guis when toolbar hides
 
             KerbalX.log("Adding buttons to toolbar");
