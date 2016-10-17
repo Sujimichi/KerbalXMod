@@ -378,31 +378,45 @@ namespace KerbalX
                         GUI.enabled = true;
                     }
                 } else{
-                    GUILayout.Label("No craft do display for \"" + mode + "\"", "h3");
-                    if(mode == "Download Queue" && !KerbalXDownloadController.instance.deferred_downloads_enabled){
+                    string msg = "There aren't any craft in your " + mode;
+                    if(mode == "Your Craft"){
+                        msg = "You have not uploaded any craft yet";
+                    }
+                    GUILayout.Label(msg, "h3");
+
+                    if(mode == "Your Craft"){
+                        GUILayout.Label("Craft which you've uploaded to KerbalX will appear here so you can download them.");
+                    }else if(mode == "Past Downloads"){
+                        GUILayout.Label("Craft which you've previously downloaded will be listed here so you can re-download them");
+                        scroll_height = 80;
+                    }else if(mode == "Download Queue" && !KerbalXDownloadController.instance.deferred_downloads_enabled){
                         scroll_height = 120;
-                        GUILayout.Label("To use the download queue you need to enable \"Deferred Downloads\" in your settings on KerbalX");
                         style_override = GUI.skin.GetStyle("background.dark.margin");
+                        v_section(ow => {
+                            GUILayout.Label("To use the download queue you need to enable \"Deferred Downloads\" in your settings on KerbalX");
+                            section(w => {
+                                if(GUILayout.Button("view your settings on KerbalX.com", "hyperlink")){
+                                    Application.OpenURL(KerbalXAPI.url_to("/settings?tab=kx_mod"));
+                                }
+                                if(GUILayout.Button("Or Click to enable it")){
+                                    KerbalXDownloadController.instance.enable_deferred_downloads();
+                                }
+                            });
+                        });
+                    }else if(mode == "Download Queue"){
+                        scroll_height = 80;
                         section(w => {
-                            if(GUILayout.Button("view your settings on KerbalX.com", "hyperlink")){
-                                Application.OpenURL(KerbalXAPI.url_to("/settings?tab=kx_mod"));
-                            }
-                            if(GUILayout.Button("Or Click to enable it")){
-                                KerbalXDownloadController.instance.enable_deferred_downloads();
+                            GUILayout.Label("To get craft to appear here, browse KerbalX.com on any device and click download on craft you want and they will appear here.", width(w - 80f));
+                            if(GUILayout.Button("refresh list", width(80f))){
+                                KerbalXDownloadController.instance.fetch_download_queue(true);
                             }
                         });
-                    }else{
-                        scroll_height = 120;
-                        GUILayout.Label("To get craft to appear here, browse KerbalX.com on any device and click download on craft you want and they will appear here.");
-                        if(GUILayout.Button("refresh list")){
-                            KerbalXDownloadController.instance.fetch_download_queue(true);
-                        }
                     }
                 }
             });
             section(w =>{
                 GUILayout.FlexibleSpace();
-                if(GUILayout.Button("Close", "button.bold", GUILayout.Width(50), GUILayout.Height(30))){
+                if(GUILayout.Button("Close", "button.bold", width(50f), height(30f))){
                     hide();
                 }
             
