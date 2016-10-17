@@ -7,6 +7,7 @@ using UnityEngine;
 namespace KerbalX
 {
 
+    //ActionGroupInterface provides a GUI for setting info about the craft's action groups
     public class KerbalXActionGroupInterface : KerbalXWindow
     {
         private List<string> keys;
@@ -15,7 +16,6 @@ namespace KerbalX
             KerbalX.action_group_gui = this;
             window_title = "KerbalX::ActionGroups";			
             window_pos = new Rect(430, 50, 500, 200); //set to be right next to the action group panel edge when it's open.
-//			prevent_click_through = true;
             keys = new List<string>(KerbalX.upload_gui.action_groups.Keys);	//Get the names of action groups - used in itterating over action groups
         }
 

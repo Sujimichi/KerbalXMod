@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Linq;
-
-//using System.Globalization;
 using System.Collections;
 using System.Collections.Generic;
-
-//using System.Collections.Specialized;
 
 using System.IO;
 using System.Threading;
 
 using UnityEngine;
 
-//using UnityEngine.Networking;
 
 namespace KerbalX
 {
@@ -32,7 +27,7 @@ namespace KerbalX
         }
     }
 
-    //[KSPAddon(KSPAddon.Startup.EditorAny, false)]
+    //The ImageSelector provides a GUI for browing the screenshot directory and selecting pics to upload. It also enables grabbing screenshots of the current view.
     public class KerbalXImageSelector : KerbalXWindow
     {
         private List<PicData> pictures = new List<PicData>();           //populated by load_pics, contains PicData objects for each pic
