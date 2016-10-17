@@ -211,33 +211,33 @@ namespace KerbalX
 
     }
 
-    //	Experimental Idea - toying with idea of a cascading set of styles that can be passed onto one another.
-    //	GUILayout.Label ("this label is bold and large", css.header ());
-    //	GUILayout.Label ("this label is red and normal size", css.alert ());
-    //	GUILayout.Label ("this label is bold, large AND red", css.header (css.alert()));
-    public class CascadingStyleSheet : MonoBehaviour
-    {
-        public GUIStyle base_style(GUIStyle foundation, params GUIStyle[] styles){
-            GUIStyle b = new GUIStyle(foundation);
-            if(styles.Length != 0){
-                b = styles[0];
-            }
-            return b;
-        }
-
-        public GUIStyle header(params GUIStyle[] styles){
-            GUIStyle h = base_style(GUI.skin.label, styles);
-            h.fontSize = 15;
-            h.fontStyle = FontStyle.Bold;
-            return h;
-        }
-
-        public GUIStyle alert(params GUIStyle[] styles){
-            GUIStyle l = base_style(GUI.skin.label, styles);
-            l.normal.textColor = Color.red;
-            return l;
-        }
-		
-    }
+//    //	Experimental Idea - toying with idea of a cascading set of styles that can be passed onto one another.
+//    //	GUILayout.Label ("this label is bold and large", css.header ());
+//    //	GUILayout.Label ("this label is red and normal size", css.alert ());
+//    //	GUILayout.Label ("this label is bold, large AND red", css.header (css.alert()));
+//    public class CascadingStyleSheet : MonoBehaviour
+//    {
+//        public GUIStyle base_style(GUIStyle foundation, params GUIStyle[] styles){
+//            GUIStyle b = new GUIStyle(foundation);
+//            if(styles.Length != 0){
+//                b = styles[0];
+//            }
+//            return b;
+//        }
+//
+//        public GUIStyle header(params GUIStyle[] styles){
+//            GUIStyle h = base_style(GUI.skin.label, styles);
+//            h.fontSize = 15;
+//            h.fontStyle = FontStyle.Bold;
+//            return h;
+//        }
+//
+//        public GUIStyle alert(params GUIStyle[] styles){
+//            GUIStyle l = base_style(GUI.skin.label, styles);
+//            l.normal.textColor = Color.red;
+//            return l;
+//        }
+//		
+//    }
 }
 
