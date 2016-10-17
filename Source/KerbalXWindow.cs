@@ -56,10 +56,10 @@ namespace KerbalX
 		{
 			private void Start()
 			{
-				window_pos = new Rect(100,100,500,200); //defaults to new Rect() if not set
+				window_pos = new Rect(100,100,500,200); //defaults to new Rect((Screen.width / 2 - 500f / 2), 200, 500f, 5) if not set
 				window_title = "test window";			//defaults to "untitled window" if not set
 				window_id = 42;							//defaults to the next ID in sequence (change last_window_id in the base class to change the sequence start point)
-				footer = false							//defaults to true. if true adds a common set of GUI elements defined in DrawWindow
+				footer = false							//defaults to true. if true adds a common set of GUI footer elements defined in FooterContent
 				draggable = false;						//defaults to true. makes the windows draggable, duh. 
 			}
 
@@ -68,11 +68,15 @@ namespace KerbalX
 				GUILayout.Label ("some nonsense", GUILayout.Width (60f));
 			}
 		}	 
-	KerbalXWindow also provides the handy-dandy fabtastic grid method. grid takes a width and a lambda (delegate) statement and wraps the actions defined in the
-	lambda in calls to BeginHorizontal and EndHorizontal.  This ensures End is always called after a begin, and (I think) makes for clearer and more readable code.
+	KerbalXWindow also provides (from KerbalXWindowExtension) the handy-dandy fabtastic section, scroll and combobox methods. 
+    section and v_section take an optional width and a lambda (delegate) statement and wraps the actions defined in the lambda 
+    in calls to BeginHorizontal and EndHorizontal (section) or BeginVertical EndVertical (v_section).  
+    This ensures End is always called after a begin, and (I think) makes for clearer and more readable code. see KerbalXWindowExtension for more detail on those.
  	*/
     public class KerbalXWindow : KerbalXWindowExtension
     {
+        public static GUISkin KXskin        = null;  //static variable to hold the reference to the custom skin. First window created will set it up
+
         //Window Config variables. Change these in Start() in descendent classes.
         public bool prevent_click_through   = true;     //prevent clicks interacting with elements behind the window
         protected bool require_login        = false;    //set to true if the window requires user to be logged into KerbalX
@@ -85,10 +89,10 @@ namespace KerbalX
         public string window_title          = "untitled window";    //shockingly enough, this is the window title
         //public Rect window_pos            = new Rect()            //override in Start() to set window size/pos - default values are defined in KerbalXWindowExtension
 
+
         private bool interface_locked       = false; //not to be confused with gui_locked. interface_lock is set to true when ControlLocks are set on the KSP interface
         protected bool is_dialog            = false; //set to true in dialog windows.
 
-        public static GUISkin KXskin        = null;  //static variable to hold the reference to the custom skin. First window created will set it up
 
 
         //show, hide and toggle - basically just change the value of the bool visible which defines whether or not OnGUI will draw the window.
