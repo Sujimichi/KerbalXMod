@@ -41,6 +41,10 @@ namespace KerbalX
                 pic_highlight.SetPixel(0, 0, new Color(0.4f, 0.5f, 0.9f, 1));
                 pic_highlight.Apply();
 
+                Texture2D green_background = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+                green_background.SetPixel(0, 0, Color.green);
+                green_background.Apply();
+
 
                 //Label Styles
                 GUIStyle h1 = new GUIStyle(GUI.skin.label);
@@ -124,6 +128,10 @@ namespace KerbalX
                 pic_hover.normal.textColor = Color.black;
                 pic_hover.normal.background = blue_background;
 
+                GUIStyle pic_selected = new GUIStyle(pic_link);
+                pic_selected.name = "pic.selected";
+                pic_selected.normal.textColor = Color.black;
+                pic_selected.normal.background = green_background;
 
                 //Button Styles
                 GUIStyle login_button = new GUIStyle(GUI.skin.button);
@@ -198,7 +206,7 @@ namespace KerbalX
                 KerbalXWindow.KXskin = Instantiate(GUI.skin);
                 KerbalXWindow.KXskin.customStyles = new GUIStyle[] { 
                     h1, h2, h3, h2_centered, hyperlink, hyperlink_h2, hyperlink_h3, hyperlink_footer, remove_link, alert, alert_h2, small, centered, right_align, 
-                    pic_link, pic_hover, dark_back, dark_back_offset, blue_box, no_style, 
+                    pic_link, pic_hover, pic_selected, dark_back, dark_back_offset, blue_box, no_style, 
                     login_button, upload_button, screenshot_button, screenshot_button_bold, wrapped_button, bold_button, 
                     combo_field, combo_bttn, combo_option, combo_option_hover 
                 };

@@ -31,7 +31,7 @@ namespace KerbalX
         private long time_counter     = 0;
 
         private int max_pics = 3;//the max number of pics that can be uploaded
-        public List<PicData> pictures = new List<PicData>();//container to hold the selected pictures to be uploaded
+        internal List<PicData> pictures = new List<PicData>();//container to hold the selected pictures to be uploaded
 
         private int selected_craft_id    = 0;//holds the KX database id of a craft selected in the select craft drop down (or autoselected by check_for_matching_craft_name)
         private int selected_style_index = 0;//holds the index for a selected craft style
@@ -45,7 +45,7 @@ namespace KerbalX
         };
 
         //Action group data.
-        public Dictionary<string, string> action_groups = new Dictionary<string, string>() { 
+        internal Dictionary<string, string> action_groups = new Dictionary<string, string>() { 
             { "1", "" }, { "2", "" }, { "3", "" }, { "4", "" }, { "5", "" }, { "6", "" }, { "7", "" }, { "8", "" }, { "9", "" }, { "0", "" }, 
             { "stage", "" }, { "gears", "" }, { "lights", "" }, { "RCS", "" }, { "SAS", "" }, { "brakes", "" }, { "abort", "" } 
         };
@@ -383,13 +383,13 @@ namespace KerbalX
         }
 
         //reset any error
-        public void clear_errors(){
+        internal void clear_errors(){
             errors.Clear();
             autoheight();
         }
 
         //reset interface
-        public void reset(){
+        internal void reset(){
             KerbalX.log("Resetting UploadInterface");
             check_for_matching_craft_name();
             KerbalXActionGroupInterface.close();        //destroy action group interface (if it is open)
@@ -476,7 +476,7 @@ namespace KerbalX
         }
 
         //Dialog box to display once an upload has compelted.
-        public void show_upload_compelte_dialog(string craft_path){  //TODO re-privatise
+        private void show_upload_compelte_dialog(string craft_path){
             KerbalXDialog dialog = show_dialog((d) =>{
                 v_section(w =>{
                     GUILayout.Label("Your craft has uploaded!", "h1");
@@ -523,7 +523,7 @@ namespace KerbalX
         }
 
         //Called from the ImageSelector to add a picture (as PicData) to the list of pictures to upload.
-        public void add_picture(PicData picture){
+        internal void add_picture(PicData picture){
             errors.Clear();
             int pic_count = 0;
             foreach(PicData pic in pictures){       //count up how many pictures with file data have been added
@@ -543,7 +543,7 @@ namespace KerbalX
 
         //removes a selected picture from pictures. Does this by creating a new List<PicData> and adding all other pics into it
         //because using pictures.Remove () causes an error to be shown in the console, (about breaking enumeration).
-        public void remove_picture(PicData picture){
+        internal void remove_picture(PicData picture){
             List<PicData> new_list = new List<PicData>();
             foreach(PicData pic in pictures){
                 if(!pic.Equals(picture)){ 
