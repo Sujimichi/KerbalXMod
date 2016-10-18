@@ -39,6 +39,9 @@ namespace KerbalX
                         GUILayout.Label("KerbalX Update Available", "h2");
                         GUILayout.Label("A new version of the KerbalX mod is available");
                         GUILayout.Label(message);
+                        if(GUILayout.Button("visit KerbalX to download the latest version", "hyperlink")){
+                            Application.OpenURL(KerbalXAPI.url_to("mod"));
+                        }
 
                         section(w2 => {
                             if (GUILayout.Button("Remind me later", height(30), width(w * 0.5f))) {
