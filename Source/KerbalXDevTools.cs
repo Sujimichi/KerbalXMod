@@ -111,11 +111,6 @@
 //                };
 //            }
 //
-//            if(KerbalX.upload_gui != null){
-//                if(GUILayout.Button("show thing")){
-//                    KerbalX.upload_gui.show_upload_compelte_dialog("fooobar/moo");
-//                }
-//            }
 //
 //        }
 //
