@@ -25,7 +25,7 @@ Only use if you are taking part in testing this mod.
 
 #Installation
 Download the latest release zip and unpack the contents (single folder named KerbalX) into the GameData folder of KSP.
-[Latest Release](https://github.com/Sujimichi/KerbalXMod/releases/tag/0.0.2)
+[Latest Release](https://github.com/Sujimichi/KerbalXMod/releases)
 
 #Usage
 To use the KerbalX Mod you need an account on KerbalX.com    
