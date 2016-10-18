@@ -38,12 +38,12 @@ namespace KerbalX
         //Static Variables
 
 //        internal static string site_url = "http://localhost:3000";
-//        internal static string site_url = "http://192.168.1.2:3000";
-        internal static string site_url = "http://kerbalx-stage.herokuapp.com";
+        internal static string site_url = "http://192.168.1.2:3000";
+//        internal static string site_url = "http://kerbalx-stage.herokuapp.com";
 
         internal static string token_path = Paths.joined(KSPUtil.ApplicationRootPath, "KerbalX.key");
         internal static string screenshot_dir = Paths.joined(KSPUtil.ApplicationRootPath, "Screenshots");//TODO make this a setting, oh and make settings.
-        internal static string version = "0.0.2";
+        internal static string version = "0.0.3";
 
         internal static bool failed_to_connect          = false;
         internal static string server_error_message     = null;
