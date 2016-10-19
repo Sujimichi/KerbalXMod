@@ -546,7 +546,7 @@ namespace KerbalX
         internal void remove_picture(PicData picture){
             List<PicData> new_list = new List<PicData>();
             foreach(PicData pic in pictures){
-                if(!pic.Equals(picture)){ 
+                if(!pic.file.FullName.Equals(picture.file.FullName)){ 
                     new_list.Add(pic);
                 }
             }

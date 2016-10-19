@@ -173,6 +173,12 @@ namespace KerbalX
                     foreach(bool p in loaded_pics){
                         if(p){n++;}
                     }
+
+                    List<string> files = new List<string>();
+                    foreach(PicData selected_pic in KerbalX.upload_gui.pictures){
+                        files.Add(selected_pic.file.FullName);
+                    }
+
                     section(w =>{
                         GUILayout.Label("loaded " + n + " of " + pictures.Count.ToString() + " pictures");
                         if(GUILayout.Button("refresh", width(100f))){
@@ -205,7 +211,8 @@ namespace KerbalX
                                 foreach(PicData pic in row){
                                     v_section(150f, w2 =>{  //vertical section, ahem, BeginVertical container for each pic.  Contains two restyled buttons, each will call select_pic.
                                         var style = (hover_ele == pic.file.FullName ? "pic.hover" : "pic.link"); //flip-flop style depending on hover_ele, being == to file name (because I can't figure out how to make style.hover work yet)
-                                        if (KerbalX.upload_gui.pictures.Contains(pic)){
+
+                                        if (files.Contains(pic.file.FullName)){
                                             style = (hover_ele == pic.file.FullName ? "pic.selected.highlighted" : "pic.selected");
                                         }
 
@@ -296,7 +303,12 @@ namespace KerbalX
 
         //adds pic to list of selected pics on UploadInterface
         private void toggle_pic(PicData pic){
-            if(KerbalX.upload_gui.pictures.Contains(pic)){
+            List<string> files = new List<string>();
+            foreach(PicData p in KerbalX.upload_gui.pictures){
+                files.Add(p.file.FullName);
+            }
+
+            if (files.Contains(pic.file.FullName)){
                 KerbalX.upload_gui.remove_picture(pic);
             }else{
                 KerbalX.upload_gui.add_picture(pic);
