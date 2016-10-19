@@ -97,7 +97,7 @@ namespace KerbalX
                             }
                             ;
                         });
-                        dialog.window_title = "KerablX Token File";
+                        dialog.window_title = "KerbalX Token File";
                         dialog.window_pos = new Rect(window_pos.x + window_pos.width + 10, window_pos.y, 350f, 5);
                     }
                 });

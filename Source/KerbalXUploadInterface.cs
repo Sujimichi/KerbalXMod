@@ -87,7 +87,7 @@ namespace KerbalX
         //Called after a succsessful login, if the login dialog was opened from this window.
         protected override void on_login(){
             base.on_login();		//inherits call to hide login window
-            fetch_existing_craft();//run check for users craft on KerablX
+            fetch_existing_craft();//run check for users craft on KerbalX
         }
 
         //Called when window is made visible, will re-show other windows which were open when it was made hidden
@@ -162,7 +162,7 @@ namespace KerbalX
                 string mode_title = new CultureInfo("en-US", false).TextInfo.ToTitleCase(mode);
 
                 if(fetching_craft){
-                    GUILayout.Label("Getting your craft list from KerablX...", "h3");
+                    GUILayout.Label("Getting your craft list from KerbalX...", "h3");
                 } else{
 					
                     GUILayout.Label(mode_title + " '" + craft_name + "' " + (mode == "update" ? "on" : "to") + " KerbalX", "h3");
@@ -259,7 +259,7 @@ namespace KerbalX
                             }
                         } else{
 							
-                            //Show message if the current craft name matches the name of one of the users craft on KerablX
+                            //Show message if the current craft name matches the name of one of the users craft on KerbalX
                             if(matching_craft_ids.Count > 0){
                                 string label_text = "This craft's name matches the name of " + (matching_craft_ids.Count == 1 ? "a" : "several") + " craft you've already uploaded.";
                                 if(matching_craft_ids.Count > 1){
@@ -511,7 +511,7 @@ namespace KerbalX
         //minimal info (craft id and name) is stached on remote_craft which is used to populate the select menu and check for matching craft.
         private void fetch_existing_craft(){
             fetching_craft = true;
-            KerbalXAPI.fetch_existing_craft(() =>{  //Query KX for the user's current craft (which gets stashed on KerablX.existing_craft). lambda gets called once request completes.
+            KerbalXAPI.fetch_existing_craft(() =>{  //Query KX for the user's current craft (which gets stashed on KerbalX.existing_craft). lambda gets called once request completes.
                 remote_craft.Clear();
                 remote_craft.Add(0, "select a craft");	//remote_craft populates the select menu, ID 0 (which can't exist on KX) is used as the placeholder
                 foreach(KeyValuePair<int, Dictionary<string, string>> craft in KerbalX.existing_craft){

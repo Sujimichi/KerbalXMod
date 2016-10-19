@@ -359,7 +359,7 @@ namespace KerbalX
         }
         
 
-        //Used in all requests to KerablX
+        //Used in all requests to KerbalX
         internal void send_request(UnityWebRequest request, RequestCallback callback){
             StartCoroutine(transmit(request, callback));
         }
