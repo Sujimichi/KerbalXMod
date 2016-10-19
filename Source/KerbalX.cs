@@ -43,7 +43,7 @@ namespace KerbalX
 
         internal static string token_path = Paths.joined(KSPUtil.ApplicationRootPath, "KerbalX.key");
         internal static string screenshot_dir = Paths.joined(KSPUtil.ApplicationRootPath, "Screenshots");//TODO make this a setting, oh and make settings.
-        internal static string version = "0.0.3";
+        internal static string version = "0.0.4";
 
         internal static bool failed_to_connect          = false;
         internal static string server_error_message     = null;
