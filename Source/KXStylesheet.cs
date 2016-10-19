@@ -42,11 +42,11 @@ namespace KerbalX
                 pic_highlight.Apply();
 
                 Texture2D green_background = new Texture2D(1, 1, TextureFormat.RGBA32, false);
-                green_background.SetPixel(0, 0, new Color(0.3f, 0.7f, 0.1f, 1));
+                green_background.SetPixel(0, 0, new Color(0.2f, 0.6f, 0.2f, 1));
                 green_background.Apply();
 
                 Texture2D light_green_background = new Texture2D(1, 1, TextureFormat.RGBA32, false);
-                light_green_background.SetPixel(0, 0, new Color(0.48f, 0.7f, 0.38f, 1));
+                light_green_background.SetPixel(0, 0, new Color(0.3f, 0.5f, 0.3f, 1));
                 light_green_background.Apply();
 
                 //Label Styles
