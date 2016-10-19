@@ -18,6 +18,7 @@ namespace KerbalX
     {
         private string craft_name        = null;//craft_name is the (adjustable) name used in the upload interface
         private string editor_craft_name = "";  //editor_craft_name is the craft's name as taken from the editor
+        private string hash_tags         = "";
 
         private string mode = "upload";         //Interface mode ("upload" || "update")
         private bool show_upload_bttn   = true; //bool for whether or not to show the upload button
@@ -187,6 +188,10 @@ namespace KerbalX
                             if(craft_name != current_craft_name){
                                 check_for_matching_craft_name();//check for matching existing craft
                             } 
+                        });
+                        section(w =>{
+                            GUILayout.Label("#tags:", width(80f));
+                            hash_tags = GUILayout.TextField(hash_tags, 255, width(w - 80));
                         });
 						
                         //drop down select for craft type
@@ -418,6 +423,7 @@ namespace KerbalX
                 craft_data.AddField("craft_file", craft_file());
                 craft_data.AddField("part_data", JSONX.toJSON(part_info()));
                 craft_data.AddField("action_groups", JSONX.toJSON(action_groups));
+                craft_data.AddField("hash_tags", hash_tags);
 
 				
                 int pic_count = 0;
