@@ -275,16 +275,12 @@ namespace KerbalX
                 craft_list.Add(data.Key, new Dictionary<string, string>(data.Value));
             }
             craft_ids = craft_list.Keys.ToArray();
-            if(mode == "Download Queue"){
-                bool all_current = true;
+            if(mode == "Download Queue" && craft_ids.Length > 0){
                 foreach(int id in craft_ids){
                     if(craft_list[id]["version"] != ksp_ver){
-                        all_current = false;
+                        only_version_compatible = false;
                     }
                 }
-                only_version_compatible = all_current;
-            }else{
-                only_version_compatible = true;
             }
             adjust_scroll_height();
             scroll_pos.y = 0;
