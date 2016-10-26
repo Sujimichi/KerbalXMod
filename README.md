@@ -20,8 +20,7 @@ With it you can upload your craft to KerbalX.com as well as downloading craft fr
 
 
 #Installation
-[Download the latest release zip](https://github.com/Sujimichi/KerbalXMod/releases) and unpack the contents (single folder named KerbalX) into the GameData folder of KSP.
-
+[Download the latest release zip](https://github.com/Sujimichi/KerbalXMod/releases/latest) and unpack the contents (single folder named KerbalX) into the GameData folder of KSP.
 
 #Usage
 * To use the KerbalX Mod you need an account on KerbalX.com
