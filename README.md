@@ -18,10 +18,6 @@
 The KerbalX Mod enables interaction with KerbalX.com from within the game Kerbal Space Program.    
 With it you can upload your craft to KerbalX.com as well as downloading craft from the site.
 
-#CURRENTLY IN PRE-RELEASE TESTING
-The mod is currently linked to the KerbalX staging server (kerbalx-stage.herokuapp.com) **NOT** to KerbalX.com    
-Only use if you are taking part in testing this mod.
-
 
 #Installation
 [Download the latest release zip](https://github.com/Sujimichi/KerbalXMod/releases) and unpack the contents (single folder named KerbalX) into the GameData folder of KSP.
