@@ -385,7 +385,6 @@ namespace KerbalX
         //reset interface
         internal void reset(){
             KerbalX.log("Resetting UploadInterface");
-//            check_for_matching_craft_name();
             KerbalXActionGroupInterface.close();        //destroy action group interface (if it is open)
             KerbalXImageSelector.close();               //destroy image selector (if it is open)
             KerbalXDialog.close();                      //destroy dialog (if one is open)
