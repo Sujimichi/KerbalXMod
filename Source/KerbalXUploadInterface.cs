@@ -63,23 +63,13 @@ namespace KerbalX
             enable_request_handler();
             visible = false;
 
-            if(visible){
-                on_show();
-            }
             //bind events to happen when the editor loads a saved craft or when new craft is clicked
-            GameEvents.onEditorLoad.Add(this.on_editor_load);	
             GameEvents.onEditorRestart.Add(this.on_editor_new);
         }
 
-        //Callback for when the editor loads a craft
-        public void on_editor_load(ShipConstruct a, KSP.UI.Screens.CraftBrowserDialog.LoadType b){
-            if(visible){
-                KerbalX.upload_gui.reset();
-            }
-        }
-
-        //Callback for when then editor resets (new craft)
-        public void on_editor_new(){
+        //Callback for when then editor resets (new craft). This is also called when loading a craft (so onEditorLoad binding is not needed)
+        public void on_editor_new(){            
+            KerbalX.log("EDIOTR NEW");
             if(visible){
                 KerbalX.upload_gui.reset();
             }
@@ -125,7 +115,6 @@ namespace KerbalX
 
         protected override void OnDestroy(){
             base.OnDestroy(); //releases any UI locks on the editor
-            GameEvents.onEditorLoad.Remove(this.on_editor_load);    //unbind editor events
             GameEvents.onEditorRestart.Remove(this.on_editor_new);
             KerbalXActionGroupInterface.close();                    //destroy action group interface (if it is open)
             KerbalXImageSelector.close();                           //destroy image selector (if it is open)
@@ -396,7 +385,7 @@ namespace KerbalX
         //reset interface
         internal void reset(){
             KerbalX.log("Resetting UploadInterface");
-            check_for_matching_craft_name();
+//            check_for_matching_craft_name();
             KerbalXActionGroupInterface.close();        //destroy action group interface (if it is open)
             KerbalXImageSelector.close();               //destroy image selector (if it is open)
             KerbalXDialog.close();                      //destroy dialog (if one is open)
@@ -584,10 +573,10 @@ namespace KerbalX
         //Kinda horrible appoach involing a temporary file, some C4 and a Swedish chiropractor (well not really, but it's kinda convoluted). TODO make this work better
         private bool craft_is_saved(){
             if(craft_file_exists()){
-                string temp_path = Paths.joined(KSPUtil.ApplicationRootPath, "GameData", "KerbalX", "temp.craft");	//set temp place to save current craft
-                EditorLogic.fetch.ship.SaveShip().Save(temp_path);													//tell editor to save craft to temp location
-                bool is_saved = Checksum.compare(File.ReadAllText(temp_path), craft_file());						//compare checksums of the two craft 
-                File.Delete(temp_path);																			//remove temp craft
+                string temp_path = Paths.joined(KSPUtil.ApplicationRootPath, "GameData", "KerbalX", "temp.craft");  //set temp place to save current craft
+                EditorLogic.fetch.ship.SaveShip().Save(temp_path);                                                  //tell editor to save craft to temp location
+                bool is_saved = Checksum.compare(File.ReadAllText(temp_path), craft_file());                        //compare checksums of the two craft 
+                File.Delete(temp_path);                                                                             //remove temp craft
                 return is_saved;
             } else{
                 return false;
@@ -599,7 +588,7 @@ namespace KerbalX
         //check if craft_name matches any of the user's existing craft.  Sets matching_craft_ids to contain KX database ids of any matching craft
         //if only one match is found then selected_craft_id is also set to the matched id (which them selects the craft in the select menu)
         private void check_for_matching_craft_name(){
-            if(craft_name != "" || craft_name != null){
+            if(!String.IsNullOrEmpty(craft_name)){
                 KerbalX.log("checking for matching craft - " + craft_name);
                 string lower_name = craft_name.Trim().ToLower();
                 matching_craft_ids.Clear();
