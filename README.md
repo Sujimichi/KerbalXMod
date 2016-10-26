@@ -19,7 +19,6 @@ The KerbalX Mod enables interaction with KerbalX.com from within the game Kerbal
 With it you can upload your craft to KerbalX.com as well as downloading craft from the site.
 
 
-
 #Installation
 [Download the latest release zip](https://github.com/Sujimichi/KerbalXMod/releases) and unpack the contents (single folder named KerbalX) into the GameData folder of KSP.
 
