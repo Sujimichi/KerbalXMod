@@ -15,8 +15,8 @@
               __/ |                                                                       
              |___/                                                                      
 
-The KerbalX Mod enables interaction with KerbalX.com from within the game Kerbal Space Program.    
-With it you can upload your craft to KerbalX.com as well as downloading craft from the site.
+A Kerbal Space Program Mod.
+The KerbalX Mod enables you to upload your craft to KerbalX.com from within the game and download craft directly into your current save.
 
 
 #Installation
@@ -33,7 +33,7 @@ With it you can upload your craft to KerbalX.com as well as downloading craft fr
 ###see [KerbalX.com/mod](https://KerbalX.com/mod) for more detailed info.
 
 ####Licence
-Licenced under Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 | Copyright (c) 2016, <Katateochi@gmail.com>    
+Licenced under Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 (CC BY-NC-ND 4.0) | Copyright (c) 2016, <Katateochi@gmail.com>    
 
 
 See LICENCE.txt for full licence which should be included (or see https://creativecommons.org/licenses/by-nc-nd/4.0/ & https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode)
