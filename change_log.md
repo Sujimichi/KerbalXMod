@@ -1,6 +1,7 @@
 ###Change Log
 0.1.2
 - change: Added feedback when a craft is updated.
+- new: Large image prevew window on image selector.
 0.1.1
 - fix: stop duplicate calls to check for matching craft names
 - fix: ignore checking matching craft name when craft name is blank

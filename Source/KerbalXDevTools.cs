@@ -18,8 +18,8 @@
 //    {
 //        public bool autostart = true;
 //        public string save_name = "default";
-//        public string mode = "spacecenter";
-////        public string mode = "editor";
+////        public string mode = "spacecenter";
+//        public string mode = "editor";
 //        public string craft_name = "testy";
 //
 //        public void Start(){
@@ -69,18 +69,18 @@
 //            KerbalX.console = this;
 //            enable_request_handler();
 //            prevent_click_through = true;
-//            visible = false;
+//            visible = true;
 //        }
 //
 //
 //        protected override void WindowContent(int win_id){
 //
-//            if(KerbalX.upload_gui){
-//                GUILayout.Label(KerbalX.upload_gui.window_pos.ToString());
+//            if(KerbalX.image_selector){
+//                GUILayout.Label(KerbalX.image_selector.window_pos.ToString());
 //            }
 //
 //            if(GUILayout.Button("test")){
-//                KerbalX.log(KerbalX.upload_gui.window_pos.ToString());
+//                KerbalX.log(KerbalX.image_selector.large_viewer.window_pos.ToString());
 //            }
 //
 //            if(GUILayout.Button("update existing craft")){
