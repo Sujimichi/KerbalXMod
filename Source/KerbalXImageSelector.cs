@@ -51,10 +51,13 @@ namespace KerbalX
         private bool minimized = false;
         private Rect normal_size;
 
+        internal KerbalXDialog large_viewer = null;
+        internal int large_viewer_index = 0;
+
         private void Start(){
             window_title = "KerbalX::ScreenShots";
             float w = 640;
-            window_pos = new Rect(275, 95, w, 5);
+            window_pos = new Rect(250, 95, w, 5);
             normal_size = new Rect(window_pos);
             KerbalX.image_selector = this;
             this.show(); //perform on_show actions when started
@@ -73,9 +76,11 @@ namespace KerbalX
 
         protected override void on_hide(){
             KerbalX.upload_gui.clear_errors();
+            if(large_viewer){GameObject.Destroy(large_viewer);}
         }
 
         public static void close(){
+            if(KerbalX.image_selector.large_viewer){GameObject.Destroy(KerbalX.image_selector.large_viewer);}
             if(KerbalX.image_selector){
                 GameObject.Destroy(KerbalX.image_selector);
             }
@@ -181,12 +186,17 @@ namespace KerbalX
 
                     section(w =>{
                         GUILayout.Label("loaded " + n + " of " + pictures.Count.ToString() + " pictures");
+                        if(GUILayout.Button("large viewer", width(100f))){
+                            toggle_large_viewer();
+                        }
+
                         if(GUILayout.Button("refresh", width(100f))){
                             prepare_pics();
                         }
                     });
 
                     pics_scroll_height = pictures.Count <= 4 ? 150f : 300f; //adjust image selector height if 4 or less images
+
 
                     scroll_pos = scroll(scroll_pos, 620f, pics_scroll_height, w =>{
                         int row_n = 1;
@@ -223,14 +233,56 @@ namespace KerbalX
                                             toggle_pic(pic);
                                         }
                                     });
-                                    if(GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition)){ //detect if mouse is over the last vertical section 
+                                    Vector2 mouse_pos = Input.mousePosition;
+                                    mouse_pos.y = Screen.height - mouse_pos.y;
+                                    if(GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition) && mouse_pos.y < window_pos.y + window_pos.height){ //detect if mouse is over the last vertical section 
+                                        KerbalX.log("image hover");
                                         hover_ele = pic.file.FullName;                                        //and hover_ele to that pics filename. used to set on hover style
+                                        KerbalX.image_selector.large_viewer_index = pictures.IndexOf(pic);
                                     }
                                 }
                             });
                         }
                     });
                 }
+            }
+        }
+
+        private void toggle_large_viewer(){
+            if(large_viewer){
+                GameObject.Destroy(large_viewer);
+            }else{
+                float viewer_width = 500f;
+                large_viewer = show_dialog(d => {
+                    PicData pic = KerbalX.image_selector.pictures[KerbalX.image_selector.large_viewer_index];
+                    v_section(viewer_width, outer => {
+                        section(w2 => {
+                            if(GUILayout.Button("<", "button.bold", width(outer*0.1f))){
+                                KerbalX.image_selector.large_viewer_index--;
+                                if(KerbalX.image_selector.large_viewer_index < 0){ KerbalX.image_selector.large_viewer_index = 0;}
+                            }
+                            if(GUILayout.Button("Add Pic", "button.bold", width(outer*0.8f))){
+                                toggle_pic(pic);
+                            }
+                            if(GUILayout.Button(">", "button.bold", width(outer*0.1f))){
+                                KerbalX.image_selector.large_viewer_index++;
+                                if(KerbalX.image_selector.large_viewer_index > KerbalX.image_selector.pictures.Count-1){ 
+                                    KerbalX.image_selector.large_viewer_index = KerbalX.image_selector.pictures.Count-1;
+                                }
+                            }
+                        });
+                        
+                        if(KerbalX.image_selector.loaded_pics[pic.id] != true){
+                            KerbalX.log("loading pic");
+                            KerbalX.image_selector.loaded_pics[pic.id] = true;
+                            StartCoroutine(KerbalX.image_selector.load_image(pic.file.FullName, pic.texture));
+                        }
+                        GUILayout.Label(pic.texture, width(viewer_width), height(viewer_width * 0.75f));
+                    });
+                    
+                });
+                large_viewer.window_pos = new Rect(this.window_pos.x + this.window_pos.width, KerbalX.upload_gui.window_pos.y + KerbalX.upload_gui.window_pos.height, viewer_width, 200);
+                large_viewer.window_title = "Image Viewer";
             }
         }
 
