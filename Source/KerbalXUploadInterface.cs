@@ -190,6 +190,22 @@ namespace KerbalX
                             combobox("craft_style_select", craft_styles, selected_style_index, 100f, 150f, this, id =>{
                                 selected_style_index = id;
                             });
+                            if(GUILayout.Button("Edit Description")){
+                                KerbalXDialog dialog = show_dialog(d => {
+                                    GUILayout.Label("Edit your craft's description", "h2");
+                                    GUILayout.Label("this field edits the description text stored on the craft file, this just provides a larger interface", "small");
+
+                                    EditorLogic.fetch.shipDescriptionField.text = GUILayout.TextArea(EditorLogic.fetch.shipDescriptionField.text, height(350f));
+                                    if(GUILayout.Button("Close", "button.bold")){
+                                        EditorLogic.fetch.saveBtn.onClick.Invoke();
+                                        close_dialog();
+                                    }
+                                    GUILayout.Label("Note: closing this also saves the craft, so changes to the description are kept", "small");
+
+                                });
+                                dialog.window_pos = new Rect(Screen.width/2 - 300, 200, 600, 400);
+                            }
+
                         });
 						
                         //buttons for setting action groups and adding pictures.
