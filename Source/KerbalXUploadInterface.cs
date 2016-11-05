@@ -25,6 +25,7 @@ namespace KerbalX
         private bool enable_upload_bttn = true; //bool to enable the upload button to be disabled (during upload/update)
         private bool fetching_craft     = false;
         private string transfer_activity= null; //message to display while uploaded/updating
+        private string update_message   = null;
         private List<string> errors = new List<string>();//container for an errors which occur and need displaying to the user
 
         //used in upload progress ticker
@@ -329,7 +330,9 @@ namespace KerbalX
                         progress_spinner(w, 5, 20);
                     });
                 }
-
+                if(update_message != null){
+                    GUILayout.Label(update_message, "h2.centered");
+                }
             }
         }
 
@@ -378,6 +381,7 @@ namespace KerbalX
 
         //reset any error
         internal void clear_errors(){
+            update_message = null;
             errors.Clear();
             autoheight();
         }
@@ -391,6 +395,7 @@ namespace KerbalX
             pictures.Clear();                           //remove all selected pictures
             selected_style_index = 0;                   //reset selected craft style to default (Ship)
             selected_craft_id = 0;                      //reset selected_craft_id (0 is non-value Database ID)
+            update_message = null;
             List<string> keys = new List<string>(action_groups.Keys);
             foreach(string key in keys){                //revert all values for action groups back to empty string
                 action_groups[key] = "";
@@ -458,6 +463,7 @@ namespace KerbalX
                     var resp_data = JSON.Parse(resp);
                     if(code == 200){
                         KerbalX.log("craft update OK");
+                        update_message = "Craft Updated";
                     } else if(code == 422){
                         KerbalX.log("craft update failed!");
                         KerbalX.log(resp);
