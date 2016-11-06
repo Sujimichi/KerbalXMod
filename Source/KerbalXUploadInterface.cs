@@ -204,6 +204,7 @@ namespace KerbalX
 
                                 });
                                 dialog.window_pos = new Rect(Screen.width/2 - 300, 200, 600, 400);
+                                dialog.window_title = "Edit Description";
                             }
 
                         });
