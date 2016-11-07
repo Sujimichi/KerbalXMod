@@ -1,7 +1,7 @@
 ###Change Log
 0.1.2
 - change: Added feedback when a craft is updated.
-- new: Large image prevew window on image selector.
+- new: Large image preview window on image selector.
 - new: Interface for editing craft's description.
 
 0.1.1
