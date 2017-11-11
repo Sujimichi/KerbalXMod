@@ -147,7 +147,12 @@ namespace KerbalX
 
         private void write_file(int craft_id, Dictionary<string, string> craft_info, string craft_file){
             Directory.CreateDirectory(craft_info["dir"]); //ensure directorys exist (usually just subassembly folder which is missing). 
-            File.WriteAllText(craft_info["path"], craft_file);
+            string os_path = craft_info["path"];
+            foreach(char c in System.IO.Path.GetInvalidPathChars()){
+                os_path = os_path.Replace(c.ToString(), "");
+            }
+
+            File.WriteAllText(os_path, craft_file);
             craft_info["status"] = "Downloaded";
             if(download_gui().craft_list.ContainsKey(craft_id)){
                 download_gui().craft_list[craft_id]["status"] = "Downloaded";
