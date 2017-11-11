@@ -20,5 +20,8 @@ rm bin/Release/KerbalX.dll.mdb
 cd bin/Release
 zip -r KerbalXMod.zip KerbalX/
 
-rm -rf /home/sujimichi/KSP/dev_KSP-1.2/GameData/KerbalX/
-cp -R KerbalX/ /home/sujimichi/KSP/dev_KSP-1.2/GameData/KerbalX/
+rm -rf /home/sujimichi/KSP/dev_KSP-1.3.1/GameData/KerbalX/
+cp -R KerbalX/ /home/sujimichi/KSP/dev_KSP-1.3.1/GameData/KerbalX/
+
+rm -rf /home/sujimichi/Share/KX_mod_dev/KerbalX/
+cp -R KerbalX/ /home/sujimichi/Share/KX_mod_dev/KerbalX/

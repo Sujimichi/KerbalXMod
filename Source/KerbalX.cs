@@ -16,11 +16,10 @@
 //         |___/                                                                        
 
 
-//Built Against KSP 1.2
-//build id = 01586
-//2016-10-11_12-44-44
+//Built Against KSP 1.3.1
+//build id = 01891
+//2017-10-05_22-01-21
 //Branch: master
-
 
 using System;
 using System.Collections.Generic;
