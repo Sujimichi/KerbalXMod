@@ -75,4 +75,7 @@
     <Folder Include="assets\plugins\" />
     <Folder Include="Source\" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\settings.cfg" />
+  </ItemGroup>
 </Project>

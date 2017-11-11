@@ -121,7 +121,7 @@ namespace KerbalX
                         GUILayout.Label("The entered URL does not return the content-type for an image", "alert");
                     }
 
-                    if(GUILayout.Button("or pic a pic from your pics, erm.", height(40f))){
+                    if(GUILayout.Button("or pic a pic from your pics.", height(40f))){
                         change_mode("pic_selector");
                     }
                 });
@@ -162,7 +162,7 @@ namespace KerbalX
                 if(!minimized){
                     GUILayout.Label("Grabs a screen shot of the current view (KX windows will hide while taking the pic).", "small");
                 }
-
+                GUILayout.Label("pics directory: " + KerbalX.screenshot_dir.Replace(KSPUtil.ApplicationRootPath, ""));
 
 
                 //Display picture selector - scrolling container of selectable pictures.

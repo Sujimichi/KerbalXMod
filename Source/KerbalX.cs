@@ -42,7 +42,7 @@ namespace KerbalX
         internal static string site_url = "https://kerbalx.com";
 
         internal static string token_path = Paths.joined(KSPUtil.ApplicationRootPath, "KerbalX.key");
-        internal static string screenshot_dir = Paths.joined(KSPUtil.ApplicationRootPath, "Screenshots");//TODO make this a setting, oh and make settings.
+        internal static string screenshot_dir = "<ksp_install>/Screenshots"; //can be changed in settings.cfg
         internal static string version = "0.1.2";
 
         internal static bool failed_to_connect          = false;
@@ -86,6 +86,14 @@ namespace KerbalX
             GameEvents.onGUIApplicationLauncherDestroyed.Add(remove_from_toolbar);
             GameEvents.onGameSceneLoadRequested.Add(scene_load_request);
             KerbalXDownloadController.query_new_save = true;
+
+            //read settings.cfg and set configurable attributes
+            string settings_data = System.IO.File.ReadAllText(Paths.joined(KSPUtil.ApplicationRootPath, "GameData", "KerbalX", "settings.cfg"));
+            ConfigNode settings = ConfigNode.Parse(settings_data);
+            foreach(ConfigNode node in settings.nodes){
+                if(node.HasValue("pic_dir")){ KerbalX.screenshot_dir = node.GetValue("pic_dir"); }
+            }
+            KerbalX.screenshot_dir = KerbalX.screenshot_dir.Replace("<ksp_install>", KSPUtil.ApplicationRootPath);
         }
 
         //Trigger the creation of custom Skin (copy of default GUI.skin with various custom styles added to it)
