@@ -115,10 +115,17 @@ namespace KerbalX
             int[] craft_ids = craft_data.Keys.ToArray();
             foreach(int id in craft_ids){
                 try{
+                    string os_safe_craft_name = craft_data[id]["name"];
+                    os_safe_craft_name = os_safe_craft_name.Replace("/", "-");
+                    os_safe_craft_name = os_safe_craft_name.Replace("\\", "-");
+                    foreach(char c in System.IO.Path.GetInvalidPathChars()){
+                        os_safe_craft_name = os_safe_craft_name.Replace(c.ToString(), "");
+                    }
+
                     string type_dir = craft_data[id]["type"] == "Subassembly" ? "Subassemblies" : Paths.joined("Ships", craft_data[id]["type"]);
                     craft_data[id].Add("dir",       Paths.joined(KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, type_dir));
-                    craft_data[id].Add("path",      Paths.joined(KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, type_dir, craft_data[id]["name"] + ".craft"));
-                    craft_data[id].Add("short_path",Paths.joined(HighLogic.SaveFolder, type_dir, craft_data[id]["name"] + ".craft"));
+                    craft_data[id].Add("path",      Paths.joined(KSPUtil.ApplicationRootPath, "saves", HighLogic.SaveFolder, type_dir, os_safe_craft_name + ".craft"));
+                    craft_data[id].Add("short_path",Paths.joined(HighLogic.SaveFolder, type_dir, os_safe_craft_name + ".craft"));
                     craft_data[id].Add("status", "");
                 }
                 catch{
@@ -147,12 +154,7 @@ namespace KerbalX
 
         private void write_file(int craft_id, Dictionary<string, string> craft_info, string craft_file){
             Directory.CreateDirectory(craft_info["dir"]); //ensure directorys exist (usually just subassembly folder which is missing). 
-            string os_path = craft_info["path"];
-            foreach(char c in System.IO.Path.GetInvalidPathChars()){
-                os_path = os_path.Replace(c.ToString(), "");
-            }
-
-            File.WriteAllText(os_path, craft_file);
+            File.WriteAllText(craft_info["path"], craft_file);
             craft_info["status"] = "Downloaded";
             if(download_gui().craft_list.ContainsKey(craft_id)){
                 download_gui().craft_list[craft_id]["status"] = "Downloaded";
