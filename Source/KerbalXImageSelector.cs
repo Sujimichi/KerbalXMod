@@ -52,6 +52,7 @@ namespace KerbalX
         private Rect normal_size;
 
         internal KerbalXDialog large_viewer = null;
+        internal KerbalXDialog tip = null;
         internal int large_viewer_index = 0;
 
         private void Start(){
@@ -162,7 +163,27 @@ namespace KerbalX
                 if(!minimized){
                     GUILayout.Label("Grabs a screen shot of the current view (KX windows will hide while taking the pic).", "small");
                 }
-                GUILayout.Label("pics directory: " + KerbalX.screenshot_dir.Replace(KSPUtil.ApplicationRootPath, ""));
+                section(w =>{
+                    GUILayout.Label("pics directory: " + KerbalX.screenshot_dir.Replace(KSPUtil.ApplicationRootPath, ""),width(w-20f));
+                    if(GUILayout.Button("?", width(20f))){
+                        if(tip){
+                            GameObject.Destroy(tip);
+                        }else{
+                            tip = show_dialog(d => {
+                                GUILayout.Label("The default location for loading and saving pictures is the Screenshots folder in your KSP install directory.");
+                                GUILayout.Label("You can change where the KerbalX mod will save and load pictures from by changing the path in the settings.cfg file in GameData/KerbalX");
+                                section(w2 => {
+                                    GUILayout.FlexibleSpace();
+                                    if(GUILayout.Button("close", width(50f))){
+                                        close_dialog();
+                                    }
+                                });
+                            });
+                            tip.window_title = "Picture Location";
+                            tip.window_pos = new Rect(this.window_pos.x + this.window_pos.width, Screen.height-Input.mousePosition.y, 400, 30);
+                        }
+                    }
+                });
 
 
                 //Display picture selector - scrolling container of selectable pictures.
@@ -170,7 +191,7 @@ namespace KerbalX
                 //but the files won't have been read yet, so the picture textures haven't been set.  Trying to load all picture textures on load is very time consuming.
                 //so instead pictures are loaded and have their texture set row by row, on demand as the user scrolls down.
                 if(pictures.Count == 0 && !minimized){
-                    GUILayout.Label("You don't have a screen shots in your screen shots folder", "h3");
+                    GUILayout.Label("You don't have any screen shots in your screen shots folder", "h3");
                     GUILayout.Label("Click Take Screenshot to take one now");
                 }
                 if(pictures.Count > 0 && !minimized){
