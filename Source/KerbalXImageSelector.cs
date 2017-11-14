@@ -147,10 +147,10 @@ namespace KerbalX
                 }
 
                 section(w =>{
-                    if(GUILayout.Button("Take Screenshot now", "button.screenshot", width(w - 40f))){
+                    if(GUILayout.Button("Take Screenshot now", "button.large", width(w - 40f))){
                         grab_screenshot();
                     }
-                    if(GUILayout.Button((minimized ? ">>" : "<<"), "button.screenshot.bold", width(40f))){
+                    if(GUILayout.Button((minimized ? ">>" : "<<"), "button.large.bold", width(40f))){
                         minimized = !minimized;
                         if(minimized){
                             minimize();
@@ -278,18 +278,24 @@ namespace KerbalX
                     PicData pic = KerbalX.image_selector.pictures[KerbalX.image_selector.large_viewer_index];
                     v_section(viewer_width, outer => {
                         section(w2 => {
-                            if(GUILayout.Button("<", "button.bold", width(outer*0.1f))){
+                            if(GUILayout.Button("<", "button.large.bold", width(viewer_width*0.1f))){
                                 KerbalX.image_selector.large_viewer_index--;
                                 if(KerbalX.image_selector.large_viewer_index < 0){ KerbalX.image_selector.large_viewer_index = 0;}
                             }
-                            if(GUILayout.Button("Add Pic", "button.bold", width(outer*0.8f))){
+                            GUILayout.FlexibleSpace();
+                            if(GUILayout.Button("Add Pic", "button.large.bold", width(viewer_width*0.6f))){
                                 toggle_pic(pic);
                             }
-                            if(GUILayout.Button(">", "button.bold", width(outer*0.1f))){
+                            GUILayout.FlexibleSpace();
+                            if(GUILayout.Button(">", "button.large.bold", width(viewer_width*0.1f))){
                                 KerbalX.image_selector.large_viewer_index++;
                                 if(KerbalX.image_selector.large_viewer_index > KerbalX.image_selector.pictures.Count-1){ 
                                     KerbalX.image_selector.large_viewer_index = KerbalX.image_selector.pictures.Count-1;
                                 }
+                            }
+                            GUILayout.FlexibleSpace();
+                            if(GUILayout.Button("X", "button.large.bold", width(viewer_width*0.1f))){
+                                close_dialog();
                             }
                         });
                         
@@ -298,11 +304,16 @@ namespace KerbalX
                             KerbalX.image_selector.loaded_pics[pic.id] = true;
                             StartCoroutine(KerbalX.image_selector.load_image(pic.file.FullName, pic.texture));
                         }
-                        GUILayout.Label(pic.texture, width(viewer_width), height(viewer_width * 0.75f));
+                        GUILayout.Label("Picture " + (large_viewer_index + 1) + "/" + pictures.Count().ToString());
+                        section(viewer_width, w2 => {
+                            float h = pic.texture.height/(new []{pic.texture.width,w2}.Max()/w2);
+                            GUILayout.Label(pic.texture, width(viewer_width), height(h));
+                            d.window_pos.height = h + 110;
+                        });
                     });
                     
                 });
-                large_viewer.window_pos = new Rect(this.window_pos.x + this.window_pos.width, KerbalX.upload_gui.window_pos.y + KerbalX.upload_gui.window_pos.height, viewer_width, 200);
+                large_viewer.window_pos = new Rect(this.window_pos.x + this.window_pos.width, KerbalX.upload_gui.window_pos.y + KerbalX.upload_gui.window_pos.height, viewer_width, 20);
                 large_viewer.window_title = "Image Viewer";
             }
         }

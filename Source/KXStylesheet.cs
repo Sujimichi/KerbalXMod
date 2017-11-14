@@ -156,14 +156,14 @@ namespace KerbalX
                 upload_button.padding = new RectOffset(3, 3, 10, 10);
                 upload_button.margin = new RectOffset(20, 20, 20, 5);
 				
-                GUIStyle screenshot_button = new GUIStyle(GUI.skin.button);
-                screenshot_button.name = "button.screenshot";
-                screenshot_button.fontSize = 15;
-                screenshot_button.padding = new RectOffset(3, 3, 10, 10);
+                GUIStyle large_button = new GUIStyle(GUI.skin.button);
+                large_button.name = "button.large";
+                large_button.fontSize = 15;
+                large_button.padding = new RectOffset(3, 3, 10, 10);
 
-                GUIStyle screenshot_button_bold = new GUIStyle(screenshot_button);
-                screenshot_button_bold.name = "button.screenshot.bold";
-                screenshot_button_bold.fontStyle = FontStyle.Bold;
+                GUIStyle large_button_bold = new GUIStyle(large_button);
+                large_button_bold.name = "button.large.bold";
+                large_button_bold.fontStyle = FontStyle.Bold;
 
                 GUIStyle wrapped_button = new GUIStyle(GUI.skin.button);
                 wrapped_button.name = "button.wrapped";
@@ -216,7 +216,7 @@ namespace KerbalX
                 KerbalXWindow.KXskin.customStyles = new GUIStyle[] { 
                     h1, h2, h3, h2_centered, hyperlink, hyperlink_h2, hyperlink_h3, hyperlink_footer, remove_link, alert, alert_h2, small, centered, right_align, 
                     pic_link, pic_hover, pic_selected, pic_selected_highlight, dark_back, dark_back_offset, blue_box, no_style, 
-                    login_button, upload_button, screenshot_button, screenshot_button_bold, wrapped_button, bold_button, 
+                    login_button, upload_button, large_button, large_button_bold, wrapped_button, bold_button, 
                     combo_field, combo_bttn, combo_option, combo_option_hover 
                 };
 
