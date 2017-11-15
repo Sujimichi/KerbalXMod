@@ -1,8 +1,10 @@
 ###Change Log
 0.1.3
   - Recompile for KSP 1.3.1
-  - fix: remove non OS friendly chars from craft file names when downloading
+  - fix: remove non OS friendly chars from craft file names when downloading. fixes issue of certain craft not downloading via the mod.
   - added settings.cfg. settings just contain the path where pictures are loaded from / saved to.
+  - minor GUI tweaks to image selector.
+
 0.1.2
 - change: Added feedback when a craft is updated.
 - new: Large image preview window on image selector.
