@@ -16,10 +16,11 @@
 //         |___/                                                                        
 
 
-//Built Against KSP 1.3.1
-//build id = 01891
-//2017-10-05_22-01-21
+//Built Against KSP 1.4.0
+//build id = 02077
+//2018-03-06_19-03-21
 //Branch: master
+
 
 using System;
 using System.Collections.Generic;
@@ -43,7 +44,7 @@ namespace KerbalX
 
         internal static string token_path = Paths.joined(KSPUtil.ApplicationRootPath, "KerbalX.key");
         internal static string screenshot_dir = "<ksp_install>/Screenshots"; //can be changed in settings.cfg
-        internal static string version = "0.1.3";
+        internal static string version = "0.1.4";
 
         internal static bool failed_to_connect          = false;
         internal static string server_error_message     = null;

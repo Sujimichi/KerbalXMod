@@ -338,7 +338,7 @@ namespace KerbalX
             }
 
             maximize();
-            Application.CaptureScreenshot(filename);
+            ScreenCapture.CaptureScreenshot(filename);
             StartCoroutine(shutter(filename));        //shutter re-opens the windows. well, it's kinda the exact opposite of what a shutter does, but yeah....whatever
         }
 
