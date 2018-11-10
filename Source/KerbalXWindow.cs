@@ -253,7 +253,8 @@ namespace KerbalX
         protected virtual void FooterContent(int window_id){
             section(w =>{
                 if(GUILayout.Button("KerbalX.com", "hyperlink.footer", width(75f), height(30f))){
-                    Application.OpenURL(KerbalX.site_url);
+                    Application.OpenURL(KerbalX.api.url_to(""));
+
                 }
                 GUILayout.FlexibleSpace();
                 GUILayout.Label(StyleSheet.assets["logo_small"]);

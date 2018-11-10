@@ -65,13 +65,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Source\KerbalX.cs" />
     <Compile Include="Source\KerbalXActionGroupInterface.cs" />
-    <Compile Include="Source\KerbalXAPI.cs" />
     <Compile Include="Source\KerbalXDevTools.cs" />
     <Compile Include="Source\KerbalXDownloadInterface.cs" />
     <Compile Include="Source\KerbalXImageSelector.cs" />
     <Compile Include="Source\KerbalXUploadInterface.cs" />
     <Compile Include="Source\KerbalXWindow.cs" />
-    <Compile Include="Source\KerbalXLoginInterface.cs" />
     <Compile Include="Source\KerbalXHelpers.cs" />
     <Compile Include="Source\KerbalXComboBox.cs" />
     <Compile Include="Source\KXStylesheet.cs" />

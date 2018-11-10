@@ -36,12 +36,6 @@ namespace KerbalX
     {
 
         //Static Variables
-
-//        internal static string site_url = "http://kerbalx-stage.herokuapp.com";
-//        internal static string site_url = "https://kerbalx.com";
-        internal static string site_url = "http://mizu.local:3000";
-        internal static string token_path = Paths.joined(KSPUtil.ApplicationRootPath, "KerbalX.key");
-
         internal static string version = "0.1.5";
         internal static KerbalXAPI api = new KerbalXAPI("KerbalXMod", KerbalX.version);
 
