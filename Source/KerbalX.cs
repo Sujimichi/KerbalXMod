@@ -40,14 +40,13 @@ namespace KerbalX
 //        internal static string site_url = "http://kerbalx-stage.herokuapp.com";
 //        internal static string site_url = "https://kerbalx.com";
         internal static string site_url = "http://mizu.local:3000";
-
-
-
         internal static string token_path = Paths.joined(KSPUtil.ApplicationRootPath, "KerbalX.key");
-        internal static string screenshot_dir = "<ksp_install>/Screenshots"; //can be changed in settings.cfg
+
         internal static string version = "0.1.5";
         internal static KerbalXAPI api = new KerbalXAPI("KerbalXMod", KerbalX.version);
 
+        internal static string screenshot_dir;
+        internal static KerbalXSettings settings = new KerbalXSettings();
 
         internal static bool failed_to_connect          = false;
         internal static string server_error_message     = null;
@@ -94,14 +93,6 @@ namespace KerbalX
             GameEvents.onGUIApplicationLauncherDestroyed.Add(remove_from_toolbar);
             GameEvents.onGameSceneLoadRequested.Add(scene_load_request);
             KerbalXDownloadController.query_new_save = true;
-
-            //read settings.cfg and set configurable attributes
-            string settings_data = System.IO.File.ReadAllText(Paths.joined(KSPUtil.ApplicationRootPath, "GameData", "KerbalX", "settings.cfg"));
-            ConfigNode settings = ConfigNode.Parse(settings_data);
-            foreach(ConfigNode node in settings.nodes){
-                if(node.HasValue("pic_dir")){ KerbalX.screenshot_dir = node.GetValue("pic_dir"); }
-            }
-            KerbalX.screenshot_dir = KerbalX.screenshot_dir.Replace("<ksp_install>", KSPUtil.ApplicationRootPath);
         }
 
 

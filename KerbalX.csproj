@@ -75,14 +75,12 @@
     <Compile Include="Source\KerbalXHelpers.cs" />
     <Compile Include="Source\KerbalXComboBox.cs" />
     <Compile Include="Source\KXStylesheet.cs" />
+    <Compile Include="Source\KerbalXSettings.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Folder Include="assets\" />
     <Folder Include="Source\" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assets\settings.cfg" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>
