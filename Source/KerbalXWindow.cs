@@ -143,7 +143,7 @@ namespace KerbalX
         //Windows which inherit from KerbalXWindow can override this method to have specific actions performed after login
         //(ie: UploadInterface will request a fetch of existing craft).
         protected virtual void on_login(){
-            GameObject.Destroy(KerbalX.login_gui);
+//            GameObject.Destroy(KerbalX.login_gui);
         }
 		
         //As windows will have been drawn with GUILayout.ExpandHeight(true) setting the height to a small value will cause the window to readjust its height.
@@ -218,54 +218,19 @@ namespace KerbalX
                 prevent_ui_click_through();
             }
 
-            //if a server error has occured display an error dialog, but don't halt drawing of interface. 
-            if(KerbalX.server_error_message != null){
-                List<string> messages = KerbalX.server_error_message.Split(new string[] { Environment.NewLine }, StringSplitOptions.None).ToList();
-                KerbalX.server_error_message = null;
-                string title = messages[0];
-                messages[0] = "";
-                KerbalXDialog dialog = show_dialog((d) =>{
-                    v_section(w =>{
-                        GUILayout.Label(title, "alert.h2");
-                        foreach(string message in messages){
-                            if(message != ""){ GUILayout.Label(message);}
-                        }
-                        if(GUILayout.Button("OK", height(30))){ close_dialog();}
-                    });
-                });
-                dialog.window_title = title;
-                on_error();
+            if(KerbalX.api.has_errors){
+                KerbalX.api.show_errors();
             }
 
-            //If unable to connect to KerbalX halt drawing interface and replace with "try again" button"
-            if(KerbalX.failed_to_connect){
-                GUILayout.Label("Unable to Connect to KerbalX.com!");
-                if(GUILayout.Button("try again")){
-                    RequestHandler.instance.try_again();
-                }
-            //If user is not logged in, halt drawing interface and show login button (unless the window is a dialog window)"
-            } else if(!is_dialog && require_login && KerbalXAPI.logged_out()){
-                GUILayout.Label("You are not logged in.");
-                if(GUILayout.Button("Login")){
-                    KerbalXLoginInterface login_window = gameObject.AddOrGetComponent<KerbalXLoginInterface>();
-                    login_window.after_login_action = () =>{ on_login(); };
-                }
-            //If an upgrade is required, halt drawing interface and show message;
-            } else if(KerbalX.upgrade_required){
-                GUILayout.Label("Upgrade Required", "h3");
-                GUILayout.Label("This version of the KerbalX mod is no longer compatible with KerbalX.com\nYou need to get the latest version.");
-                GUILayout.Label(KerbalX.upgrade_required_message);
-                on_error();
-            //otherwse all is good, draw the main content of the window as defined by WindowContent
-            } else{
-                if(gui_locked){
-                    GUI.enabled = false;
-                    GUI.color = new Color(1, 1, 1, 2); //This enables the GUI to be locked from input, but without changing it's appearance. 
-                }
-                WindowContent(window_id);	//oh hey, finally, actually drawing the window content. 
-                GUI.enabled = true;
-                GUI.color = Color.white;
+
+            if(gui_locked){
+                GUI.enabled = false;
+                GUI.color = new Color(1, 1, 1, 2); //This enables the GUI to be locked from input, but without changing it's appearance. 
             }
+            WindowContent(window_id);	//oh hey, finally, actually drawing the window content. 
+            GUI.enabled = true;
+            GUI.color = Color.white;
+
 
             //add common footer elements for all windows if footer==true
             if(footer){
@@ -327,13 +292,13 @@ namespace KerbalX
         //Essential for any window which needs to make web requests.  If a window is going to trigger web requests then it needs to call this method on its Start() method
         //The RequestHandler handles sending requests asynchronously (so delays in response time don't lag the interface).  In order to do that it uses Coroutines 
         //which are inherited from MonoBehaviour (and therefore can't be triggered by the static methods in KerbalXAPI).
-        protected void enable_request_handler(){
-            if(RequestHandler.instance == null){
-                KerbalX.log("starting web request handler");
-                RequestHandler request_handler = gameObject.AddOrGetComponent<RequestHandler>();
-                RequestHandler.instance = request_handler;
-            }
-        }
+//        protected void enable_request_handler(){
+//            if(RequestHandler.instance == null){
+//                KerbalX.log("starting web request handler");
+//                RequestHandler request_handler = gameObject.AddOrGetComponent<RequestHandler>();
+//                RequestHandler.instance = request_handler;
+//            }
+//        }
 
 
         //Definition of delegate to be passed into the section, v_section and scroll methods

@@ -26,7 +26,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
-
+using KXAPI;
 
 namespace KerbalX
 {
@@ -41,9 +41,13 @@ namespace KerbalX
 //        internal static string site_url = "https://kerbalx.com";
         internal static string site_url = "http://mizu.local:3000";
 
+
+
         internal static string token_path = Paths.joined(KSPUtil.ApplicationRootPath, "KerbalX.key");
         internal static string screenshot_dir = "<ksp_install>/Screenshots"; //can be changed in settings.cfg
-        internal static string version = "0.1.4";
+        internal static string version = "0.1.5";
+        internal static KerbalXAPI api = new KerbalXAPI("KerbalXMod", KerbalX.version);
+
 
         internal static bool failed_to_connect          = false;
         internal static string server_error_message     = null;
@@ -51,12 +55,16 @@ namespace KerbalX
         internal static string upgrade_required_message = null;
 
         internal static List<string> log_data = new List<string>();
-        internal static Dictionary<int, Dictionary<string, string>> existing_craft;//container for listing of user's craft already on KX and some details about them.
-
+//        internal static Dictionary<int, Dictionary<string, string>> existing_craft;//container for listing of user's craft already on KX and some details about them.
+        internal static Dictionary<int, Dictionary<string, string>> existing_craft {
+            get {
+                return KerbalX.api.user_craft;
+            }
+        }
 
         //window handles (cos a window without a handle is just a pane)
         internal static KerbalXWindow console                         = null;
-        internal static KerbalXLoginInterface login_gui               = null;
+//        internal static KerbalXLoginInterface login_gui               = null;
         internal static KerbalXUploadInterface upload_gui             = null;
         internal static KerbalXDownloadInterface download_gui         = null;
         internal static KerbalXImageSelector image_selector           = null;
@@ -94,6 +102,11 @@ namespace KerbalX
                 if(node.HasValue("pic_dir")){ KerbalX.screenshot_dir = node.GetValue("pic_dir"); }
             }
             KerbalX.screenshot_dir = KerbalX.screenshot_dir.Replace("<ksp_install>", KSPUtil.ApplicationRootPath);
+        }
+
+
+        private void Start(){
+            KerbalX.api.login();
         }
 
         //Trigger the creation of custom Skin (copy of default GUI.skin with various custom styles added to it)

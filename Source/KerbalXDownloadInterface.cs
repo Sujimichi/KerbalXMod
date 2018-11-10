@@ -24,7 +24,7 @@ namespace KerbalX
 
 
         private void Start(){
-            enable_request_handler();
+//            enable_request_handler();
             download_gui();
             start_time = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             instance = this;
@@ -53,8 +53,8 @@ namespace KerbalX
             }
         }
 
-        internal void check_deferred_downloads_setting(){
-            KerbalXAPI.deferred_downloads_enabled((resp, code) =>{
+        internal void check_deferred_downloads_setting(){            
+            KerbalX.api.deferred_downloads_enabled((resp, code) =>{
                 if(code == 200 && resp == "enabled"){
                     deferred_downloads_enabled = true;
                 }
@@ -62,7 +62,7 @@ namespace KerbalX
         }
 
         internal void enable_deferred_downloads(){
-            KerbalXAPI.enable_deferred_downloads((resp, code) =>{
+            KerbalX.api.enable_deferred_downloads((resp, code) =>{
                 if(code == 200){
                     deferred_downloads_enabled = true;
                 }
@@ -75,9 +75,9 @@ namespace KerbalX
         }
 
         public void fetch_download_queue(bool show_list){
-            if(KerbalXAPI.logged_in()){
+            if(KerbalX.api.logged_in){
                 
-                KerbalXAPI.fetch_download_queue((craft_data) =>{
+                KerbalX.api.fetch_download_queue((craft_data, status_code) =>{
                     download_queue.Clear();
                     download_queue = craft_data;
                     if(show_list){
@@ -97,14 +97,14 @@ namespace KerbalX
 
         //Fetch list of craft the user has downloaded in the past, add in path info and push it to the download interface
         public void fetch_past_downloads(){
-            KerbalXAPI.fetch_past_downloads((craft_data) =>{
+            KerbalX.api.fetch_past_downloads((craft_data, status_code) =>{
                 download_gui().set_craft_list(update_craft_data(craft_data), "Past Downloads");
             });
         }
 
         //Fetch list of craft uploaded by the user, add in path info and push it to the download interface
         public void fetch_users_craft(){
-            KerbalXAPI.fetch_users_craft((craft_data) =>{
+            KerbalX.api.fetch_users_craft((craft_data, status_code) =>{
                 download_gui().set_craft_list(update_craft_data(craft_data), "Your Craft");
             });
         }
@@ -142,7 +142,7 @@ namespace KerbalX
         //fetch craft of given ID from KerbalX and write it to file.  no confirmation for overwrite is given by this method.
         //this will be called from the download interface once overwrite confirmation has been given.
         public void download_craft(int id, Dictionary<string, string> craft_info){
-            KerbalXAPI.download_craft(id, (craft_file_string, code) =>{
+            KerbalX.api.download_craft(id, (craft_file_string, code) =>{
                 if(code == 200){
                     write_file(id, craft_info, craft_file_string);
                     if(download_gui().mode == "Download Queue"){
@@ -183,7 +183,7 @@ namespace KerbalX
         public void auto_load_users_craft(){
             string ksp_version = Versioning.GetVersionString();
             List<int> loaded_craft_ids = new List<int>();
-            KerbalXAPI.fetch_users_craft((craft_data) =>{
+            KerbalX.api.fetch_users_craft((craft_data, status_code) =>{
                 var user_craft_data = update_craft_data(craft_data);
                 int[] craft_ids = user_craft_data.Keys.ToArray();
                 foreach(int id in craft_ids){
@@ -203,7 +203,7 @@ namespace KerbalX
         }
 
         private void OnGUI(){
-            if(KerbalXAPI.logged_in()){
+            if(KerbalX.api.logged_in){
                 GUI.skin = KerbalXWindow.KXskin;
                 if(query_new_save && save_is_empty()){
                     query_new_save = false;
@@ -368,9 +368,11 @@ namespace KerbalX
                                         }
                                         if(mode == "Download Queue"){
                                             if(GUILayout.Button("X", "remove_link", width(10f), height(25f))){
-                                                KerbalXAPI.remove_from_queue(id);
-                                                KerbalXDownloadController.instance.fetch_download_queue();
-                                                craft_list[id]["status"] = "removed";
+                                                KerbalX.api.remove_from_queue(id, (resp, code) => {
+                                                    KerbalXDownloadController.instance.fetch_download_queue();
+                                                    craft_list[id]["status"] = "removed";
+                                                    
+                                                });
                                             }
                                         }
                                     });
@@ -399,7 +401,7 @@ namespace KerbalX
                             GUILayout.Label("To use the download queue you need to enable \"Deferred Downloads\" in your settings on KerbalX");
                             section(w => {
                                 if(GUILayout.Button("view your settings on KerbalX.com", "hyperlink")){
-                                    Application.OpenURL(KerbalXAPI.url_to("/settings?tab=kx_mod"));
+                                    Application.OpenURL(KerbalX.api.url_to("/settings?tab=kx_mod"));
                                 }
                                 if(GUILayout.Button("Or Click to enable it")){
                                     KerbalXDownloadController.instance.enable_deferred_downloads();

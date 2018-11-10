@@ -61,7 +61,7 @@ namespace KerbalX
             window_title = "KerbalX::Upload";
             window_pos = new Rect((Screen.width - 410f - 20), 50, 410f, 5);
             require_login = true;
-            enable_request_handler();
+//            enable_request_handler();
             visible = false;
 
             //bind events to happen when the editor loads a saved craft or when new craft is clicked
@@ -302,7 +302,7 @@ namespace KerbalX
                                 v_section(w =>{
                                     GUILayout.Label("Pressing Update will update the this craft on KerbalX:", "h3");
                                     GUILayout.Label(KerbalX.existing_craft[selected_craft_id]["name"] + " (id: " + selected_craft_id + ")", "h3");
-                                    string craft_url = KerbalXAPI.url_to(KerbalX.existing_craft[selected_craft_id]["url"]);
+                                    string craft_url = KerbalX.api.url_to(KerbalX.existing_craft[selected_craft_id]["url"]);
                                     if(GUILayout.Button(craft_url, "hyperlink.h3")){
                                         Application.OpenURL(craft_url);
                                     }
@@ -446,7 +446,7 @@ namespace KerbalX
                     }
                 }
 
-                KerbalXAPI.upload_craft(craft_data, (resp, code) =>{
+                KerbalX.api.upload_craft(craft_data, (resp, code) =>{
                     var resp_data = JSON.Parse(resp);
                     if(code == 200){
                         KerbalX.log("craft uploaded OK");
@@ -476,7 +476,7 @@ namespace KerbalX
                 craft_data.AddField("craft_file", craft_file());
                 craft_data.AddField("part_data", JSONX.toJSON(part_info()));
 
-                KerbalXAPI.update_craft(craft_id, craft_data, (resp, code) =>{
+                KerbalX.api.update_craft(craft_id, craft_data, (resp, code) =>{
                     var resp_data = JSON.Parse(resp);
                     if(code == 200){
                         KerbalX.log("craft update OK");
@@ -497,7 +497,7 @@ namespace KerbalX
             KerbalXDialog dialog = show_dialog((d) =>{
                 v_section(w =>{
                     GUILayout.Label("Your craft has uploaded!", "h1");
-                    string craft_url = KerbalXAPI.url_to(craft_path);
+                    string craft_url = KerbalX.api.url_to(craft_path);
                     GUILayout.Space(10f);
                     if(GUILayout.Button(craft_url, "hyperlink.h2", width(500f))){
                         Application.OpenURL(craft_url);
@@ -528,7 +528,7 @@ namespace KerbalX
         //minimal info (craft id and name) is stached on remote_craft which is used to populate the select menu and check for matching craft.
         private void fetch_existing_craft(){
             fetching_craft = true;
-            KerbalXAPI.fetch_existing_craft(() =>{  //Query KX for the user's current craft (which gets stashed on KerbalX.existing_craft). lambda gets called once request completes.
+            KerbalX.api.fetch_existing_craft((resp, status_code) =>{  //Query KX for the user's current craft (which gets stashed on KerbalX.existing_craft). lambda gets called once request completes.
                 remote_craft.Clear();
                 remote_craft.Add(0, "select a craft");	//remote_craft populates the select menu, ID 0 (which can't exist on KX) is used as the placeholder
                 foreach(KeyValuePair<int, Dictionary<string, string>> craft in KerbalX.existing_craft){
