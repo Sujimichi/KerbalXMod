@@ -1,28 +1,33 @@
 #Collie - rounds all the files up into release
 
 rm -rf bin/Release/KerbalX
-rm bin/Release/KerbalXMod.zip
 
 mkdir bin/Release/KerbalX -p
 mkdir bin/Release/KerbalX/Plugins -p
 mkdir bin/Release/KerbalX/Assets -p
 
 cp bin/Release/KerbalX.dll bin/Release/KerbalX/Plugins/KerbalX.dll
+
 cp -a assets/images/*.png bin/Release/KerbalX/Assets/
 cp assets/settings.cfg bin/Release/KerbalX/settings.cfg
+
 cp LICENCE.txt bin/Release/KerbalX/LICENCE.txt
 
-ruby -e "i=%x(cat Source/KerbalX.cs | grep version); i=i.split('=')[1].sub(';','').gsub('\"','').strip; s=\"echo 'version: #{i}' > bin/Release/KerbalX/version\"; system(s)"
 
+MODVER=$(ruby -e "i=%x(cat Source/KerbalX.cs | grep version); i=i.split(';')[0].split('=')[1].sub(';','').gsub('\"','').strip; puts i;")
+KSPVER=$(ruby -e "i=%x(cat Source/KerbalX.cs | grep 'Built Against KSP'); i=i.split(' ').last; puts i")
 
-rm bin/Release/KerbalX.dll
-rm bin/Release/KerbalX.dll.mdb
+echo "version $MODVER" > bin/Release/KerbalX/version
+
+rm bin/Release/*.dll
+rm bin/Release/*.dll.mdb
 
 cd bin/Release
-zip -r KerbalXMod.zip KerbalX/
+rm -rf $MODVER/
 
-rm -rf /home/sujimichi/KSP/dev_KSP-1.3.1/GameData/KerbalX/
-cp -R KerbalX/ /home/sujimichi/KSP/dev_KSP-1.3.1/GameData/KerbalX/
+mkdir $MODVER
+#rm KerbalX_$MODVER.zip
+zip -r $MODVER/KerbalX.zip KerbalX/
 
-rm -rf /home/sujimichi/Share/KX_mod_dev/KerbalX/
-cp -R KerbalX/ /home/sujimichi/Share/KX_mod_dev/KerbalX/
+rm -rf /home/sujimichi/KSP/dev_KSP-$KSPVER/GameData/KerbalX/
+cp -R KerbalX/ /home/sujimichi/KSP/dev_KSP-$KSPVER/GameData/KerbalX/

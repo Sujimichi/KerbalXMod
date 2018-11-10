@@ -41,16 +41,16 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Net" />
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\#References\KSP 1.4.0\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\#References\KSP 1.4.3\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>..\#References\KSP 1.4.0\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>..\#References\KSP 1.4.3\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\#References\KSP 1.4.0\UnityEngine.dll</HintPath>
+      <HintPath>..\#References\KSP 1.4.3\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>..\#References\KSP 1.4.0\UnityEngine.UI.dll</HintPath>
+      <HintPath>..\#References\KSP 1.4.3\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

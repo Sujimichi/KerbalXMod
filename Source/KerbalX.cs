@@ -16,10 +16,10 @@
 //         |___/                                                                        
 
 
-//Built Against KSP 1.4.0
-//build id = 02077
-//2018-03-06_19-03-21
-//Branch: master
+//Built Against KSP 1.4.3
+//build id = 02152
+//2018-04-26_22-43-47
+
 
 
 using System;
@@ -37,10 +37,9 @@ namespace KerbalX
 
         //Static Variables
 
-//        internal static string site_url = "http://localhost:3000";
-//        internal static string site_url = "http://192.168.1.2:3000";
 //        internal static string site_url = "http://kerbalx-stage.herokuapp.com";
-        internal static string site_url = "https://kerbalx.com";
+//        internal static string site_url = "https://kerbalx.com";
+        internal static string site_url = "http://mizu.local:3000";
 
         internal static string token_path = Paths.joined(KSPUtil.ApplicationRootPath, "KerbalX.key");
         internal static string screenshot_dir = "<ksp_install>/Screenshots"; //can be changed in settings.cfg
