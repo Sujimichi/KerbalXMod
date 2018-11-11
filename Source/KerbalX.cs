@@ -36,7 +36,7 @@ namespace KerbalX
     {
 
         //Static Variables
-        internal static string version = "1.1.0";
+        internal static string version = "1.0.0";
         internal static KerbalXAPI api = new KerbalXAPI("KerbalXMod", KerbalX.version);
 
         internal static string screenshot_dir;
